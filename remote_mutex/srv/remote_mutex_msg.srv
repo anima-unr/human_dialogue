@@ -1,0 +1,5 @@
+string node
+float32 activation_potential
+bool request
+---
+bool success
