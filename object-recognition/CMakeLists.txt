@@ -9,6 +9,7 @@ if( ${LOG_INFO_PRINTING} )
 endif( ${LOG_INFO_PRINTING} )
 
 find_package(OpenCV 3 REQUIRED)
+find_package(catkin REQUIRED)
 option(BUILD_TESTS "Add test build functionality")
 
 add_library(quad_tree
