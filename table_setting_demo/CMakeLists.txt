@@ -135,7 +135,9 @@ else()
 endif()
 
 
-if (${ROS_VERSION} MATCHES "groovy")
+#JB: This used to be only groovy to build on the pr2, but since we are running it in 
+#    simulation now, we need to build it on our host machine!
+# if (${ROS_VERSION} MATCHES "groovy")
   find_package(catkin REQUIRED COMPONENTS
     # arm_navigation
     # pr2_controllers
@@ -144,8 +146,13 @@ if (${ROS_VERSION} MATCHES "groovy")
   )
 
   set(message_INCLUDE_DIRS
-    /opt/ros/groovy/stacks/arm_navigation/arm_navigation_msgs/msg_gen/cpp/include/
-    /opt/ros/groovy/stacks/pr2_controllers/pr2_controllers_msgs/msg_gen/cpp/include/
+# JB: TODO: The arm_navigation does not exist in indigo, it is replaced by MoveIt!
+#           So will need to more than a simple change here!!!!
+#    /opt/ros/groovy/stacks/arm_navigation/arm_navigation_msgs/msg_gen/cpp/include/
+
+    # /opt/ros/groovy/stacks/pr2_controllers/pr2_controllers_msgs/msg_gen/cpp/include/
+    /opt/ros/indigo/stacks/pr2_controllers/pr2_controllers_msgs/msg_gen/cpp/include/
+
   )
   option(BUILD_PR2_PICKPLACE "Build PR2 pick and place service" 1)
   if (${BUILD_PR2_PICKPLACE})
@@ -163,7 +170,7 @@ if (${ROS_VERSION} MATCHES "groovy")
     table_setting_demo_generate_messages_cpp
   )
   endif (${BUILD_PR2_PICKPLACE})
-endif (${ROS_VERSION} MATCHES "groovy")
+# endif (${ROS_VERSION} MATCHES "groovy")
 ################################################################################
 ################################################################################
 if (${BUILD_TABLE_SETTING_DEMO})

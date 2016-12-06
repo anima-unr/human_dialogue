@@ -4,7 +4,7 @@
 #include "table_setting_demo/pick_and_place.h"
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
-#include <arm_navigation_msgs/MoveArmAction.h>
+//JB TODO: #include <arm_navigation_msgs/MoveArmAction.h>
 #include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
 #include <tf/transform_listener.h>
 #include <table_setting_demo/pick_and_place.h>
@@ -31,8 +31,8 @@ typedef enum STATE {
 } STATE_t;
 
 struct PickPlaceGoal {
-  arm_navigation_msgs::MoveArmGoal pick_pose;
-  arm_navigation_msgs::MoveArmGoal place_pose;
+  //JB TODO: arm_navigation_msgs::MoveArmGoal pick_pose;
+  //JB TODO: arm_navigation_msgs::MoveArmGoal place_pose;
 };
 
 typedef struct Point {
@@ -40,7 +40,7 @@ typedef struct Point {
 }__attribute__((packed)) Point_t;
 
 typedef actionlib::SimpleActionClient<pr2_controllers_msgs::Pr2GripperCommandAction> GripperClient;
-typedef arm_navigation_msgs::MoveArmGoal MoveArmGoal_t;
+//JB TODO: typedef arm_navigation_msgs::MoveArmGoal MoveArmGoal_t;
 
 class Gripper {
  public:
@@ -73,17 +73,17 @@ class PickPlace {
   void PostParameters();
   void CalibrateObjects();
   void ReadCalibration(std::string filename);
-  MoveArmGoal_t GetArmPoseFromPoints(
+  /* //JB TODO:    MoveArmGoal_t GetArmPoseFromPoints(
     std::string frame_id,
     std::string link,
     Point_t position,
-    Point_t orientation);
+    Point_t orientation); */
   void SaveCalibration(std::string filename);
   void PickAndPlaceImpl(std::string object);
 
  private:
-  bool SendGoal(MoveArmGoal_t goal);
-  MoveArmGoal_t GetArmPoseGoal();
+  //TODO JB: bool SendGoal(MoveArmGoal_t goal);
+  //TODO JB:   MoveArmGoal_t GetArmPoseGoal();
 
   ros::NodeHandle nh_;
   std::vector<std::string> objects_;
@@ -91,7 +91,7 @@ class PickPlace {
   std::vector<std::string> dynamic_objects_;
   std::string arm_;
   std::map<std::string, PickPlaceGoal> object_goal_map_;
-  actionlib::SimpleActionClient<arm_navigation_msgs::MoveArmAction> move_arm_;
+  //JB TODO: actionlib::SimpleActionClient<arm_navigation_msgs::MoveArmAction> move_arm_;
   Gripper r_gripper_;
   uint32_t state_;
   bool stop;
