@@ -4,7 +4,19 @@
 #include "table_setting_demo/pick_and_place.h"
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
+
+//-----
 //JB TODO: #include <arm_navigation_msgs/MoveArmAction.h>
+#include "moveit_msgs/PlanningScene.h"
+#include "moveit_msgs/ApplyPlanningScene.h"
+#include "moveit_msgs/CollisionObject.h"
+#include "moveit_msgs/AttachedCollisionObject.h"
+#include "moveit_msgs/DisplayTrajectory.h"
+#include "geometry_msgs/Pose.h"
+// #include "moveit/move_group_interface/move_group.h"
+// #include "moveit/planning_scene_interface/planning_scene_interface.h"
+//-----
+
 #include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
 #include <tf/transform_listener.h>
 #include <table_setting_demo/pick_and_place.h>
@@ -31,8 +43,12 @@ typedef enum STATE {
 } STATE_t;
 
 struct PickPlaceGoal {
+//-----
   //JB TODO: arm_navigation_msgs::MoveArmGoal pick_pose;
   //JB TODO: arm_navigation_msgs::MoveArmGoal place_pose;
+  geometry_msgs::Pose pick_pose;
+  geometry_msgs::Pose place_pose;
+//-----
 };
 
 typedef struct Point {
@@ -40,7 +56,10 @@ typedef struct Point {
 }__attribute__((packed)) Point_t;
 
 typedef actionlib::SimpleActionClient<pr2_controllers_msgs::Pr2GripperCommandAction> GripperClient;
+//-----
 //JB TODO: typedef arm_navigation_msgs::MoveArmGoal MoveArmGoal_t;
+typedef geometry_msgs::Pose Pose_t;
+//-----
 
 class Gripper {
  public:
@@ -73,17 +92,28 @@ class PickPlace {
   void PostParameters();
   void CalibrateObjects();
   void ReadCalibration(std::string filename);
+//-----
   /* //JB TODO:    MoveArmGoal_t GetArmPoseFromPoints(
     std::string frame_id,
     std::string link,
     Point_t position,
     Point_t orientation); */
+  Pose_t GetArmPoseFromPoints(
+    std::string frame_id,
+    std::string link,
+    Point_t position,
+    Point_t orientation); //Do I also need to pass in group?
+//-----
   void SaveCalibration(std::string filename);
   void PickAndPlaceImpl(std::string object);
 
  private:
+//-----
   //TODO JB: bool SendGoal(MoveArmGoal_t goal);
   //TODO JB:   MoveArmGoal_t GetArmPoseGoal();
+  bool SendGoal(Pose_t goal); //Do I also need to pass in group?
+  Pose_t GetArmPoseGoal(); //Do I also need to pass in group?
+//-----
 
   ros::NodeHandle nh_;
   std::vector<std::string> objects_;
@@ -91,7 +121,10 @@ class PickPlace {
   std::vector<std::string> dynamic_objects_;
   std::string arm_;
   std::map<std::string, PickPlaceGoal> object_goal_map_;
+//-----
   //JB TODO: actionlib::SimpleActionClient<arm_navigation_msgs::MoveArmAction> move_arm_;
+  // actionlib::SimpleActionClient<moveit::planning_interface::MoveGroup> move_arm_;
+//-----
   Gripper r_gripper_;
   uint32_t state_;
   bool stop;
