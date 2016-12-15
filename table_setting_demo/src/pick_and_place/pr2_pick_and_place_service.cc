@@ -172,12 +172,21 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   r_gripper_.Open();
   state_ = APPROACHING;
   // Move to Neutral Start
+//------
   //TODO JB: object_goal_map_["neutral"].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
+  // N/A?!  
+//------
+  
   if (stop)
     return;
+//------
   /* //TODO JB: if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
     return;
   } */
+  if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+    return;
+  } 
+//------
   if (stop)
     return;
   // Move to Object Pick location
@@ -208,16 +217,25 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
 
     // Transform pose into world space
     geometry_msgs::PoseStamped object_pose, world_pose;
+//------
     //JB TODO: arm_navigation_msgs::MoveArmGoal pick_pose = object_goal_map_[object.c_str()].pick_pose;
+      geometry_msgs::Pose pick_pose = object_goal_map_[object.c_str()].pick_pose;
+
 
     //TODO JB: object_pose.pose.position = pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position;
     //TODO JB: object_pose.pose.orientation = pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation;
+    object_pose.pose.position = pick_pose.position;
+    object_pose.pose.orientation = pick_pose.orientation;
+//------
 
     TransformPoseLocalToWorld(object_pose, world_pose, pose_msg.response.transform);
 
     state_ = PICKING;
+//------
     //TODO JB: pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position = world_pose.pose.position;
     //TODO JB: pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation = world_pose.pose.orientation;
+
+//------
     if (stop)
     return;
     /* //TODO JB: if (!SendGoal(pick_pose)) {
@@ -510,6 +528,7 @@ void PickPlace::ReadCalibration(std::string filename) {
   fin.close();
 }
 
+//-------
 /* //TODO JB: arm_navigation_msgs::MoveArmGoal PickPlace::GetArmPoseFromPoints(std::string frame_id, std::string link, Point_t position, Point_t orientation) {
   arm_navigation_msgs::MoveArmGoal goal;
 
@@ -560,6 +579,62 @@ void PickPlace::ReadCalibration(std::string filename) {
 
   return goal;
 } */
+
+// geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::string link, Point_t position, Point_t orientation) {
+//   geometry_msgs::Pose goal;
+
+  // goal.motion_plan_request.group_name = arm_.c_str();
+  // goal.motion_plan_request.num_planning_attempts = 5;
+  // goal.motion_plan_request.allowed_planning_time = ros::Duration(5.0);
+  
+  //group.setPlanningTime(5.0);
+
+  // nh_.param<std::string>(
+  //   "planner_id",
+  //   goal.motion_plan_request.planner_id,
+  //   std::string(""));
+  // nh_.param<std::string>(
+  //   "planner_service_name",
+  //   goal.planner_service_name,
+  //   std::string("ompl_planning/plan_kinematic_path"));
+
+  // // Setup position of Joint
+  // goal.motion_plan_request.goal_constraints.position_constraints.resize(1);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].header.frame_id = frame_id.c_str();
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].link_name = link.c_str();
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].position.x = position.x;
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].position.y = position.y;
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].position.z = position.z;
+
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.type = arm_navigation_msgs::Shape::BOX;
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
+
+  // // Setup Orientation
+  // goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.stamp = ros::Time::now();
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.frame_id = frame_id.c_str();
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].link_name = link.c_str();
+
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.x = orientation.x;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.y = orientation.y;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.z = orientation.z;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.w = orientation.w;
+
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_roll_tolerance = 0.08;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
+
+  // return goal;
+// } 
+
+//-------
+
 
 void PickPlace::SaveCalibration(std::string filename) {
   std::ofstream fout;
@@ -627,6 +702,34 @@ void PickPlace::SaveCalibration(std::string filename) {
   }
   return false;
 } */
+
+bool PickPlace::SendGoal(geometry_msgs::Pose goal) {
+  if (nh_.ok()) {
+    bool finished_within_time = false;
+    ROS_INFO("Sending Goal");
+    // move_arm_.sendGoal(goal);
+    // finished_within_time = move_arm_.waitForResult(ros::Duration(45.0));
+    group.setPoseTarget(goal);
+
+    // group.move();
+    // if (!finished_within_time) {
+    //   move_arm_.cancelGoal();
+    //   ROS_INFO("Timed out achieving Goal");
+    // } else {
+      // actionlib::SimpleClientGoalState state = move_arm_.getState();
+      // bool success = (state == actionlib::SimpleClientGoalState::SUCCEEDED);
+      // if (success) {
+      //   ROS_INFO("Action finished: %s",state.toString().c_str());
+      //   return true;
+      // } else {
+      //   ROS_INFO("Action failed: %s",state.toString().c_str());
+      //   return false;
+      // }
+    // }
+  }
+  return false;
+} 
+
 
 /* //TODO JB: arm_navigation_msgs::MoveArmGoal PickPlace::GetArmPoseGoal() {
   arm_navigation_msgs::MoveArmGoal goal;

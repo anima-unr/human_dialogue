@@ -15,6 +15,12 @@
 #include "geometry_msgs/Pose.h"
 // #include "moveit/move_group_interface/move_group.h"
 // #include "moveit/planning_scene_interface/planning_scene_interface.h"
+//#include "moveit/move_group/move_group_context.h"
+//#include "moveit/planning_interface/move_group.h"
+// #include "moveit/move_group_interface/move_group_interface.h"
+
+// #include "~/ws_moveit/src/moveit/moveit_ros/planning_interface/move_group_interface/include/moveit/move_group_interface/move_group.h"
+#include "moveit/move_group_interface/move_group.h"
 //-----
 
 #include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
@@ -121,10 +127,12 @@ class PickPlace {
   std::vector<std::string> dynamic_objects_;
   std::string arm_;
   std::map<std::string, PickPlaceGoal> object_goal_map_;
+
 //-----
   //JB TODO: actionlib::SimpleActionClient<arm_navigation_msgs::MoveArmAction> move_arm_;
-  // actionlib::SimpleActionClient<moveit::planning_interface::MoveGroup> move_arm_;
+  moveit::planning_interface::MoveGroup group(std::string arm_);
 //-----
+
   Gripper r_gripper_;
   uint32_t state_;
   bool stop;
