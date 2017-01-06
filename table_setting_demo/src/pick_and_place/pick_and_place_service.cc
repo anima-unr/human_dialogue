@@ -61,5 +61,9 @@ int main(int argc, char **argv) {
     &pp);
   printf("READY to PICK and Place\n");
   ros::spin();
+  // while(ros::ok()) {
+  //   ros::spinOnce();
+  // }
+
   return 0;
 }

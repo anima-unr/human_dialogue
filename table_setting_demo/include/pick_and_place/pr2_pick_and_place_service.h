@@ -21,6 +21,7 @@
 
 // #include "~/ws_moveit/src/moveit/moveit_ros/planning_interface/move_group_interface/include/moveit/move_group_interface/move_group.h"
 #include "moveit/move_group_interface/move_group.h"
+#include "moveit/planning_scene_interface/planning_scene_interface.h"
 //-----
 
 #include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
@@ -108,7 +109,7 @@ class PickPlace {
     std::string frame_id,
     std::string link,
     Point_t position,
-    Point_t orientation); //Do I also need to pass in group?
+    Point_t orientation); 
 //-----
   void SaveCalibration(std::string filename);
   void PickAndPlaceImpl(std::string object);
@@ -117,8 +118,8 @@ class PickPlace {
 //-----
   //TODO JB: bool SendGoal(MoveArmGoal_t goal);
   //TODO JB:   MoveArmGoal_t GetArmPoseGoal();
-  bool SendGoal(Pose_t goal); //Do I also need to pass in group?
-  Pose_t GetArmPoseGoal(); //Do I also need to pass in group?
+  bool SendGoal(Pose_t goal);
+  Pose_t GetArmPoseGoal(); 
 //-----
 
   ros::NodeHandle nh_;
@@ -130,7 +131,7 @@ class PickPlace {
 
 //-----
   //JB TODO: actionlib::SimpleActionClient<arm_navigation_msgs::MoveArmAction> move_arm_;
-  moveit::planning_interface::MoveGroup group(std::string arm_);
+  moveit::planning_interface::MoveGroup arm_group_;
 //-----
 
   Gripper r_gripper_;

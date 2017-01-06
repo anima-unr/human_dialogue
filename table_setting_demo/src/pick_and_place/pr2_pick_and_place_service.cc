@@ -1,6 +1,13 @@
 #include "pick_and_place/pr2_pick_and_place_service.h"
 #include "table_setting_demo/object_position.h"
 #include "table_setting_demo/ObjectTransformation.h"
+#include "moveit/move_group_interface/move_group.h"
+#include "moveit/planning_scene_interface/planning_scene_interface.h"
+#include "moveit/planning_scene/planning_scene.h"
+#include "moveit/planning_interface/planning_interface.h"
+#include "moveit/robot_model_loader/robot_model_loader.h"
+#include <pluginlib/class_loader.h>
+#include <ros/node_handle.h>
 #include "log.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -42,10 +49,12 @@ Gripper::~Gripper(){
 void Gripper::Open(){
   pr2_controllers_msgs::Pr2GripperCommandGoal open;
   open.command.position = 0.08;
-  open.command.max_effort = 80.0;  // Do not limit effort (negative)
+  // open.command.max_effort = 80.0;  // Do not limit effort (negative)
+  open.command.max_effort = -1.0;  // Do not limit effort (negative)
   
   ROS_INFO("Sending open goal");
   gripper_client_->sendGoal(open);
+  sleep(5.0);
   gripper_client_->waitForResult();
   if(gripper_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     ROS_INFO("The gripper opened!");
@@ -57,10 +66,12 @@ void Gripper::Open(){
 void Gripper::Close(){
   pr2_controllers_msgs::Pr2GripperCommandGoal squeeze;
   squeeze.command.position = 0.0;
-  squeeze.command.max_effort = 30.0;  // Close gently
+  // squeeze.command.max_effort = 30.0;  // Close gently
+  squeeze.command.max_effort = -1.0;  // Close gently
   
   ROS_INFO("Sending squeeze goal");
   gripper_client_->sendGoal(squeeze);
+  sleep(5.0);
   gripper_client_->waitForResult();
   if(gripper_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     ROS_INFO("The gripper closed!");
@@ -73,36 +84,39 @@ void Gripper::Close(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-PickPlace::PickPlace(std::string arm) /* : //TODO JB: move_arm_("move_right_arm",true) */ {
+PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
   arm_ = arm;
+  // arm_group_.setPlannerId("PRMkConfigDefault");
+
+
   const char *dynamic_object_str[] = {
     // "cup",
     // "bowl",
     // "soda",
-    "fork",
-    "spoon",
-    "knife"
+    // "fork",
+    // "spoon",
+    // "knife"
   };
   const char *static_object_str[] = {
     "cup",
     "bowl",
-    "soda",
+    // "soda",
     "neutral",
-    "placemat",
-    "wineglass",
-    "plate"
+    // "placemat",
+    // "wineglass",
+    // "plate"
   };
   const char *object_str[] = {
     "neutral",
-    "placemat",
+    // "placemat",
     "cup",
-    "plate",
-    "fork",
-    "spoon",
-    "knife",
+    // "plate",
+    // "fork",
+    // "spoon",
+    // "knife",
     "bowl",
-    "soda",
-    "wineglass"
+    // "soda",
+    // "wineglass"
   };
   objects_ = std::vector<std::string>(object_str,
     object_str + sizeof(object_str) / sizeof(char*));
@@ -118,6 +132,7 @@ PickPlace::PickPlace(std::string arm) /* : //TODO JB: move_arm_("move_right_arm"
   } 
 
   // SET STATE
+  arm_group_.setStartStateToCurrentState();
   state_ = IDLE;
 } 
 
@@ -180,9 +195,14 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   if (stop)
     return;
 //------
-  /* //TODO JB: if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
-    return;
-  } */
+  // Todo goes through here -> goal is object_goal_map_["neutral"].pick_pose
+
+
+
+  ROS_INFO("Goal is object_goal_map_[neutral].pick_pose");
+  printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
+  printf("\n  goal ori pick place imp x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
+  // ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
   if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
     return;
   } 
@@ -219,82 +239,119 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
     geometry_msgs::PoseStamped object_pose, world_pose;
 //------
     //JB TODO: arm_navigation_msgs::MoveArmGoal pick_pose = object_goal_map_[object.c_str()].pick_pose;
-      geometry_msgs::Pose pick_pose = object_goal_map_[object.c_str()].pick_pose;
+    geometry_msgs::Pose pick_pose = object_goal_map_[object.c_str()].pick_pose;
+    ROS_INFO("     Pick_pose set to gola map pose");
 
 
     //TODO JB: object_pose.pose.position = pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position;
     //TODO JB: object_pose.pose.orientation = pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation;
     object_pose.pose.position = pick_pose.position;
     object_pose.pose.orientation = pick_pose.orientation;
+    ROS_INFO("     Object pose set to pick_pose");
 //------
 
     TransformPoseLocalToWorld(object_pose, world_pose, pose_msg.response.transform);
+    ROS_INFO("     pose tramsformed from local to world");
+
 
     state_ = PICKING;
+    ROS_INFO("     State is now PICKING");
+
 //------
     //TODO JB: pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position = world_pose.pose.position;
     //TODO JB: pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation = world_pose.pose.orientation;
+    pick_pose.position = world_pose.pose.position;
+    pick_pose.orientation = world_pose.pose.orientation;
+    // ROS_INFO("     Pick_pose set to world pose");
+
 
 //------
     if (stop)
     return;
-    /* //TODO JB: if (!SendGoal(pick_pose)) {
+    ROS_INFO("Goal: %s PICK", object.c_str());
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[object.c_str()].pick_pose.position.x, object_goal_map_[object.c_str()].pick_pose.position.y, object_goal_map_[object.c_str()].pick_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].pick_pose.orientation.x, object_goal_map_[object.c_str()].pick_pose.orientation.y, object_goal_map_[object.c_str()].pick_pose.orientation.z, object_goal_map_[object.c_str()].pick_pose.orientation.z);
+
+    if (!SendGoal(pick_pose)) {
       return;
-    } */
+    }
     if (stop)
     return;
-  } else {
+  }
+  // if not dynamic, do the following
+  else {
     if (stop)
     return;
     //TODO JB: object_goal_map_[object.c_str()].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-    /* //TODO JB: if (!SendGoal(object_goal_map_[object.c_str()].pick_pose)) {
+    ROS_INFO("Goal: %s PICK", object.c_str());
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[object.c_str()].pick_pose.position.x, object_goal_map_[object.c_str()].pick_pose.position.y, object_goal_map_[object.c_str()].pick_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].pick_pose.orientation.x, object_goal_map_[object.c_str()].pick_pose.orientation.y, object_goal_map_[object.c_str()].pick_pose.orientation.z, object_goal_map_[object.c_str()].pick_pose.orientation.z);
+    if (!SendGoal(object_goal_map_[object.c_str()].pick_pose)) {
       return;
-    } */
+    }
     if (stop)
     return;
   }
   r_gripper_.Close();
   state_ = PICKED;
+  ROS_INFO("     State is now PICKED");
   // Move to Neutral start
   if (stop)
     return;
   //TODO JB: object_goal_map_["neutral"].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  /* //TODO JB: if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+  ROS_INFO("Goal: Neutral PICK");
+      printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
+  if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
     return;
-  } */
+  }
   if (stop)
     return;
   state_ = PLACING;
+  ROS_INFO("     State is now PLACING");
   //TODO JB: object_goal_map_["neutral"].place_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  /* //TODO JB: if (!SendGoal(object_goal_map_["neutral"].place_pose)) {
+  ROS_INFO("Goal: Neutral PLACE");
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
+  if (!SendGoal(object_goal_map_["neutral"].place_pose)) {
     return;
-  } */
+  }
   if (stop)
     return;
 
-  // obejct place
+  // object place
   //TODO JB: object_goal_map_[object.c_str()].place_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  /* //TODO JB: if (!SendGoal(object_goal_map_[object.c_str()].place_pose)) {
+  ROS_INFO("Goal: %s PLACE", object.c_str());
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[object.c_str()].place_pose.position.x, object_goal_map_[object.c_str()].place_pose.position.y, object_goal_map_[object.c_str()].place_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].place_pose.orientation.x, object_goal_map_[object.c_str()].place_pose.orientation.y, object_goal_map_[object.c_str()].place_pose.orientation.z, object_goal_map_[object.c_str()].place_pose.orientation.z);
+  if (!SendGoal(object_goal_map_[object.c_str()].place_pose)) {
     return;
-  } */
+  }
   if (stop)
     return;
   r_gripper_.Open();
   state_ = PLACED;
+  ROS_INFO("     State is now PLACED");
 
   if (stop)
     return;
    //TODO JB: object_goal_map_["neutral"].place_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  /* //TODO JB: if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+  ROS_INFO("Goal: Neutral PLACE");
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
+  if (!SendGoal(object_goal_map_["neutral"].place_pose)) {
     return;
-  } */
+  }
 
   if (stop)
     return;
   //TODO JB: object_goal_map_["neutral"].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  /* //TODO JB: if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+  ROS_INFO("Goal: Neutral PICK");
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
+  if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
     return;
-  } */
+  }
 }
 
 bool PickPlace::PickAndPlaceObject(
@@ -333,6 +390,7 @@ bool PickPlace::PickAndPlaceStop(
     table_setting_demo::pick_and_place_stop::Response &res) {
   stop = true;
   //TODO JB: move_arm_.cancelGoal();
+  arm_group_.stop();
   work_thread->join();
   stop = false;
   return true;
@@ -347,6 +405,9 @@ void PickPlace::PostParameters() {
     //TODO JB: positions.push_back(it->second.pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position.x);
     //TODO JB: positions.push_back(it->second.pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position.y);
     //TODO JB: positions.push_back(it->second.pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position.z);
+    positions.push_back(it->second.pick_pose.position.x);
+    positions.push_back(it->second.pick_pose.position.y);
+    positions.push_back(it->second.pick_pose.position.z);
     ros::param::set((topic + it->first).c_str(), positions);
     positions.clear();
   }
@@ -433,7 +494,13 @@ void PickPlace::CalibrateObjects() {
         arm_.c_str(),
         objects_[i].c_str());
       waitKeyboard();
-      //TODO JB: object_goal_map_[objects_[i]].pick_pose = GetArmPoseGoal();
+
+      object_goal_map_[objects_[i]].pick_pose = GetArmPoseGoal();
+
+
+  // printf("  goal pos x %f  y %f  z %f ", object_goal_map_[objects_[i]].pick_pose.position.x, object_goal_map_[objects_[i]].pick_pose.position.y, object_goal_map_[objects_[i]].pick_pose.position.z);
+  // printf("  goal ori prior scene view and not dynamic x %f  y %f  z %f  w %f", object_goal_map_[objects_[i]].pick_pose.orientation.x, object_goal_map_[objects_[i]].pick_pose.orientation.y, object_goal_map_[objects_[i]].pick_pose.orientation.z, object_goal_map_[objects_[i]].pick_pose.orientation.z);
+
     } else {
       printf("Dyanamic Object [%s]! Move arm out of Kinect path! Then Press enter\n", objects_[i].c_str());
       waitKeyboard();
@@ -473,18 +540,26 @@ void PickPlace::CalibrateObjects() {
           arm_.c_str(),
           objects_[i].c_str());
         waitKeyboard();
-        //TODO JB: object_goal_map_[objects_[i]].pick_pose = GetArmPoseGoal();
+        ROS_INFO("HERE!!!!!");
+        object_goal_map_[objects_[i]].pick_pose = GetArmPoseGoal();
+
+  // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[objects_[i]].pick_pose.position.x, object_goal_map_[objects_[i]].pick_pose.position.y, object_goal_map_[objects_[i]].pick_pose.position.z);
+  // printf("\n  goal ori here x %f  y %f  z %f  w %f\n", object_goal_map_[objects_[i]].pick_pose.orientation.x, object_goal_map_[objects_[i]].pick_pose.orientation.y, object_goal_map_[objects_[i]].pick_pose.orientation.z, object_goal_map_[objects_[i]].pick_pose.orientation.z);
       }
 
       geometry_msgs::PoseStamped world_pose, object_pose;
       //TODO JB: world_pose.pose.position =    object_goal_map_[objects_[i]].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position;
       //TODO JB: world_pose.pose.orientation = object_goal_map_[objects_[i]].pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation;
+      world_pose.pose.position =    object_goal_map_[objects_[i]].pick_pose.position;
+      world_pose.pose.orientation = object_goal_map_[objects_[i]].pick_pose.orientation;
 
       // Transform pose
       TransformPoseWorldToLocal(world_pose, object_pose, pose_msg.response.transform);
       // apply transform
       //TODO JB: object_goal_map_[objects_[i]].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position = object_pose.pose.position;
       //TODO JB: object_goal_map_[objects_[i]].pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation = object_pose.pose.orientation;
+      object_goal_map_[objects_[i]].pick_pose.position = object_pose.pose.position;
+      object_goal_map_[objects_[i]].pick_pose.orientation = object_pose.pose.orientation;
     }
 
     r_gripper_.Close();
@@ -493,7 +568,7 @@ void PickPlace::CalibrateObjects() {
       arm_.c_str(),
       objects_[i].c_str());
     waitKeyboard();
-    //TODO JB: object_goal_map_[objects_[i]].place_pose = GetArmPoseGoal();
+    object_goal_map_[objects_[i]].place_pose = GetArmPoseGoal();
     r_gripper_.Open();
   }
 }
@@ -519,75 +594,26 @@ void PickPlace::ReadCalibration(std::string filename) {
     fin.read(reinterpret_cast<char*>(&orientation), sizeof(Point_t));
     printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", orientation.x, orientation.y, orientation.z, orientation.w);
     //TODO JB: object_goal_map_[key].pick_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+    object_goal_map_[key].pick_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
     fin.read(reinterpret_cast<char*>(&position), sizeof(Point_t));
     printf("Position: x: %f, y: %f, z: %f, \n", position.x, position.y, position.z);
     fin.read(reinterpret_cast<char*>(&orientation), sizeof(Point_t));
     printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", orientation.x, orientation.y, orientation.z, orientation.w);
     //TODO JB: object_goal_map_[key].place_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+    object_goal_map_[key].place_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
   }
   fin.close();
 }
 
-//-------
-/* //TODO JB: arm_navigation_msgs::MoveArmGoal PickPlace::GetArmPoseFromPoints(std::string frame_id, std::string link, Point_t position, Point_t orientation) {
-  arm_navigation_msgs::MoveArmGoal goal;
 
-  goal.motion_plan_request.group_name = arm_.c_str();
-  goal.motion_plan_request.num_planning_attempts = 5;
-  goal.motion_plan_request.allowed_planning_time = ros::Duration(5.0);
-
-  nh_.param<std::string>(
-    "planner_id",
-    goal.motion_plan_request.planner_id,
-    std::string(""));
-  nh_.param<std::string>(
-    "planner_service_name",
-    goal.planner_service_name,
-    std::string("ompl_planning/plan_kinematic_path"));
-
-  // Setup position of Joint
-  goal.motion_plan_request.goal_constraints.position_constraints.resize(1);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  goal.motion_plan_request.goal_constraints.position_constraints[0].header.frame_id = frame_id.c_str();
-  goal.motion_plan_request.goal_constraints.position_constraints[0].link_name = link.c_str();
-  goal.motion_plan_request.goal_constraints.position_constraints[0].position.x = position.x;
-  goal.motion_plan_request.goal_constraints.position_constraints[0].position.y = position.y;
-  goal.motion_plan_request.goal_constraints.position_constraints[0].position.z = position.z;
-
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.type = arm_navigation_msgs::Shape::BOX;
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
-  goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
-
-  // Setup Orientation
-  goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.stamp = ros::Time::now();
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.frame_id = frame_id.c_str();
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].link_name = link.c_str();
-
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.x = orientation.x;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.y = orientation.y;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.z = orientation.z;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.w = orientation.w;
-
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_roll_tolerance = 0.08;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
-
-  return goal;
-} */
-
-// geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::string link, Point_t position, Point_t orientation) {
-//   geometry_msgs::Pose goal;
+geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::string link, Point_t position, Point_t orientation) {
+   geometry_msgs::Pose goal;
 
   // goal.motion_plan_request.group_name = arm_.c_str();
   // goal.motion_plan_request.num_planning_attempts = 5;
   // goal.motion_plan_request.allowed_planning_time = ros::Duration(5.0);
-  
-  //group.setPlanningTime(5.0);
+  arm_group_.setNumPlanningAttempts(15);
+  arm_group_.setPlanningTime(15.0);
 
   // nh_.param<std::string>(
   //   "planner_id",
@@ -603,9 +629,9 @@ void PickPlace::ReadCalibration(std::string filename) {
   // goal.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
   // goal.motion_plan_request.goal_constraints.position_constraints[0].header.frame_id = frame_id.c_str();
   // goal.motion_plan_request.goal_constraints.position_constraints[0].link_name = link.c_str();
-  // goal.motion_plan_request.goal_constraints.position_constraints[0].position.x = position.x;
-  // goal.motion_plan_request.goal_constraints.position_constraints[0].position.y = position.y;
-  // goal.motion_plan_request.goal_constraints.position_constraints[0].position.z = position.z;
+  goal.position.x = position.x;
+  goal.position.y = position.y;
+  goal.position.z = position.z;
 
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.type = arm_navigation_msgs::Shape::BOX;
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
@@ -613,6 +639,7 @@ void PickPlace::ReadCalibration(std::string filename) {
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
   // goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
+  arm_group_.setGoalPositionTolerance(0.05); 
 
   // // Setup Orientation
   // goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
@@ -620,18 +647,19 @@ void PickPlace::ReadCalibration(std::string filename) {
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.frame_id = frame_id.c_str();
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].link_name = link.c_str();
 
-  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.x = orientation.x;
-  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.y = orientation.y;
-  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.z = orientation.z;
-  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.w = orientation.w;
+  goal.orientation.x = orientation.x;
+  goal.orientation.y = orientation.y;
+  goal.orientation.z = orientation.z;
+  goal.orientation.w = orientation.w;
 
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_roll_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
+  arm_group_.setGoalOrientationTolerance(0.08);
 
-  // return goal;
-// } 
+  return goal;
+} 
 
 //-------
 
@@ -652,137 +680,160 @@ void PickPlace::SaveCalibration(std::string filename) {
     snprintf(header, 128, "%s", it->first.c_str());
     fout.write(header, 128);
     printf("Key:%s\n", header);
-    /* //TODO JB: point.x = it->second.pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position.x;
-    point.y = it->second.pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position.y;
-    point.z = it->second.pick_pose.motion_plan_request.goal_constraints.position_constraints[0].position.z;
-    printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
-    point.x = it->second.pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.x;
-    point.y = it->second.pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.y;
-    point.z = it->second.pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.z;
-    point.w = it->second.pick_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.w;
-    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
-    */
-    /* //TODO JB: point.x = it->second.place_pose.motion_plan_request.goal_constraints.position_constraints[0].position.x;
-    point.y = it->second.place_pose.motion_plan_request.goal_constraints.position_constraints[0].position.y;
-    point.z = it->second.place_pose.motion_plan_request.goal_constraints.position_constraints[0].position.z;
-    printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
-    point.x = it->second.place_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.x;
-    point.y = it->second.place_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.y;
-    point.z = it->second.place_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.z;
-    point.w = it->second.place_pose.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.w;
-    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
-    */
-  }
-}
 
-/* //TODO JB: bool PickPlace::SendGoal(arm_navigation_msgs::MoveArmGoal goal) {
-  if (nh_.ok()) {
-    bool finished_within_time = false;
-    ROS_INFO("Sending Goal");
-    move_arm_.sendGoal(goal);
-    finished_within_time = move_arm_.waitForResult(ros::Duration(45.0));
-    if (!finished_within_time) {
-      move_arm_.cancelGoal();
-      ROS_INFO("Timed out achieving Goal");
-    } else {
-      actionlib::SimpleClientGoalState state = move_arm_.getState();
-      bool success = (state == actionlib::SimpleClientGoalState::SUCCEEDED);
-      if (success) {
-        ROS_INFO("Action finished: %s",state.toString().c_str());
-        return true;
-      } else {
-        ROS_INFO("Action failed: %s",state.toString().c_str());
-        return false;
-      }
-    }
-  }
-  return false;
-} */
+    point.x = it->second.pick_pose.position.x;
+    point.y = it->second.pick_pose.position.y;
+    point.z = it->second.pick_pose.position.z;
+    printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
+    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+    point.x = it->second.pick_pose.orientation.x;
+    point.y = it->second.pick_pose.orientation.y;
+    point.z = it->second.pick_pose.orientation.z;
+    point.w = it->second.pick_pose.orientation.w;
+    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
+    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+
+    point.x = it->second.place_pose.position.x;
+    point.y = it->second.place_pose.position.y;
+    point.z = it->second.place_pose.position.z;
+    printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
+    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+    point.x = it->second.place_pose.orientation.x;
+    point.y = it->second.place_pose.orientation.y;
+    point.z = it->second.place_pose.orientation.z;
+    point.w = it->second.place_pose.orientation.w;
+    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
+    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+  
+}}
 
 bool PickPlace::SendGoal(geometry_msgs::Pose goal) {
+  static bool success = false;
   if (nh_.ok()) {
     bool finished_within_time = false;
-    ROS_INFO("Sending Goal");
-    // move_arm_.sendGoal(goal);
+    // ROS_INFO("Sending Goal");
     // finished_within_time = move_arm_.waitForResult(ros::Duration(45.0));
-    group.setPoseTarget(goal);
+    // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
+    // printf("\n  goal ori send goal x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
+    arm_group_.setPoseTarget(goal);
+    // ROS_INFO("     the target pose was succcessfully set to goal");
 
-    // group.move();
+    // // attempt using move group tutorial
+    // // set up planning scene interface and publisher for vizualizing plans in Rviz
+    // moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+    // // ros::Publisher display_publisher = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
+    // moveit_msgs::DisplayTrajectory display_trajectory;
+
+    // // get info
+    // ROS_INFO("Reference frame: %s", arm_group_.getPlanningFrame().c_str());
+    // ROS_INFO("Reference frame: %s", arm_group_.getEndEffectorLink().c_str());
+
+ros::Publisher display_publisher = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
+moveit_msgs::DisplayTrajectory display_trajectory;
+
+
+    // success = arm_group_.move();
+  arm_group_.setNumPlanningAttempts(3);
+  arm_group_.setPlanningTime(5.0);
+  arm_group_.setGoalPositionTolerance(0.05); 
+  arm_group_.setGoalOrientationTolerance(0.08); 
+
+    moveit::planning_interface::MoveGroup::Plan motion_plan;
+    success = arm_group_.plan(motion_plan);
+
+    // success = arm_group_.move();
+    ROS_INFO("  Visualizing plan! %s",success?"":"FAILED");
+    sleep(5.0);
+
     // if (!finished_within_time) {
-    //   move_arm_.cancelGoal();
+    //   arm_group_.stop();
     //   ROS_INFO("Timed out achieving Goal");
     // } else {
-      // actionlib::SimpleClientGoalState state = move_arm_.getState();
-      // bool success = (state == actionlib::SimpleClientGoalState::SUCCEEDED);
-      // if (success) {
-      //   ROS_INFO("Action finished: %s",state.toString().c_str());
-      //   return true;
-      // } else {
-      //   ROS_INFO("Action failed: %s",state.toString().c_str());
-      //   return false;
-      // }
+      // robot_state::RobotStatePtr state = arm_group_.getCurrentState();
+      // bool success = (state == moveit_msgs::MoveItErrorCodes::SUCCESS);
+      if (success) {
+
+        // now execute the plan
+        ROS_INFO("  Action will now execute!");
+        arm_group_.execute(motion_plan);
+        sleep(5.0);
+        arm_group_.setStartStateToCurrentState();
+
+        // ROS_INFO("Action finished: %s",state.toString().c_str());
+        ROS_INFO("  Action finished:");
+        return true;
+      } else {
+        // ROS_INFO("Action failed: %s",state.toString().c_str());
+        ROS_INFO("  Action failed:");
+        return false;
+      }
     // }
   }
   return false;
 } 
 
 
-/* //TODO JB: arm_navigation_msgs::MoveArmGoal PickPlace::GetArmPoseGoal() {
-  arm_navigation_msgs::MoveArmGoal goal;
+geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
+  // arm_navigation_msgs::MoveArmGoal goal;
+  geometry_msgs::Pose goal;
   tf::TransformListener listener;
   tf::StampedTransform transform;
   // Get Current Arm Pose
-  listener.waitForTransform("torso_lift_link", "r_wrist_roll_link",
-    ros::Time(0), ros::Duration(3.0));
-  listener.lookupTransform("torso_lift_link", "r_wrist_roll_link",
+  listener.waitForTransform("odom_combined", "r_wrist_roll_link",
+     ros::Time(0), ros::Duration(3.0));
+  listener.lookupTransform("odom_combined", "r_wrist_roll_link",
     ros::Time(0), transform);
-  goal.motion_plan_request.group_name = arm_.c_str();
-  goal.motion_plan_request.num_planning_attempts = 5;
-  goal.motion_plan_request.allowed_planning_time = ros::Duration(5.0);
+  // goal.motion_plan_request.group_name = arm_.c_str();
+  // goal.motion_plan_request.num_planning_attempts = 5;
+  // goal.motion_plan_request.allowed_planning_time = ros::Duration(5.0);
+  // arm_group_.group_name_ = arm_.c_str();
+  arm_group_.setNumPlanningAttempts(15);
+  arm_group_.setPlanningTime(15.0);
 
-  nh_.param<std::string>(
-    "planner_id",
-    goal.motion_plan_request.planner_id,
-    std::string(""));
-  nh_.param<std::string>(
-    "planner_service_name",
-    goal.planner_service_name,
-    std::string("ompl_planning/plan_kinematic_path"));
+  // nh_.param<std::string>(
+  //   "planner_id",
+  //   // goal.motion_plan_request.planner_id,
+  //   arm_group_.getDefaultPlannerId(arm_),
+  //   std::string(""));
+  // nh_.param<std::string>(
+  //   "planner_service_name",
+  //   // goal.planner_service_name,
+  //   std::string("ompl_planning/plan_kinematic_path"));
+  ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
+  ROS_INFO("HERE!!!!!");
+  // // Setup position of Joint
+  // goal.motion_plan_request.goal_constraints.position_constraints.resize(1);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].header.frame_id = "torso_lift_link";
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].link_name = "r_wrist_roll_link";
+  goal.position.x = transform.getOrigin().x();
+  goal.position.y = transform.getOrigin().y();
+  goal.position.z = transform.getOrigin().z();
 
-  // Setup position of Joint
-  goal.motion_plan_request.goal_constraints.position_constraints.resize(1);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  goal.motion_plan_request.goal_constraints.position_constraints[0].header.frame_id = "torso_lift_link";
-  goal.motion_plan_request.goal_constraints.position_constraints[0].link_name = "r_wrist_roll_link";
-  goal.motion_plan_request.goal_constraints.position_constraints[0].position.x = transform.getOrigin().x();
-  goal.motion_plan_request.goal_constraints.position_constraints[0].position.y = transform.getOrigin().y();
-  goal.motion_plan_request.goal_constraints.position_constraints[0].position.z = transform.getOrigin().z();
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.type = arm_navigation_msgs::Shape::BOX;
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
+  // goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
+  arm_group_.setGoalPositionTolerance(0.05); 
 
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.type = arm_navigation_msgs::Shape::BOX;
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
-  goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
-  goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
-
-  // Setup Orientation
-  goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.stamp = ros::Time::now();
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.frame_id = "torso_lift_link";    
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].link_name = "r_wrist_roll_link";
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.x = transform.getRotation().x();
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.y = transform.getRotation().y();
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.z = transform.getRotation().z();
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].orientation.w = transform.getRotation().w();
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_roll_tolerance = 0.08;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
-  goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
+  // // Setup Orientation
+  // goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.stamp = ros::Time::now();
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].header.frame_id = "torso_lift_link";    
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].link_name = "r_wrist_roll_link";
+  goal.orientation.x = transform.getRotation().x();
+  goal.orientation.y = transform.getRotation().y();
+  goal.orientation.z = transform.getRotation().z();
+  goal.orientation.w = transform.getRotation().w();
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_roll_tolerance = 0.08;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
+  arm_group_.setGoalOrientationTolerance(0.08);
+  // goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
 
   return goal;
-} */
+}
+
 }  // namespace pr2

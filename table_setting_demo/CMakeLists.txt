@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(table_setting_demo)
 
+set(CMAKE_CXX_FLAGS "--std=c++11")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -9,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   geometry_msgs
+  moveit_ros_planning_interface
 )
 if ($ENV{ROBOT} MATCHES "pr2")
   option(BUILD_TABLE_SETTING_DEMO "build table setting demo" OFF)
@@ -23,6 +26,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
     robotics_task_tree_eval
     remote_mutex
     tabletop_segmenter
+    moveit_ros_planning_interface
   )
   find_package(PCL REQUIRED COMPONENTS
     common
@@ -143,6 +147,7 @@ endif()
     # pr2_controllers
     tf
     actionlib
+    moveit_ros_planning_interface
   )
 
   set(message_INCLUDE_DIRS
@@ -184,6 +189,8 @@ if (${BUILD_TABLE_SETTING_DEMO})
     remote_mutex
     pcl_ros
     tf
+    moveit_ros_planning_interface
+
   )
 
   add_executable(table_setting_demo
