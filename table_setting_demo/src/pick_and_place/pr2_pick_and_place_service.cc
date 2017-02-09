@@ -104,13 +104,13 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
     "neutral",
     // "placemat",
     // "wineglass",
-    // "plate"
+    "plate"
   };
   const char *object_str[] = {
     "neutral",
     // "placemat",
     "cup",
-    // "plate",
+    "plate",
     // "fork",
     // "spoon",
     // "knife",
@@ -134,6 +134,10 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
   // SET STATE
   arm_group_.setStartStateToCurrentState();
   state_ = IDLE;
+
+  // TODO JB: Create the scene objects!
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
+  SetSceneObjects();
 } 
 
 PickPlace::~PickPlace() {}
@@ -293,6 +297,14 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
     return;
   }
   r_gripper_.Close();
+  // TODO JB: attach object to arm using moveit
+  ROS_INFO("Attach the object to the robot");
+  int index = getIndex(object);
+  if (index != -1) {
+  arm_group_.attachObject(collision_objects_[index].id);
+  }
+  /* Sleep to give Rviz time to show the object attached (different color). */
+  sleep(4.0);
   state_ = PICKED;
   ROS_INFO("     State is now PICKED");
   // Move to Neutral start
@@ -303,6 +315,11 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
       printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
     printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
   if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+    ROS_INFO("Detach the object from the robot");
+    index = getIndex(object);
+    if (index != -1) {
+    arm_group_.detachObject(collision_objects_[index].id);
+    }
     return;
   }
   if (stop)
@@ -330,6 +347,14 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   if (stop)
     return;
   r_gripper_.Open();
+  // TODO JB: dettach object to arm using moveit
+  ROS_INFO("Detach the object from the robot");
+  index = getIndex(object);
+  if (index != -1) {
+  arm_group_.detachObject(collision_objects_[index].id);
+  }
+  /* Sleep to give Rviz time to show the object detached. */
+  sleep(4.0);
   state_ = PLACED;
   ROS_INFO("     State is now PLACED");
 
@@ -835,5 +860,118 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
 
   return goal;
 }
+
+
+// TODO JB: ADDED FUNCTIONALITY TO CREATE SCENE OBJECTS
+void PickPlace::SetSceneObjects() {
+
+//----------------------------------------
+// define objects 
+sleep(2.0);
+moveit_msgs::CollisionObject collision_object1;
+moveit_msgs::CollisionObject collision_object2;
+moveit_msgs::CollisionObject collision_object3;
+collision_object1.header.frame_id = arm_group_.getPlanningFrame();
+collision_object2.header.frame_id = arm_group_.getPlanningFrame();
+collision_object3.header.frame_id = arm_group_.getPlanningFrame();
+
+// -------
+/* Define a bowl to add to the world. */
+/* The id of the object is used to identify it. */
+collision_object1.id = "bowl";
+shape_msgs::SolidPrimitive primitive;
+primitive.type = primitive.BOX;
+primitive.dimensions.resize(3);
+primitive.dimensions[0] = 0.1;
+primitive.dimensions[1] = 0.1;
+primitive.dimensions[2] = 0.1;
+/* A pose for the bowl (specified relative to frame_id) */
+geometry_msgs::Pose bowl_pose;
+bowl_pose.orientation.w = 1.0;
+bowl_pose.position.x =  0.5;
+bowl_pose.position.y =  -0.2;
+bowl_pose.position.z =  0.5; //objects_n3_v2.bin 
+// bowl_pose.position.z =  0.3;
+
+collision_object1.primitives.push_back(primitive);
+collision_object1.primitive_poses.push_back(bowl_pose);
+collision_object1.operation = collision_object1.ADD;
+
+collision_objects_.push_back(collision_object1);
+
+// -------
+/* Define a cup to add to the world. */
+/* The id of the object is used to identify it. */
+collision_object2.id = "cup";
+primitive.type = primitive.BOX;
+primitive.dimensions.resize(3);
+primitive.dimensions[0] = 0.1;
+primitive.dimensions[1] = 0.1;
+primitive.dimensions[2] = 0.2;
+geometry_msgs::Pose cup_pose;
+cup_pose.orientation.w = 1.0;
+cup_pose.position.x =  0.4;
+cup_pose.position.y =  -0.35;
+cup_pose.position.z =  0.55; //objects_n3_v2.bin 
+// cup_pose.position.z =  0.35;
+
+collision_object2.primitives.push_back(primitive);
+collision_object2.primitive_poses.push_back(cup_pose);
+collision_object2.operation = collision_object2.ADD;
+
+collision_objects_.push_back(collision_object2);
+
+// -------
+/* Define a plate to add to the world. */
+/* The id of the object is used to identify it. */
+collision_object3.id = "plate";
+primitive.type = primitive.BOX;
+primitive.dimensions.resize(3);
+primitive.dimensions[0] = 0.3;
+primitive.dimensions[1] = 0.05;
+primitive.dimensions[2] = 0.25;
+geometry_msgs::Pose plate_pose;
+plate_pose.orientation.w = 1.0;
+plate_pose.position.x =  0.5;
+plate_pose.position.y =  -0.45;
+plate_pose.position.z =  0.575; //objects_n3_v2.bin 
+// plate_pose.position.z =  0.375;
+
+collision_object3.primitives.push_back(primitive);
+collision_object3.primitive_poses.push_back(plate_pose);
+collision_object3.operation = collision_object3.ADD;
+
+collision_objects_.push_back(collision_object3);
+
+
+//----------------------------------------
+// Add objects to world
+
+// if collision_objects_.primitives.empty()
+
+ROS_INFO("Add an object into the world");
+planning_scene_interface_.addCollisionObjects(collision_objects_);
+
+/* Sleep so we have time to see the object in RViz */
+sleep(2.0);
+}
+
+
+int PickPlace::getIndex(std::string object) {
+
+  // for index in vector collision_objects
+  for ( int i = 0; i < collision_objects_.size(); i++) {
+
+    // compare .id with object
+    if ( collision_objects_[i].id == object) {
+
+      // return index when match is found
+      return i;
+    }
+  }
+  return -1;
+
+}
+
 
 }  // namespace pr2

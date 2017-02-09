@@ -114,6 +114,10 @@ class PickPlace {
   void SaveCalibration(std::string filename);
   void PickAndPlaceImpl(std::string object);
 
+// TODO JB: ADDED FUNCTIONALITY TO CREATE SCENE OBJECTS
+  void SetSceneObjects();
+  int getIndex(std::string object);
+
  private:
 //-----
   //TODO JB: bool SendGoal(MoveArmGoal_t goal);
@@ -132,6 +136,8 @@ class PickPlace {
 //-----
   //JB TODO: actionlib::SimpleActionClient<arm_navigation_msgs::MoveArmAction> move_arm_;
   moveit::planning_interface::MoveGroup arm_group_;
+  std::vector<moveit_msgs::CollisionObject> collision_objects_;
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 //-----
 
   Gripper r_gripper_;
