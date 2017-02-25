@@ -49,12 +49,22 @@ class TableSetting {
     std::vector<float> neutral_object_pos;
     std::vector<float> object_pos;
 
+  printf("This is happening!!!!!!\n");
+
+
     ros::param::get("/ObjectPositions/neutral", neutral_object_pos);
+
+    printf("neutral: %f\n", neutral_object_pos[0]); //this is getting stuff correctly - via the pr2 pick service stuff
+
 
     if (nh_.getParam("NodeList", nodes)) {
       printf("Tree Size: %d\n", nodes.size());
     }
+    else { printf("No nodeList params!!!\n");}
     network = new task_net::Node*[nodes.size()];
+
+  printf("This is happening!!!!!!\n");
+
 
     // Grab Node Attributes
     std::string param_prefix = "Nodes/";
@@ -257,6 +267,8 @@ void EndingFunc(int signal) {
 int main(int argc, char **argv) {
   ros::init(argc, argv, "behavior_network", ros::init_options::NoSigintHandler);
   signal(SIGINT, EndingFunc);
+
+  printf("This is happening!!!!!!\n");
 
   TableSetting SetTable;
   ros::spin();
