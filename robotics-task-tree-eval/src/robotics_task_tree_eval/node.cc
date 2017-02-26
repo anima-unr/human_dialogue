@@ -43,9 +43,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     bool use_local_callback_queue, boost::posix_time::millisec mtime):
     local_("~") {
   if (use_local_callback_queue) {
-  #ifdef DEBUG
-    printf("Local Callback Queues\n");
-  #endif
+    LOG_INFO("Local Callback Queues");
     pub_nh_.setCallbackQueue(pub_callback_queue_);
     sub_nh_.setCallbackQueue(sub_callback_queue_);
   }
@@ -56,6 +54,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   for (NodeListIterator it = peers.begin(); it != peers.end(); ++it) {
     peers_.push_back(node_dict_[GetBitmask(it->topic)]);
   }
+  printf("NODE::PEERS_: %s\n", peers_[0]->topic.c_str());
   for (NodeListIterator it = children.begin(); it != children.end(); ++it) {
     children_.push_back(node_dict_[GetBitmask(it->topic)]);
   }
@@ -76,7 +75,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.peer_active = false;
 
   // Get bitmask
-  printf("name: %s\n", name_->topic.c_str());
+  // printf("name: %s\n", name_->topic.c_str());
   mask_ = GetBitmask(name_->topic);
   // Setup Publisher/subscribers
   InitializeSubscriber(name_);
@@ -117,12 +116,14 @@ void Node::GenerateNodeBitmaskMap() {
   }
 }
 void Node::Activate() {
-  if (!state_.active and !state_.peer_active) {
+  if (!state_.active && !state_.peer_active && !state_.peer_done) {
     if (ActivationPrecondition()) {
-      printf("Activating Node: %s\n", name_->topic.c_str());
+      LOG_INFO("Activating Node: %s", name_->topic.c_str());
       {
         boost::lock_guard<boost::mutex> lock(work_mut);
         state_.active = true;
+        // Send activation to peers to avoid race condition
+        PublishStateToPeers();
       }
       cv.notify_all();
     }
@@ -181,6 +182,7 @@ void Node::SendToPeer(NodeBitmask node,
   ControlMessagePtr msg_temp(new robotics_task_tree_eval::ControlMessage);
   *msg_temp = msg;
   pub->publish(msg_temp);
+
 }
 void Node::SendToPeer(NodeBitmask node, const ControlMessagePtr_t msg) {
   node_dict_[node]->pub->publish(msg);
@@ -199,12 +201,14 @@ void Node::ReceiveFromChildren(ConstControlMessagePtr_t msg) {
   child->state.activation_level = msg->activation_level;
   child->state.activation_potential = msg->activation_potential;
   child->state.done = msg->done;
+  child->state.active = msg->active;
 }
 void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
   // boost::unique_lock<boost::mutex> lck(mut);
   // state_.activation_level = msg->activation_level;
   // state_.done = msg->done;
-  state_.peer_active = (msg->activation_level > ACTIVATION_THESH);
+  boost::unique_lock<boost::mutex> lck(mut);
+  state_.peer_active = msg->active;
   state_.peer_done = msg->done;
   state_.done = state_.done || state_.peer_done;
 }
@@ -236,6 +240,7 @@ void WorkThread(Node *node) {
   node->state_.done = true;
   node->working = false;
   node->PublishDoneParent();
+  node->PublishStateToPeers();
 }
 
 void CheckThread(Node *node) {
@@ -319,24 +324,11 @@ void Node::Update() {
     if (IsActive()) {
       // Check Preconditions
       if (Precondition()) {
-// #ifdef DEBUG
-//         ROS_INFO("Node: %s - Preconditions Satisfied Safe To Do Work!",
-//           name_->topic.c_str());
-// #endif
         Activate();
       } else {
-// #ifdef DEBUG
-//         ROS_INFO("Node: %s|Preconditions Not Satisfied, Spreading Activation!",
-//           name_->topic.c_str());
-// #endif
         SpreadActivation();
       }
       ActivationFalloff();
-    } else {
-// #ifdef DEBUG
-//       ROS_INFO("Node: %s - Not Active: %f", name_->topic.c_str(),
-//         state_.activation_level);
-// #endif
     }
   }
   // Publish Status
@@ -386,6 +378,7 @@ void Node::PublishStateToPeers() {
   msg->activation_level = state_.activation_level;
   msg->activation_potential = state_.activation_potential;
   msg->done = state_.done;
+  msg->active = state_.active;
 
   for (PubList::iterator it = peer_pub_list_.begin();
       it != peer_pub_list_.end(); ++it) {
@@ -401,6 +394,7 @@ void Node::PublishActivationPotential() {
   msg->activation_level = state_.activation_level;
   msg->activation_potential = state_.activation_potential;
   msg->done = state_.done;
+  msg->active = state_.active;
   parent_pub_.publish(msg);
 }
 
@@ -412,6 +406,7 @@ void Node::PublishDoneParent() {
   msg->activation_level = state_.activation_level;
   msg->activation_potential = state_.activation_potential;
   msg->done = state_.done;
+  msg->active = state_.active;
   parent_pub_.publish(msg);
   // printf("Publish Status: %s\n", msg->data.c_str());
 }
@@ -439,7 +434,7 @@ bool Node::Precondition() {
 }
 uint32_t Node::SpreadActivation() {}
 void Node::InitializeSubscriber(NodeId_t *node) {
-  std::string peer_topic = node->topic + "_peers";
+  std::string peer_topic = node->topic + "_peer";
 #ifdef DEBUG
   printf("[SUBSCRIBER] - Creating Peer Topic: %s\n", peer_topic.c_str());
 #endif

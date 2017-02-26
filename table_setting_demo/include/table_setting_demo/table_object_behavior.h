@@ -47,7 +47,7 @@ class TableObject : public Behavior {
   virtual bool CheckWork();
   virtual void UndoWork();
 
- private:
+ protected:
   mutex::RemoteMutex mut;
   std::string object_;
   std::string object_id_;

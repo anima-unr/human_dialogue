@@ -48,7 +48,7 @@ Nodes:
       robot: 1
       node: 3
     parent: 'THEN_0_1_001'
-    children: ['OR_3_1_004', 'PLACE_3_1_005', 'PLACE_3_1_006', 'THEN_0_1_007', PLACE_3_1_008']
+    children: ['OR_3_1_004', 'PLACE_3_1_005', 'PLACE_3_1_006', 'THEN_0_1_007', 'PLACE_3_1_008']
     peers: ['NONE']
   OR_3_1_004:
     mask:

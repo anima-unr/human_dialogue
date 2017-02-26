@@ -1,22 +1,22 @@
 #ifndef PICK_AND_PLACE_PR2_PICK_AND_PLACE_SERVICE
 #define PICK_AND_PLACE_PR2_PICK_AND_PLACE_SERVICE
 
-#include "table_setting_demo/pick_and_place.h"
-#include <ros/ros.h>
-#include <actionlib/client/simple_action_client.h>
-#include <arm_navigation_msgs/MoveArmAction.h>
-#include <pr2_controllers_msgs/Pr2GripperCommandAction.h>
-#include <tf/transform_listener.h>
-#include <table_setting_demo/pick_and_place.h>
-#include <table_setting_demo/pick_and_place_state.h>
-#include <table_setting_demo/pick_and_place_stop.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string>
 #include <iostream>
-#include <stdint.h>
 #include <fstream>
+#include "ros/ros.h"
+#include "table_setting_demo/pick_and_place.h"
+#include "actionlib/client/simple_action_client.h"
+#include "arm_navigation_msgs/MoveArmAction.h"
+#include "pr2_controllers_msgs/Pr2GripperCommandAction.h"
+#include "tf/transform_listener.h"
+// #include "table_setting_demo/pick_and_place.h"
+#include "table_setting_demo/pick_and_place_state.h"
+#include "table_setting_demo/pick_and_place_stop.h"
 
 namespace pr2 {
 
