@@ -49,22 +49,15 @@ class TableSetting {
     std::vector<float> neutral_object_pos;
     std::vector<float> object_pos;
 
-  printf("This is happening!!!!!!\n");
-
-
     ros::param::get("/ObjectPositions/neutral", neutral_object_pos);
-
     printf("neutral: %f\n", neutral_object_pos[0]); //this is getting stuff correctly - via the pr2 pick service stuff
-
 
     if (nh_.getParam("NodeList", nodes)) {
       printf("Tree Size: %d\n", nodes.size());
     }
-    else { printf("No nodeList params!!!\n");}
+    else { printf("No nodeList params!!!\n");
+    }
     network = new task_net::Node*[nodes.size()];
-
-  printf("This is happening!!!!!!\n");
-
 
     // Grab Node Attributes
     std::string param_prefix = "Nodes/";
@@ -126,73 +119,74 @@ class TableSetting {
         case task_net::BEHAVIOR:
           ROS_INFO("Children Size: %lu", children_param.size());
           object = name_param.topic.c_str();
-          if (object =="PLACE_3_1_002") {
-            ros::param::get("/ObjectPositions/placemat", object_pos);
-            network[i] = new task_net::TableObject(name_param,
-                                    peers_param,
-                                    children_param,
-                                    parent_param,
-                                    state,
-                                    "/right_arm_mutex",
-                                    "placemat",
-                                    neutral_object_pos,
-                                    object_pos,
-                                    false);
-            // network[i] = new task_net::AndBehavior(name_param,
-            //                           peers_param,
-            //                           children_param,
-            //                           parent_param,
-            //                           state,
-            //                           false);
-          } else if (object =="PLACE_3_1_005") {
-            ros::param::get("/ObjectPositions/spoon", object_pos);
-            network[i] = new task_net::TableObject(name_param,
-                                    peers_param,
-                                    children_param,
-                                    parent_param,
-                                    state,
-                                    "/right_arm_mutex",
-                                    "spoon",
-                                    neutral_object_pos,
-                                    object_pos,
-                                    false);
-          } else if (object =="PLACE_3_1_006") {
-            ros::param::get("/ObjectPositions/fork", object_pos);
-            network[i] = new task_net::TableObject(name_param,
-                                    peers_param,
-                                    children_param,
-                                    parent_param,
-                                    state,
-                                    "/right_arm_mutex",
-                                    "fork",
-                                    neutral_object_pos,
-                                    object_pos,
-                                    false);
-          } else if (object =="PLACE_3_1_008") {
-            ros::param::get("/ObjectPositions/knife", object_pos);
-            network[i] = new task_net::TableObject(name_param,
-                                    peers_param,
-                                    children_param,
-                                    parent_param,
-                                    state,
-                                    "/right_arm_mutex",
-                                    "knife",
-                                    neutral_object_pos,
-                                    object_pos,
-                                    false);
-          } else if (object =="PLACE_3_1_009") {
-            ros::param::get("/ObjectPositions/wineglass", object_pos);
-            network[i] = new task_net::TableObject(name_param,
-                                    peers_param,
-                                    children_param,
-                                    parent_param,
-                                    state,
-                                    "/right_arm_mutex",
-                                    "wineglass",
-                                    neutral_object_pos,
-                                    object_pos,
-                                    false);
-          } else if (object =="PLACE_3_1_010") {
+          // if (object =="PLACE_3_1_002") {
+          //   ros::param::get("/ObjectPositions/placemat", object_pos);
+          //   network[i] = new task_net::TableObject(name_param,
+          //                           peers_param,
+          //                           children_param,
+          //                           parent_param,
+          //                           state,
+          //                           "/right_arm_mutex",
+          //                           "placemat",
+          //                           neutral_object_pos,
+          //                           object_pos,
+          //                           false);
+          //   // network[i] = new task_net::AndBehavior(name_param,
+          //   //                           peers_param,
+          //   //                           children_param,
+          //   //                           parent_param,
+          //   //                           state,
+          //   //                           false);
+          // } else if (object =="PLACE_3_1_005") {
+          //   ros::param::get("/ObjectPositions/spoon", object_pos);
+          //   network[i] = new task_net::TableObject(name_param,
+          //                           peers_param,
+          //                           children_param,
+          //                           parent_param,
+          //                           state,
+          //                           "/right_arm_mutex",
+          //                           "spoon",
+          //                           neutral_object_pos,
+          //                           object_pos,
+          //                           false);
+          // } else if (object =="PLACE_3_1_006") {
+          //   ros::param::get("/ObjectPositions/fork", object_pos);
+          //   network[i] = new task_net::TableObject(name_param,
+          //                           peers_param,
+          //                           children_param,
+          //                           parent_param,
+          //                           state,
+          //                           "/right_arm_mutex",
+          //                           "fork",
+          //                           neutral_object_pos,
+          //                           object_pos,
+          //                           false);
+          // } else if (object =="PLACE_3_1_008") {
+          //   ros::param::get("/ObjectPositions/knife", object_pos);
+          //   network[i] = new task_net::TableObject(name_param,
+          //                           peers_param,
+          //                           children_param,
+          //                           parent_param,
+          //                           state,
+          //                           "/right_arm_mutex",
+          //                           "knife",
+          //                           neutral_object_pos,
+          //                           object_pos,
+          //                           false);
+          // } else if (object =="PLACE_3_1_009") {
+          //   ros::param::get("/ObjectPositions/wineglass", object_pos);
+          //   network[i] = new task_net::TableObject(name_param,
+          //                           peers_param,
+          //                           children_param,
+          //                           parent_param,
+          //                           state,
+          //                           "/right_arm_mutex",
+          //                           "wineglass",
+          //                           neutral_object_pos,
+          //                           object_pos,
+          //                           false);
+          // } else if (object =="PLACE_3_1_010") {
+          if (object =="PLACE_3_1_010") {
             ros::param::get("/ObjectPositions/cup", object_pos);
             network[i] = new task_net::TableObject(name_param,
                                     peers_param,
@@ -204,18 +198,18 @@ class TableSetting {
                                     neutral_object_pos,
                                     object_pos,
                                     false);
-          } else if (object =="PLACE_3_1_011") {
-            ros::param::get("/ObjectPositions/soda", object_pos);
-            network[i] = new task_net::TableObject(name_param,
-                                    peers_param,
-                                    children_param,
-                                    parent_param,
-                                    state,
-                                    "/right_arm_mutex",
-                                    "soda",
-                                    neutral_object_pos,
-                                    object_pos,
-                                    false);
+          // } else if (object =="PLACE_3_1_011") {
+          //   ros::param::get("/ObjectPositions/soda", object_pos);
+          //   network[i] = new task_net::TableObject(name_param,
+          //                           peers_param,
+          //                           children_param,
+          //                           parent_param,
+          //                           state,
+          //                           "/right_arm_mutex",
+          //                           "soda",
+          //                           neutral_object_pos,
+          //                           object_pos,
+          //                           false);
           } else if (object =="PLACE_3_1_012") {
             ros::param::get("/ObjectPositions/plate", object_pos);
             network[i] = new task_net::TableObject(name_param,
@@ -249,6 +243,7 @@ class TableSetting {
           network[i] = NULL;
           break;
       }
+
     }
     // Initialzie Nodes
 
@@ -269,8 +264,8 @@ int main(int argc, char **argv) {
   signal(SIGINT, EndingFunc);
 
   printf("This is happening!!!!!!\n");
-
   TableSetting SetTable;
+  ROS_INFO("\n\nThis is finished!!!!!!\n");
   ros::spin();
   return 0;
 }

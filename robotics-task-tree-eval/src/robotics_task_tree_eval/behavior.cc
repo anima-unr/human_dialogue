@@ -53,6 +53,8 @@ AndBehavior::AndBehavior(NodeId_t name, NodeList peers, NodeList children,
 AndBehavior::~AndBehavior() {}
 
 void AndBehavior::UpdateActivationPotential() {
+    ROS_INFO("AndBehavior::UpdateActivationPotential was called!!!!\n");
+
   float sum = 0;
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
@@ -62,6 +64,7 @@ void AndBehavior::UpdateActivationPotential() {
 }
 
 bool AndBehavior::Precondition() {
+    ROS_INFO("AndBehavior::Precondition was called!!!!\n");
   bool satisfied = true;
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
@@ -73,6 +76,7 @@ bool AndBehavior::Precondition() {
 }
 
 uint32_t AndBehavior::SpreadActivation() {
+    ROS_INFO("AndBehavior::SpreadActivation was called!!!!\n");
   ControlMessagePtr_t msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = 1.0f / children_.size();
@@ -107,6 +111,7 @@ ThenBehavior::ThenBehavior(NodeId_t name, NodeList peers, NodeList children,
 ThenBehavior::~ThenBehavior() {}
 
 void ThenBehavior::UpdateActivationPotential() {
+    ROS_INFO("ThenBehavior::UpdateActivationPotential was called!!!!\n");
   float sum = 0;
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
@@ -116,6 +121,7 @@ void ThenBehavior::UpdateActivationPotential() {
 }
 
 bool ThenBehavior::Precondition() {
+    ROS_INFO("ThenBehavior::Precondition was called!!!!\n");
   bool satisfied = true;
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
@@ -127,6 +133,7 @@ bool ThenBehavior::Precondition() {
 }
 
 uint32_t ThenBehavior::SpreadActivation() {
+    ROS_INFO("ThenBehavior::SpreadActivation was called!!!!\n");
   if (!activation_queue_.empty()) {
     ControlMessagePtr_t msg(new ControlMessage_t);
     msg->sender = mask_;
@@ -161,6 +168,7 @@ OrBehavior::OrBehavior(NodeId_t name, NodeList peers, NodeList children,
 OrBehavior::~OrBehavior() {}
 
 void OrBehavior::UpdateActivationPotential() {
+    ROS_INFO("OrBehavior::UpdateActivationPotential was called!!!!\n");
   float max = 0;
   int max_child_index = 0, index = 0;
 
@@ -178,12 +186,14 @@ void OrBehavior::UpdateActivationPotential() {
 }
 
 bool OrBehavior::Precondition() {
+    ROS_INFO("OrBehavior::Precondition was called!!!!\n");
   if (children_[random_child_selection]->state.done)
     return true;
   return false;
 }
 
 uint32_t OrBehavior::SpreadActivation() {
+    ROS_INFO("OrBehavior::SpreadActivation was called!!!!\n");
   ControlMessagePtr_t msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = 1.0f;

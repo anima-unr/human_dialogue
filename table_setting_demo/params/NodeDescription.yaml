@@ -16,12 +16,12 @@
 #   uint8_t robot;
 #   uint16_t node;
 # };
-NodeList: ['ROOT_4_1_000', 'THEN_0_1_001', 'PLACE_3_1_002', 'AND_3_1_003', 'OR_3_1_004', 'PLACE_3_1_005', 'PLACE_3_1_006', 'THEN_0_1_007', 'PLACE_3_1_008', 'PLACE_3_1_009', 'PLACE_3_1_010', 'PLACE_3_1_011', 'PLACE_3_1_012', 'PLACE_3_1_013']
+NodeList: ['ROOT_4_1_000', 'THEN_0_1_001', 'AND_3_1_003', 'PLACE_3_1_010', 'PLACE_3_1_012', 'PLACE_3_1_013']
 Nodes:
   ROOT_4_1_000:
     mask:
       type: 4
-      robot: 1
+      robot: 0
       node: 0
     parent: 'NONE'
     childred: ['THEN_0_1_001']
@@ -29,104 +29,113 @@ Nodes:
   THEN_0_1_001:
     mask:
       type: 0
-      robot: 1
+      robot: 0
       node: 1
     parent: 'ROOT_4_1_000'
-    children: ['PLACE_3_1_002', 'AND_3_1_003']
+    # children: ['PLACE_3_1_002', 'AND_3_1_003']
+    children: ['PLACE_3_1_010', 'AND_3_1_003']
     peers: ['NONE']
-  PLACE_3_1_002:
-    mask:
-      type: 3
-      robot: 1
-      node: 2
-    parent: 'THEN_0_1_001'
-    # children: ['NONE']
-    peers: ['NONE']
+#   PLACE_3_1_002:
+#     mask:
+#       type: 3
+#       robot: 1
+#       node: 2
+#     parent: 'THEN_0_1_001'
+#     # children: ['NONE']
+#     peers: ['NONE']
   AND_3_1_003:
     mask:
       type: 2
-      robot: 1
+      robot: 0
       node: 3
     parent: 'THEN_0_1_001'
-    children: ['OR_3_1_004', 'PLACE_3_1_005', 'PLACE_3_1_006', 'THEN_0_1_007', PLACE_3_1_008']
-    peers: ['NONE']
-  OR_3_1_004:
-    mask:
-      type: 1
-      robot: 1
-      node: 4
-    parent: 'AND_3_1_003'
-    children: ['PLACE_3_1_009', 'PLACE_3_1_010', 'PLACE_3_1_011']
-    peers: ['NONE']
-  PLACE_3_1_005:
-    mask:
-      type: 3
-      robot: 1
-      node: 5
-    parent: 'AND_3_1_003'
-    # children: ['NONE']
-    peers: ['NONE']
-  PLACE_3_1_006:
-    mask:
-      type: 3
-      robot: 1
-      node: 6
-    parent: 'AND_3_1_003'
-    # children: ['NONE']
-    peers: ['NONE']
-  THEN_0_1_007:
-    mask:
-      type: 0
-      robot: 1
-      node: 7
-    parent: 'AND_3_1_003'
+    # children: ['OR_3_1_004', 'PLACE_3_1_005', 'PLACE_3_1_006', 'THEN_0_1_007', PLACE_3_1_008']
     children: ['PLACE_3_1_012', 'PLACE_3_1_013']
     peers: ['NONE']
-  PLACE_3_1_008:
-    mask:
-      type: 3
-      robot: 1
-      node: 8
-    parent: 'AND_3_1_003'
-    # children: ['NONE']
-    peers: ['NONE']
-  PLACE_3_1_009:
-    mask:
-      type: 3
-      robot: 1
-      node: 9
-    parent: 'OR_3_1_004'
-    # children: ['NONE']
-    peers: ['NONE']
+#   OR_3_1_004:
+#     mask:
+#       type: 1
+#       robot: 1
+#       node: 4
+#     parent: 'AND_3_1_003'
+#     children: ['PLACE_3_1_009', 'PLACE_3_1_010', 'PLACE_3_1_011']
+#     peers: ['NONE']
+#   PLACE_3_1_005:
+#     mask:
+#       type: 3
+#       robot: 1
+#       node: 5
+#     parent: 'AND_3_1_003'
+#     # children: ['NONE']
+#     peers: ['NONE']
+#   PLACE_3_1_006:
+#     mask:
+#       type: 3
+#       robot: 1
+#       node: 6
+#     parent: 'AND_3_1_003'
+#     # children: ['NONE']
+#     peers: ['NONE']
+#   THEN_0_1_007:
+#     mask:
+#       type: 0
+#       robot: 1
+#       node: 7
+#     parent: 'AND_3_1_003'
+#     children: ['PLACE_3_1_012', 'PLACE_3_1_013']
+#     peers: ['NONE']
+#   PLACE_3_1_008:
+#     mask:
+#       type: 3
+#       robot: 1
+#       node: 8
+#     parent: 'AND_3_1_003'
+#     # children: ['NONE']
+#     peers: ['NONE']
+#   PLACE_3_1_009:
+#     mask:
+#       type: 3
+#       robot: 1
+#       node: 9
+#     parent: 'OR_3_1_004'
+#     # children: ['NONE']
+#     peers: ['NONE']
+
+# this is the cup!!!
   PLACE_3_1_010:
     mask:
       type: 3
-      robot: 1
+      robot: 0
       node: 10
-    parent: 'OR_3_1_004'
+    parent: 'THEN_0_1_001'
     # children: ['NONE']
     peers: ['NONE']
-  PLACE_3_1_011:
-    mask:
-      type: 3
-      robot: 1
-      node: 11
-    parent: 'OR_3_1_004'
-    # children: ['NONE']
-    peers: ['NONE']
+#   PLACE_3_1_011:
+#     mask:
+#       type: 3
+#       robot: 1
+#       node: 11
+#     parent: 'OR_3_1_004'
+#     # children: ['NONE']
+#     peers: ['NONE']
+
+
+# this is the plate!!!
   PLACE_3_1_012:
     mask:
       type: 3
-      robot: 1
+      robot: 0
       node: 12
-    parent: 'THEN_0_1_007'
+    parent: 'AND_3_1_003'
     # children: ['NONE']
     peers: ['NONE']
+
+# this is the bowl!!!
   PLACE_3_1_013:
     mask:
       type: 3
-      robot: 1
+      robot: 0
       node: 13
-    parent: 'THEN_0_1_007'
+    parent: 'AND_3_1_003'
     # children: ['NONE']
     peers: ['NONE']
