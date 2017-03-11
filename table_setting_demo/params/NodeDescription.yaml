@@ -17,6 +17,7 @@
 #   uint16_t node;
 # };
 NodeList: ['ROOT_4_1_000', 'THEN_0_1_001', 'AND_3_1_003', 'PLACE_3_1_010', 'PLACE_3_1_012', 'PLACE_3_1_013']
+# NodeList: ['THEN_0_1_001', 'AND_3_1_003', 'PLACE_3_1_010', 'PLACE_3_1_012', 'PLACE_3_1_013']
 Nodes:
   ROOT_4_1_000:
     mask:
@@ -24,7 +25,7 @@ Nodes:
       robot: 0
       node: 0
     parent: 'NONE'
-    childred: ['THEN_0_1_001']
+    children: ['THEN_0_1_001']
     peers: ['NONE']
   THEN_0_1_001:
     mask:

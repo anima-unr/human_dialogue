@@ -49,7 +49,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     pub_nh_.setCallbackQueue(pub_callback_queue_);
     sub_nh_.setCallbackQueue(sub_callback_queue_);
   }
-    ROS_INFO("Node::Node was called!!!!\n");
+    // ROS_INFO("Node::Node was called!!!!\n");
 
   // Generate reverse map
   GenerateNodeBitmaskMap();
@@ -93,19 +93,19 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
 Node::~Node() {}
 
 void Node::InitializeBitmask(NodeId_t * node) {
-    ROS_INFO("Node::InitializeBitmask was called!!!!\n");
+    // ROS_INFO("Node::InitializeBitmask was called!!!!\n");
   node->mask = GetBitmask(node->topic);
 }
 
 void Node::InitializeBitmasks(NodeListPtr nodes) {
-    ROS_INFO("Node::InitializeBitmasks was called!!!!\n");
+    // ROS_INFO("Node::InitializeBitmasks was called!!!!\n");
   for (NodeListPtrIterator it = nodes.begin(); it != nodes.end(); ++it) {
     InitializeBitmask(*it);
   }
 }
 
 void Node::GenerateNodeBitmaskMap() {
-      ROS_INFO("Node::GenerateNodeBitmaskMap was called!!!!\n");
+      // ROS_INFO("Node::GenerateNodeBitmaskMap was called!!!!\n");
 
   std::vector<std::string> nodes;
   if (local_.getParam("NodeList", nodes)) {
@@ -117,8 +117,13 @@ void Node::GenerateNodeBitmaskMap() {
       nptr->mask = GetBitmask(*it);
       nptr->pub = NULL;
       nptr->state =  {nptr->mask, false, false, 0.0f, 0.0f};
+      if( nptr->mask.node == 1) {
+        nptr->state =  {nptr->mask, false, false, 10.0f, 0.0f};         
+        printf("\n\n\nTHEN (ROOT) NODE!!!!\n");
+        printf("activation_level: %f \n\n\n", nptr->state.activation_level);
+      }
       node_dict_[nptr->mask] = nptr;
-      // printf("Adding [%s] to Dictionary.\n", nptr->topic.c_str());
+      printf("Adding [%s] to Dictionary. Activation_Level = %f \n", nptr->topic.c_str(), nptr->state.activation_level);
     }
   }
 }
@@ -137,7 +142,7 @@ void Node::Activate() {
 }
 
 bool Node::ActivationPrecondition() {
-    ROS_INFO("Node::ActivationPrecondition was called!!!!\n");
+    // ROS_INFO("Node::ActivationPrecondition was called!!!!\n");
   return true;
 }
 
@@ -150,11 +155,11 @@ void Node::Deactivate() {
 }
 
 void Node::ActivateNode(NodeId_t node) {    
-  ROS_INFO("Node::ActivateNode was called!!!!\n");
+  // ROS_INFO("Node::ActivateNode was called!!!!\n");
 }
 
 void Node::DeactivateNode(NodeId_t node) {
-      ROS_INFO("Node::DeactivateNode was called!!!!\n");
+      // ROS_INFO("Node::DeactivateNode was called!!!!\n");
 }
 
 void Node::Finish() {
@@ -165,24 +170,24 @@ void Node::Finish() {
 }
 
 State Node::GetState() {
-      ROS_INFO("Node::GetState was called!!!!\n");
+      // ROS_INFO("Node::GetState was called!!!!\n");
 
   return state_;
 }
 
 void Node::SendToParent(const robotics_task_tree_eval::ControlMessage msg) {
-    ROS_INFO("Node::SendToParent was called!!!!\n");
+    // ROS_INFO("Node::SendToParent was called!!!!\n");
   ControlMessagePtr msg_temp(new robotics_task_tree_eval::ControlMessage);
   *msg_temp = msg;
   parent_pub_.publish(msg_temp);
 }
 void Node::SendToParent(const ControlMessagePtr_t msg) {
-    ROS_INFO("Node::SendToParent was called!!!!\n");
+    // ROS_INFO("Node::SendToParent was called!!!!\n");
   parent_pub_.publish(msg);
 }
 void Node::SendToChild(NodeBitmask node,
   const robotics_task_tree_eval::ControlMessage msg) {
-    ROS_INFO("Node::SendToChild was called!!!!\n");
+    // ROS_INFO("Node::SendToChild was called!!!!\n");
   // get publisher for specific node
   ros::Publisher* pub = node_dict_[node]->pub;
   // publish message to the specific child
@@ -191,12 +196,12 @@ void Node::SendToChild(NodeBitmask node,
   pub->publish(msg_temp);
 }
 void Node::SendToChild(NodeBitmask node, const ControlMessagePtr_t msg) {
-    ROS_INFO("Node::SendToChild was called!!!!\n");
+    // ROS_INFO("Node::SendToChild was called!!!!\n");
   node_dict_[node]->pub->publish(msg);
 }
 void Node::SendToPeer(NodeBitmask node,
   const robotics_task_tree_eval::ControlMessage msg) {
-    ROS_INFO("Node::SendToPeer was called!!!!\n");
+    // ROS_INFO("Node::SendToPeer was called!!!!\n");
   // get publisher for specific node
   ros::Publisher* pub = node_dict_[node]->pub;
   // publish message to the specific child
@@ -205,12 +210,12 @@ void Node::SendToPeer(NodeBitmask node,
   pub->publish(msg_temp);
 }
 void Node::SendToPeer(NodeBitmask node, const ControlMessagePtr_t msg) {
-    ROS_INFO("Node::SendToPeer was called!!!!\n");
+    // ROS_INFO("Node::SendToPeer was called!!!!\n");
   node_dict_[node]->pub->publish(msg);
 }
 
 void Node::ReceiveFromParent(ConstControlMessagePtr_t msg) {
-    ROS_INFO("Node::ReceiveFromParent was called!!!!\n");
+    // ROS_INFO("Node::ReceiveFromParent was called!!!!\n");
   // Set activation level from parent
   // TODO(Luke Fraser) Use mutex to avoid race condition setup in publisher
   boost::unique_lock<boost::mutex> lck(mut);
@@ -228,7 +233,7 @@ void Node::ReceiveFromChildren(ConstControlMessagePtr_t msg) {
   ROS_INFO("child->state.activation_potential %f", child->state.activation_potential);
 }
 void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
-    ROS_INFO("Node::ReceiveFromPeers was called!!!!\n");
+    // ROS_INFO("Node::ReceiveFromPeers was called!!!!\n");
   // boost::unique_lock<boost::mutex> lck(mut);
   // state_.activation_level = msg->activation_level;
   // state_.done = msg->done;
@@ -239,7 +244,7 @@ void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
 
 // Main Loop of Update Thread. spins once every mtime milliseconds
 void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
-    ROS_INFO("Node::UpdateThread was called!!!!\n");
+    // ROS_INFO("Node::UpdateThread was called!!!!\n");
   while (true) {
     node->Update();
     boost::this_thread::sleep(mtime);
@@ -252,7 +257,7 @@ void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
 // IDEA: This thread may be able to start the thread then become the work watcher
 // IDEA: The work watcher may need to funtion earlier than the work thread is started.
 void WorkThread(Node *node) {
-      ROS_INFO("Node::WorkThread was called!!!!\n");
+      // ROS_INFO("Node::WorkThread was called!!!!\n");
 
   boost::unique_lock<boost::mutex> lock(node->work_mut);
   while (!node->state_.active) {
@@ -270,21 +275,21 @@ void WorkThread(Node *node) {
 }
 
 void CheckThread(Node *node) {
-      ROS_INFO("Node::CheckThread was called!!!!\n");
+      // ROS_INFO("Node::CheckThread was called!!!!\n");
 
   boost::mutex mut;
   boost::unique_lock<boost::mutex> lock(mut);
   while (!node->state_.active) {
     LOG_INFO("Check Thread waiting");
-    ROS_INFO("Check Thread waiting");
+    // ROS_INFO("Check Thread waiting");
     node->cv.wait(lock);
   }
   LOG_INFO("Check Work Thread Initialized");
-  ROS_INFO("Check Work Thread Initialized");
+  // ROS_INFO("Check Work Thread Initialized");
   while (node->state_.active) {
     if (!node->CheckWork()) {
       LOG_INFO("Deleting Thread! and Restarting");
-      ROS_INFO("Deleting Thread! and Restarting");
+      // ROS_INFO("Deleting Thread! and Restarting");
       {
         boost::unique_lock<boost::mutex> lock(node->mut);
         node->work_thread->interrupt();
@@ -323,7 +328,7 @@ void Node::RecordToFile() {
         record_file.flush();
 }
 void RecordThread(Node *node) {
-      ROS_INFO("Node::RecordThreadc was called!!!!\n");
+      // ROS_INFO("Node::RecordThreadc was called!!!!\n");
 
   // Open Record File
   while (true) {
@@ -333,7 +338,7 @@ void RecordThread(Node *node) {
 }
 // Initialize node threads and variables
 void Node::NodeInit(boost::posix_time::millisec mtime) {
-  ROS_INFO("Node::NodeInit was called!!!!\n");
+  // ROS_INFO("Node::NodeInit was called!!!!\n");
 
   // Initialize node threads
   update_thread = new boost::thread(&UpdateThread, this, mtime);
@@ -349,14 +354,14 @@ void Node::NodeInit(boost::posix_time::millisec mtime) {
 }
 
 void Node::ActivationFalloff() {
-    ROS_INFO("Node::ActivationFalloff was called!!!!\n");
+    // ROS_INFO("Node::ActivationFalloff was called!!!!\n");
   boost::unique_lock<boost::mutex> lck(mut);
   state_.activation_level *= ACTIVATION_FALLOFF;
 }
 // Main Loop of the Node type Each Node Will have this fucnction called at each
 // times step to process node properties. Each node should run in its own thread
 void Node::Update() {
-      ROS_INFO("Node::Update was called!!!!\n");
+      // ROS_INFO("Node::Update was called!!!!\n");
 
   // Check if Done
   if (!IsDone()) {
@@ -389,27 +394,27 @@ void Node::Update() {
 }
 
 void Node::Work() {
-    ROS_INFO("Node::Work was called!!!!\n");
+    // ROS_INFO("Node::Work was called!!!!\n");
   printf("Doing Work\n");
   boost::this_thread::sleep(boost::posix_time::millisec(1000));
   printf("Done!\n");
 }
 
 bool Node::CheckWork() {
-    ROS_INFO("Node::CheckWork was called!!!!\n");
+    // ROS_INFO("Node::CheckWork was called!!!!\n");
   // LOG_INFO("Checking Work");
   boost::this_thread::sleep(boost::posix_time::millisec(100));
   return true;
 }
 
 void Node::UndoWork() {
-      ROS_INFO("Node::UndoWork was called!!!!\n");
+      // ROS_INFO("Node::UndoWork was called!!!!\n");
 
   LOG_INFO("Undoing Work");
 }
 // Deprecated function. use ros message data type with struct generality.
 std::string StateToString(State state) {
-    ROS_INFO("StateToString was called!!!!\n");
+    // ROS_INFO("StateToString was called!!!!\n");
 
   char buffer[sizeof(State)*8];
   snprintf(buffer, sizeof(buffer), "Owner:%u, Active:%d, Done:%d, Level:%f",
@@ -422,7 +427,7 @@ std::string StateToString(State state) {
 }
 
 void Node::PublishStatus() {
-    ROS_INFO("Node::PublishStatus was called!!!!\n");
+    // ROS_INFO("Node::PublishStatus was called!!!!\n");
   boost::shared_ptr<State_t> msg(new State_t);
   *msg = state_;
   self_pub_.publish(msg);
@@ -433,7 +438,7 @@ void Node::PublishStatus() {
 }
 
 void Node::PublishStateToPeers() {
-    ROS_INFO("Node::PublishStateToPeers was called!!!!\n");
+    // ROS_INFO("Node::PublishStateToPeers was called!!!!\n");
   boost::shared_ptr<ControlMessage_t> msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = state_.activation_level;
@@ -461,12 +466,12 @@ void Node::PublishActivationPotential() {
 }
 
 void Node::UpdateActivationPotential() {
-      ROS_INFO("Node::UpdateActivationPotential was called!!!!\n");
+      // ROS_INFO("Node::UpdateActivationPotential was called!!!!\n");
 
 }
 
 void Node::PublishDoneParent() {
-      ROS_INFO("Node::PublishDoneParent was called!!!!\n");
+      // ROS_INFO("Node::PublishDoneParent was called!!!!\n");
 
   ControlMessagePtr_t msg(new ControlMessage_t);
   msg->sender = mask_;
@@ -478,22 +483,22 @@ void Node::PublishDoneParent() {
 }
 
 bool Node::IsDone() {
-      ROS_INFO("Node::IsDone was called!!!!\n");
+      // ROS_INFO("Node::IsDone was called!!!!\n");
 
   return state_.done;
 }
 bool Node::IsActive() {
-      ROS_INFO("Node::IsActive was called!!!!\n");
+      // ROS_INFO("Node::IsActive was called!!!!\n");
 
   return state_.activation_level > ACTIVATION_THESH;
 }
 float Node::ActivationLevel() {
-      ROS_INFO("Node::ActivationLevel was called!!!!\n");
+      // ROS_INFO("Node::ActivationLevel was called!!!!\n");
 
   return state_.activation_level;
 }
 bool Node::Precondition() {
-      ROS_INFO("Node::Precondition was called!!!!\n");
+      // ROS_INFO("Node::Precondition was called!!!!\n");
 
   // TODO(Luke Fraser) Merge children/peer/name/parent lists to point to the
   // same as dictionary
@@ -507,7 +512,7 @@ bool Node::Precondition() {
   return false;
 }
 uint32_t Node::SpreadActivation() {
-      ROS_INFO("Node::SpreadActivation was called!!!!\n");
+      // ROS_INFO("Node::SpreadActivation was called!!!!\n");
 
 }
 void Node::InitializeSubscriber(NodeId_t *node) {
@@ -524,6 +529,8 @@ void Node::InitializeSubscriber(NodeId_t *node) {
 #ifdef DEBUG
   printf("[SUBSCRIBER] - Creating Child Topic: %s\n", node->topic.c_str());
 #endif
+    printf("THIS IS HAPPENING!!!!!!!!!\n\n");
+
   children_sub_ = sub_nh_.subscribe(node->topic,
     PUB_SUB_QUEUE_SIZE,
     &Node::ReceiveFromChildren,
@@ -539,7 +546,7 @@ void Node::InitializeSubscriber(NodeId_t *node) {
 }
 void Node::InitializePublishers(NodeListPtr nodes, PubList *pub,
     const char * topic_addition) {
-    ROS_INFO("Node::InitializePublishers was called!!!!\n");
+    // ROS_INFO("Node::InitializePublishers was called!!!!\n");
   for (NodeListPtrIterator it = nodes.begin(); it != nodes.end(); ++it) {
     ros::Publisher * topic = new ros::Publisher;
     *topic =
@@ -558,7 +565,7 @@ void Node::InitializePublishers(NodeListPtr nodes, PubList *pub,
 
 void Node::InitializePublisher(NodeId_t *node, ros::Publisher *pub,
     const char * topic_addition) {
-      ROS_INFO("Node::InitializePublisher was called!!!!\n");
+      // ROS_INFO("Node::InitializePublisher was called!!!!\n");
 
   node->topic += topic_addition;
 #ifdef DEBUG
@@ -573,7 +580,7 @@ void Node::InitializePublisher(NodeId_t *node, ros::Publisher *pub,
 
 void Node::InitializeStatePublisher(NodeId_t *node, ros::Publisher *pub,
   const char * topic_addition) {
-      ROS_INFO("Node::InitializeStatePublisher was called!!!!\n");
+      // ROS_INFO("Node::InitializeStatePublisher was called!!!!\n");
 
   node->topic += topic_addition;
 #ifdef DEBUG
@@ -586,7 +593,7 @@ void Node::InitializeStatePublisher(NodeId_t *node, ros::Publisher *pub,
 }
 
 NodeBitmask Node::GetBitmask(std::string name) {
-    ROS_INFO("Node::GetBitmask was called!!!!\n");
+    // ROS_INFO("Node::GetBitmask was called!!!!\n");
   // Split underscores
   std::vector<std::string> split_vec;
   boost::algorithm::split(split_vec, name,
@@ -599,16 +606,16 @@ NodeBitmask Node::GetBitmask(std::string name) {
   return mask;
 }
 NodeId_t Node::GetNodeId(NodeBitmask id) {
-    ROS_INFO("Node::GetNodeId was called!!!!\n");
+    // ROS_INFO("Node::GetNodeId was called!!!!\n");
   return *node_dict_[id];
 }
 
 ros::CallbackQueue* Node::GetPubCallbackQueue() {
-    ROS_INFO("Node::GetPubCallbackQueue was called!!!!\n");
+    // ROS_INFO("Node::GetPubCallbackQueue was called!!!!\n");
   return pub_callback_queue_;
 }
 ros::CallbackQueue* Node::GetSubCallbackQueue() {
-    ROS_INFO("Node::GetSubCallbackQueue was called!!!!\n");
+    // ROS_INFO("Node::GetSubCallbackQueue was called!!!!\n");
   return sub_callback_queue_;
 }
 }  // namespace task_net

@@ -112,7 +112,7 @@ TableObject::~TableObject() {}
 
 void TableObject::UpdateActivationPotential() {
   float dist;
-  ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
+  ROS_INFO("TableObject::UpdateActivationPotential was called!!!");
   // Get object neutral position and object position 
   //   from service call potentially
   if (!dynamic_object) {
