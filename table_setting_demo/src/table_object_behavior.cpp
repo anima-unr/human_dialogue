@@ -112,7 +112,7 @@ TableObject::~TableObject() {}
 
 void TableObject::UpdateActivationPotential() {
   float dist;
-  ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
+  // ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
   // Get object neutral position and object position 
   //   from service call potentially
   if (!dynamic_object) {
@@ -122,9 +122,9 @@ void TableObject::UpdateActivationPotential() {
     dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
     state_.activation_potential = 1.0f / dist;
 
-    ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
-    ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);
-    ROS_INFO("x %f y %f z %f dist %f activation_potential %f", x, y, z, dist, state_.activation_potential);
+    // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
+    // ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);
+    // ROS_INFO("x %f y %f z %f dist %f activation_potential %f", x, y, z, dist, state_.activation_potential);
 
   } else {
     ROS_INFO("Dynamic object here soooo get activation diffly");
