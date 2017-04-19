@@ -212,9 +212,11 @@ void TableObject::Work() {
   PickAndPlace(object_id_.c_str());
   while (!PickAndPlaceDone()) {
     boost::this_thread::sleep(boost::posix_time::millisec(500));
+      // ROS_INFO("TableObject::Work: waiting for pick and place to be done!");
   }
   // Check if succeeded and try again
   mut.Release();
+  ROS_INFO("TableObject::Work: Released mutex!");
 }
 float CalcPositionDistance(std::vector<float> pos_a, std::vector<float> pos_b) {
   // LOG_INFO("TX: %f TY: %f TZ: %f, 3X: %f 3Y: %f 3Z: %f", pos_a);

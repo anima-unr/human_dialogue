@@ -126,11 +126,10 @@ void Node::Activate() {
     // ROS_INFO("Node::Activate was called!!!!\n");
   if (!state_.active and !state_.peer_active) {
     if (ActivationPrecondition()) {
-      printf("Activating Node: %s\n", name_->topic.c_str());
+      printf("\t\tNode::Activate  Activating Node: %s\n\n", name_->topic.c_str());
       {
         boost::lock_guard<boost::mutex> lock(work_mut);
         state_.active = true;
-        printf("state_.active is %d", state_.active);
       }
       cv.notify_all();
     }

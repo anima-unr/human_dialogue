@@ -208,7 +208,7 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
 
 
 
-  ROS_INFO("Goal is object_goal_map_[neutral].pick_pose");
+  ROS_INFO("Goal is Neutral PICK");
   // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
   // printf("\n  goal ori pick place imp x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
   // ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
