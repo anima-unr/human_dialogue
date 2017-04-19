@@ -179,6 +179,7 @@ endif()
 ################################################################################
 ################################################################################
 if (${BUILD_TABLE_SETTING_DEMO})
+  include(cmake/CPlusPlusCompiler.cmake)
   find_package(OpenCV 3 REQUIRED)
   find_package(catkin REQUIRED COMPONENTS
     std_msgs
@@ -192,6 +193,16 @@ if (${BUILD_TABLE_SETTING_DEMO})
     moveit_ros_planning_interface
 
   )
+
+  option(BUILD_TEST "Build Testing Modules" 1)
+
+  if (${BUILD_TEST})
+
+    add_library(table_object_behavior
+      src/table_object_behavior.cpp
+    )
+    add_subdirectory(testing)
+  endif ()
 
   add_executable(table_setting_demo
     src/table_setting_demo.cpp

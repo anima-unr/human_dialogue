@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
 
   ros::Nodehandle nh("~");
 
+  task_net::NodeId_t name_param;
   
   return 0;
 }
