@@ -39,7 +39,6 @@
 #include "ros/ros.h"
 #include "table_setting_demo/pick_and_place.h"
 #include "actionlib/client/simple_action_client.h"
-#include "arm_navigation_msgs/MoveArmAction.h"
 #include "pr2_controllers_msgs/Pr2GripperCommandAction.h"
 #include "tf/transform_listener.h"
 // #include "table_setting_demo/pick_and_place.h"

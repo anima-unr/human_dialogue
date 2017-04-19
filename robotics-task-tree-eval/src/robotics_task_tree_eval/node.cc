@@ -51,17 +51,19 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
 
   // Generate reverse map
   GenerateNodeBitmaskMap();
-
   name_   = node_dict_[GetBitmask(name.topic)];
+
   for (NodeListIterator it = peers.begin(); it != peers.end(); ++it) {
     peers_.push_back(node_dict_[GetBitmask(it->topic)]);
+    printf("NODE::PEERS_: %s\n", peers_[0]->topic.c_str());
+    // NOTE: THIS IS PROBABLY IN THE WRONG SPOT NOW BUT IT WAS CAUSING ISSUES BELOW!
   }
-  printf("NODE::PEERS_: %s\n", peers_[0]->topic.c_str());
+  // printf("NODE::PEERS_: %s\n", peers_[0]->topic.c_str());
+
   for (NodeListIterator it = children.begin(); it != children.end(); ++it) {
     children_.push_back(node_dict_[GetBitmask(it->topic)]);
   }
   parent_ = node_dict_[GetBitmask(parent.topic)];
-
   // Setup bitmasks
   InitializeBitmask(name_);
   InitializeBitmasks(peers_);
@@ -79,6 +81,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());
   mask_ = GetBitmask(name_->topic);
+
   // Setup Publisher/subscribers
   InitializeSubscriber(name_);
   InitializePublishers(children_, &children_pub_list_, "_parent");
@@ -87,6 +90,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   InitializeStatePublisher(name_, &self_pub_, "_state");
 
   NodeInit(mtime);
+
 }
 
 Node::~Node() {}
@@ -380,9 +384,9 @@ void Node::Update() {
       }
       ActivationFalloff();
     }
-    // else {
-    //   ROS_INFO("Node: %s - Not Active: %f", name_->topic.c_str(),
-    //     state_.activation_level);
+    else {
+      ROS_INFO("Node: %s - Not Active: %f", name_->topic.c_str(),
+        state_.activation_level); }
   }
   // Publish Status
   PublishStatus();

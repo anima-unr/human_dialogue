@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(robotics_task_tree_eval)
 
-include(cmake/CPlusPlusCompiler.cmake)
+#include(cmake/CPlusPlusCompiler.cmake)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)

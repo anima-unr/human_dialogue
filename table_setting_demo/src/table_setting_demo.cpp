@@ -76,9 +76,9 @@ class TableSetting {
       children_param.clear();
       if (nh_.getParam((param_prefix + nodes[i]
           + "/" + param_ext_children).c_str(), children_param_str)) {
-        for (int i = 0; i < children_param_str.size(); ++i) {
+        for (int j = 0; j < children_param_str.size(); ++j) {
           task_net::NodeId_t temp;
-          temp.topic = children_param_str[i];
+          temp.topic = children_param_str[j];
           temp.pub = NULL;
           children_param.push_back(temp);
           printf("Node: %s Child: %s\n", nodes[i].c_str(), temp.topic.c_str());
@@ -99,6 +99,7 @@ class TableSetting {
                                       parent_param,
                                       state,
                                       false);
+          // printf("\ttask_net::THEN %d\n",task_net::THEN);
           break;
         case task_net::OR:
           network[i] = new task_net::OrBehavior(name_param,
@@ -107,6 +108,7 @@ class TableSetting {
                                       parent_param,
                                       state,
                                       false);
+          // printf("\ttask_net::OR %d\n",task_net::OR);
           break;
         case task_net::AND:
           network[i] = new task_net::AndBehavior(name_param,
@@ -115,6 +117,7 @@ class TableSetting {
                                       parent_param,
                                       state,
                                       false);
+          // printf("\ttask_net::AND %d\n",task_net::AND);
           break;
         case task_net::BEHAVIOR:
           ROS_INFO("Children Size: %lu", children_param.size());
@@ -186,7 +189,7 @@ class TableSetting {
           //                           object_pos,
           //                           false);
           // } else if (object =="PLACE_3_1_010") {
-          if (object =="PLACE_3_1_010") {
+          if (object =="PLACE_3_0_010") {
             ros::param::get("/ObjectPositions/cup", object_pos);
             network[i] = new task_net::TableObject(name_param,
                                     peers_param,
@@ -210,7 +213,7 @@ class TableSetting {
           //                           neutral_object_pos,
           //                           object_pos,
           //                           false);
-          } else if (object =="PLACE_3_1_012") {
+          } else if (object =="PLACE_3_0_012") {
             ros::param::get("/ObjectPositions/plate", object_pos);
             network[i] = new task_net::TableObject(name_param,
                                     peers_param,
@@ -222,7 +225,7 @@ class TableSetting {
                                     neutral_object_pos,
                                     object_pos,
                                     false);
-          } else if (object =="PLACE_3_1_013") {
+          } else if (object =="PLACE_3_0_013") {
             ros::param::get("/ObjectPositions/bowl", object_pos);
             network[i] = new task_net::TableObject(name_param,
                                     peers_param,
@@ -237,10 +240,12 @@ class TableSetting {
           } else {
             printf("ERROR - wrong node for tree: %s\n", name_param.topic.c_str());
           }
+          // printf("\ttask_net::BEHAVIOR %d\n",task_net::BEHAVIOR);
           break;
         case task_net::ROOT:
         default:
           network[i] = NULL;
+          // printf("\ttask_net::ROOT %d\n",task_net::ROOT);
           break;
       }
 

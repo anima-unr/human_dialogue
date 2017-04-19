@@ -16,25 +16,25 @@
 #   uint8_t robot;
 #   uint16_t node;
 # };
-NodeList: ['ROOT_4_1_000', 'THEN_0_1_001', 'AND_3_1_003', 'PLACE_3_1_010', 'PLACE_3_1_012', 'PLACE_3_1_013']
+NodeList: ['ROOT_4_0_000', 'THEN_0_0_001', 'AND_3_0_003', 'PLACE_3_0_010', 'PLACE_3_0_012', 'PLACE_3_0_013']
 # NodeList: ['THEN_0_1_001', 'AND_3_1_003', 'PLACE_3_1_010', 'PLACE_3_1_012', 'PLACE_3_1_013']
 Nodes:
-  ROOT_4_1_000:
+  ROOT_4_0_000:
     mask:
       type: 4
       robot: 0
       node: 0
     parent: 'NONE'
-    children: ['THEN_0_1_001']
+    children: ['THEN_0_0_001']
     peers: ['NONE']
-  THEN_0_1_001:
+  THEN_0_0_001:
     mask:
       type: 0
       robot: 0
       node: 1
-    parent: 'ROOT_4_1_000'
+    parent: 'ROOT_4_0_000'
     # children: ['PLACE_3_1_002', 'AND_3_1_003']
-    children: ['PLACE_3_1_010', 'AND_3_1_003']
+    children: ['PLACE_3_0_010', 'AND_3_0_003']
     peers: ['NONE']
 #   PLACE_3_1_002:
 #     mask:
@@ -44,14 +44,14 @@ Nodes:
 #     parent: 'THEN_0_1_001'
 #     # children: ['NONE']
 #     peers: ['NONE']
-  AND_3_1_003:
+  AND_3_0_003:
     mask:
       type: 2
       robot: 0
       node: 3
-    parent: 'THEN_0_1_001'
+    parent: 'THEN_0_0_001'
     # children: ['OR_3_1_004', 'PLACE_3_1_005', 'PLACE_3_1_006', 'THEN_0_1_007', PLACE_3_1_008']
-    children: ['PLACE_3_1_012', 'PLACE_3_1_013']
+    children: ['PLACE_3_0_012', 'PLACE_3_0_013']
     peers: ['NONE']
 #   OR_3_1_004:
 #     mask:
@@ -103,12 +103,12 @@ Nodes:
 #     peers: ['NONE']
 
 # this is the cup!!!
-  PLACE_3_1_010:
+  PLACE_3_0_010:
     mask:
       type: 3
       robot: 0
       node: 10
-    parent: 'THEN_0_1_001'
+    parent: 'THEN_0_0_001'
     # children: ['NONE']
     peers: ['NONE']
 #   PLACE_3_1_011:
@@ -122,21 +122,21 @@ Nodes:
 
 
 # this is the plate!!!
-  PLACE_3_1_012:
+  PLACE_3_0_012:
     mask:
       type: 3
       robot: 0
       node: 12
-    parent: 'AND_3_1_003'
+    parent: 'AND_3_0_003'
     # children: ['NONE']
     peers: ['NONE']
 
 # this is the bowl!!!
-  PLACE_3_1_013:
+  PLACE_3_0_013:
     mask:
       type: 3
       robot: 0
       node: 13
-    parent: 'AND_3_1_003'
+    parent: 'AND_3_0_003'
     # children: ['NONE']
     peers: ['NONE']

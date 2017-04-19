@@ -179,7 +179,7 @@ endif()
 ################################################################################
 ################################################################################
 if (${BUILD_TABLE_SETTING_DEMO})
-  include(cmake/CPlusPlusCompiler.cmake)
+  #include(cmake/CPlusPlusCompiler.cmake)
   find_package(OpenCV 3 REQUIRED)
   find_package(catkin REQUIRED COMPONENTS
     std_msgs
