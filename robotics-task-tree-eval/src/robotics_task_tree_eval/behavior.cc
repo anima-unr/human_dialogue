@@ -76,7 +76,7 @@ bool AndBehavior::Precondition() {
 }
 
 uint32_t AndBehavior::SpreadActivation() {
-    ROS_INFO("AndBehavior::SpreadActivation was called!!!!\n");
+    ROS_INFO("AndBehavior::SpreadActivation was called!!!!");
   ControlMessagePtr_t msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = 1.0f / children_.size();
@@ -133,7 +133,7 @@ bool ThenBehavior::Precondition() {
 }
 
 uint32_t ThenBehavior::SpreadActivation() {
-    ROS_INFO("ThenBehavior::SpreadActivation was called!!!!\n");
+    ROS_INFO("ThenBehavior::SpreadActivation was called!!!!");
   if (!activation_queue_.empty()) {
     ControlMessagePtr_t msg(new ControlMessage_t);
     msg->sender = mask_;
@@ -193,7 +193,7 @@ bool OrBehavior::Precondition() {
 }
 
 uint32_t OrBehavior::SpreadActivation() {
-    ROS_INFO("OrBehavior::SpreadActivation was called!!!!\n");
+    ROS_INFO("OrBehavior::SpreadActivation was called!!!!");
   ControlMessagePtr_t msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = 1.0f;
