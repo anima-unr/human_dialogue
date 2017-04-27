@@ -54,7 +54,8 @@ class PickPlace(object):
         dash_io = baxter_interface.DigitalIO(limb + '_upper_button')
         self.calibrating = False
         self.object_calib = -1
-        self.objects = ['neutral', 'placemat', 'cup', 'plate', 'fork', 'spoon', 'knife', 'bowl', 'soda', 'wineglass']
+        # self.objects = ['neutral', 'placemat', 'cup', 'plate', 'fork', 'spoon', 'knife', 'bowl', 'soda', 'wineglass']
+        self.objects = ['neutral',  'cup', 'plate', 'bowl']
         # self.objects = ['neutral', 'cup']
         self.object_pick_joint_angles = dict()
         self.object_pick_poses = dict()
