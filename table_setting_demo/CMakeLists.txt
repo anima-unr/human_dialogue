@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(table_setting_demo)
 
-set(CMAKE_CXX_FLAGS "--std=c++11")
+set(CMAKE_CXX_FLAGS "--std=c++0x")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -179,7 +179,7 @@ endif()
 ################################################################################
 ################################################################################
 if (${BUILD_TABLE_SETTING_DEMO})
-  find_package(OpenCV 3 REQUIRED)
+  find_package(OpenCV REQUIRED)
   find_package(catkin REQUIRED COMPONENTS
     std_msgs
     sensor_msgs
@@ -219,25 +219,25 @@ if (${BUILD_TABLE_SETTING_DEMO})
     table_setting_demo_generate_messages_cpp
   )
 
-  if (NOT ${QR_FOUND})
-    message( FATAL_ERROR "QR Library not found cannot build table demo")
-  endif()
+  #if (NOT ${QR_FOUND})
+   # message( FATAL_ERROR "QR Library not found cannot build table demo")
+  #endif()
 
-  include_directories(${QR_INCLUDE_DIRS})
-  add_executable(qr_object_track_service
-    src/qr/qr_object_service.cc
-    src/qr/qr_object_detect.cc
-  )
+  #include_directories(${QR_INCLUDE_DIRS})
+  #add_executable(qr_object_track_service
+  #  src/qr/qr_object_service.cc
+  #  src/qr/qr_object_detect.cc
+  #)
 
-  target_link_libraries(qr_object_track_service
-    ${QR_LIBRARIES}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-  )
-  add_dependencies(qr_object_track_service
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-  )
+  #target_link_libraries(qr_object_track_service
+  #  ${QR_LIBRARIES}
+  #  ${catkin_LIBRARIES}
+  #  ${OpenCV_LIBS}
+  #)
+  #add_dependencies(qr_object_track_service
+  #  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  #  ${catkin_EXPORTED_TARGETS}
+  #)
   add_dependencies(table_setting_demo
     table_setting_demo_generate_messages_cpp
   )

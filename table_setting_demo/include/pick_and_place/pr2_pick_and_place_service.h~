@@ -8,7 +8,7 @@
 //-----
 //JB TODO: #include <arm_navigation_msgs/MoveArmAction.h>
 #include "moveit_msgs/PlanningScene.h"
-//#include "moveit_msgs/ApplyPlanningScene.h"
+#include "moveit_msgs/ApplyPlanningScene.h"
 #include "moveit_msgs/CollisionObject.h"
 #include "moveit_msgs/AttachedCollisionObject.h"
 #include "moveit_msgs/DisplayTrajectory.h"

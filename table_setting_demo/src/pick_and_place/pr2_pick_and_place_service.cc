@@ -14,6 +14,15 @@
 #include <termios.h>
 #include <unistd.h>
 
+//-------------------------
+
+
+#include "ros/ros.h"
+#include "active_perception/Vision_Service.h"
+#include "active_perception/Vision_Message.h"
+
+#include <tf/transform_listener.h>
+
 int getch() {
   static termios oldt, newt;
   tcgetattr( STDIN_FILENO, &oldt);           // save old settings
@@ -91,26 +100,26 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
 
   const char *dynamic_object_str[] = {
     // "cup",
-    // "bowl",
+     "bowl",
     // "soda",
     // "fork",
     // "spoon",
     // "knife"
   };
   const char *static_object_str[] = {
-    "cup",
-    "bowl",
+    // "cup",
+    //"bowl",
     // "soda",
     "neutral",
     // "placemat",
     // "wineglass",
-    "plate"
+    //"plate"
   };
   const char *object_str[] = {
     "neutral",
     // "placemat",
-    "cup",
-    "plate",
+    // "cup",
+    //"plate",
     // "fork",
     // "spoon",
     // "knife",
@@ -218,25 +227,65 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   // Check if Object is dynamic or static
   if (dynamic) {
     // request object tracked position
-    pos_msg.request.object_id = object;
-    if (!ros::service::call("qr_get_object_position", pos_msg)) {
-      ROS_ERROR("Service: [%s] not available!", "qr_get_object_position");
-    }
-    // Request object 3D transform
-    if (pos_msg.response.position.size() > 0) {
-      pose_msg.request.x = pos_msg.response.position[0];
-      pose_msg.request.y = pos_msg.response.position[1];
-      pose_msg.request.w = pos_msg.response.position[2];
-      pose_msg.request.h = pos_msg.response.position[3];
-      pose_msg.request.object = object;
+ //    pos_msg.request.object_id = object;
+ //    if (!ros::service::call("vision_service", pos_msg)) {
+ //      ROS_ERROR("Service: [%s] not available!", "Vision service");
+ //      //to-do: santosh: change to get vision service to get location of one object.
+ //      pose_msg.response.transform.transform.translation.x = 0;
+ //      pose_msg.response.transform.transform.translation.y = 0;
+ //      pose_msg.response.transform.transform.translation.z = 0;
+ //    }
+ // else {
+ //      pose_msg.response.transform.transform.translation.x = 0;
+ //      pose_msg.response.transform.transform.translation.y = 0;
+ //      pose_msg.response.transform.transform.translation.z = 0;
+ //    }
 
-      if (!ros::service::call("object_transformation", pose_msg)) {
-        ROS_ERROR("Service: [%s] not available!", "object_transformation");
+
+//---------------------------------------------------------------------------------------
+    ros::NodeHandle n;
+    ros::ServiceClient client = n.serviceClient<active_perception::Vision_Service>("/CV_Objects");
+    active_perception::Vision_Service srv;
+
+    tf::TransformListener listener;
+    geometry_msgs::PointStamped kinect_obj_pnt;
+    geometry_msgs::PointStamped world_obj_pnt;
+   
+    srv.request.Label = object;
+    if (client.call(srv))
+    {
+      ROS_INFO("Being served!!!");
+      //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+      active_perception::Vision_Message msg;
+      msg = srv.response.object_location;
+      ROS_INFO("Frame id is %s", msg.Frameid.c_str());
+      ROS_INFO("x = %f", msg.Pos.x);
+      ROS_INFO("y = %f", msg.Pos.y);
+      ROS_INFO("z = %f", msg.Pos.z);
+      ROS_INFO("Is available: %u", msg.Found);
+      if (msg.Found == true)
+      {
+        kinect_obj_pnt.header.frame_id = msg.Frameid;
+        kinect_obj_pnt.header.stamp = ros::Time();
+        kinect_obj_pnt.point.x = msg.Pos.x;
+        kinect_obj_pnt.point.y = msg.Pos.y;
+        kinect_obj_pnt.point.z = msg.Pos.z;
+
+        try
+        {
+          listener.transformPoint("torso_lift_link", kinect_obj_pnt, world_obj_pnt);
+          ROS_INFO("============= transformed");
+        }
+        catch(tf::TransformException& ex)
+        {
+          ROS_ERROR("Received an exception while trying to transform the point");
+        }
       }
-    } else {
-      pose_msg.response.transform.transform.translation.x = 0;
-      pose_msg.response.transform.transform.translation.y = 0;
-      pose_msg.response.transform.transform.translation.z = 0;
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service vision_server");
+      //return 1;
     }
 
     // Transform pose into world space
@@ -597,37 +646,187 @@ void PickPlace::CalibrateObjects() {
     r_gripper_.Open();
   }
 }
-void PickPlace::ReadCalibration(std::string filename) {
-  std::ifstream fin;
-  fin.open(filename.c_str(), std::ifstream::binary);
-  char header[256];
-  char frame_id_str[256],link_str[256]; 
+// void PickPlace::ReadCalibration(std::string filename) {
+//   std::ifstream fin;
+//   fin.open(filename.c_str(), std::ifstream::binary);
+//   char header[256];
+//   char frame_id_str[256],link_str[256]; 
+//   std::string key;
+//   Point_t position, orientation;
+//   // Read header
+//   fin.read(header, 256);
+//   std::string frame_id, link;
+//   sscanf(header,"%s\n%s\n", frame_id_str, link_str);
+//   frame_id = frame_id_str;
+//   link = link_str;
+//   // read in
+//   while (fin.peek() != EOF) {
+//     fin.read(header, 128);
+//     key = header;
+//     fin.read(reinterpret_cast<char*>(&position), sizeof(Point_t));
+//     printf("Position: x: %f, y: %f, z: %f, \n", position.x, position.y, position.z);
+//     fin.read(reinterpret_cast<char*>(&orientation), sizeof(Point_t));
+//     printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", orientation.x, orientation.y, orientation.z, orientation.w);
+//     //TODO JB: object_goal_map_[key].pick_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+//     object_goal_map_[key].pick_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+//     fin.read(reinterpret_cast<char*>(&position), sizeof(Point_t));
+//     printf("Position: x: %f, y: %f, z: %f, \n", position.x, position.y, position.z);
+//     fin.read(reinterpret_cast<char*>(&orientation), sizeof(Point_t));
+//     printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", orientation.x, orientation.y, orientation.z, orientation.w);
+//     //TODO JB: object_goal_map_[key].place_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+//     object_goal_map_[key].place_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+//   }
+//   fin.close();
+// }
+
+void PickPlace::ReadCalibration(std::string filename) 
+{
+  std::string header;
+  std::string frame_id_str;
+  std::string frame_id;
+  std::string link_str;
+  std::string link;
+  std::string temp;
   std::string key;
+  double val;
   Point_t position, orientation;
-  // Read header
-  fin.read(header, 256);
-  std::string frame_id, link;
-  sscanf(header,"%s\n%s\n", frame_id_str, link_str);
-  frame_id = frame_id_str;
+  std::stringstream convert;
+  std::ifstream infile;
+  infile.open(filename);
+
+  getline(infile,frame_id_str);
+  getline(infile,link_str);
+
   link = link_str;
-  // read in
-  while (fin.peek() != EOF) {
-    fin.read(header, 128);
+  frame_id = frame_id_str;
+
+  while(infile >> header)
+  {
     key = header;
-    fin.read(reinterpret_cast<char*>(&position), sizeof(Point_t));
-    printf("Position: x: %f, y: %f, z: %f, \n", position.x, position.y, position.z);
-    fin.read(reinterpret_cast<char*>(&orientation), sizeof(Point_t));
-    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", orientation.x, orientation.y, orientation.z, orientation.w);
-    //TODO JB: object_goal_map_[key].pick_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    position.x = val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    position.y = val;
+  
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    position.z = val;
+
+    ROS_INFO("%s: %f %f %f", header.c_str(), position.x, position.y, position.z);
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.x= val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.y = val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.z= val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.w = val;
+
+    ROS_INFO("%s: %f %f %f %f", header.c_str(), orientation.x, orientation.y, orientation.z, orientation.w);
     object_goal_map_[key].pick_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
-    fin.read(reinterpret_cast<char*>(&position), sizeof(Point_t));
-    printf("Position: x: %f, y: %f, z: %f, \n", position.x, position.y, position.z);
-    fin.read(reinterpret_cast<char*>(&orientation), sizeof(Point_t));
-    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", orientation.x, orientation.y, orientation.z, orientation.w);
-    //TODO JB: object_goal_map_[key].place_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    position.x = val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    position.y = val;
+  
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    position.z = val;
+
+    ROS_INFO("%s: %f %f %f", header.c_str(), position.x, position.y, position.z);
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.x= val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.y = val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.z= val;
+
+    convert.str("");
+    convert.clear();
+
+    getline(infile,temp,',');
+    convert << temp;
+    convert >> val;
+    orientation.w = val;
+
+    ROS_INFO("%s: %f %f %f %f", header.c_str(), orientation.x, orientation.y, orientation.z, orientation.w);
     object_goal_map_[key].place_pose = GetArmPoseFromPoints(frame_id, link, position, orientation);
+
+    convert.str("");
+    convert.clear();
+
   }
-  fin.close();
 }
 
 
@@ -664,7 +863,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::s
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
   // goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
-  arm_group_.setGoalPositionTolerance(0.05); 
+  arm_group_.setGoalPositionTolerance(0.003); 
 
   // // Setup Orientation
   // goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
@@ -681,7 +880,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::s
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
-  arm_group_.setGoalOrientationTolerance(0.08);
+  arm_group_.setGoalOrientationTolerance(0.0075);
 
   return goal;
 } 
@@ -689,48 +888,122 @@ geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::s
 //-------
 
 
+// void PickPlace::SaveCalibration(std::string filename) {
+//   std::ofstream fout;
+//   fout.open(filename.c_str(), std::ofstream::binary);
+//   char header[256];
+//   // Save links to first 
+//   snprintf(header, 256, "%s\n%s\n", "torso_lift_link", "r_wrist_roll_link");
+//   fout.write(header, 256);
+//   // save positions
+//   Point_t point;
+//   point.w = 1;
+//   for (std::map<std::string, PickPlaceGoal>::iterator it = object_goal_map_.begin();
+//       it != object_goal_map_.end();
+//       ++it) {
+//     snprintf(header, 128, "%s", it->first.c_str());
+//     fout.write(header, 128);
+//     printf("Key:%s\n", header);
+
+//     point.x = it->second.pick_pose.position.x;
+//     point.y = it->second.pick_pose.position.y;
+//     point.z = it->second.pick_pose.position.z;
+//     printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
+//     fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+//     point.x = it->second.pick_pose.orientation.x;
+//     point.y = it->second.pick_pose.orientation.y;
+//     point.z = it->second.pick_pose.orientation.z;
+//     point.w = it->second.pick_pose.orientation.w;
+//     printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
+//     fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+
+//     point.x = it->second.place_pose.position.x;
+//     point.y = it->second.place_pose.position.y;
+//     point.z = it->second.place_pose.position.z;
+//     printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
+//     fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+//     point.x = it->second.place_pose.orientation.x;
+//     point.y = it->second.place_pose.orientation.y;
+//     point.z = it->second.place_pose.orientation.z;
+//     point.w = it->second.place_pose.orientation.w;
+//     printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
+//     fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+  
+// }}
+
 void PickPlace::SaveCalibration(std::string filename) {
-  std::ofstream fout;
-  fout.open(filename.c_str(), std::ofstream::binary);
-  char header[256];
-  // Save links to first 
-  snprintf(header, 256, "%s\n%s\n", "torso_lift_link", "r_wrist_roll_link");
-  fout.write(header, 256);
-  // save positions
+  
+  std::ofstream outfile;
+  outfile.open(filename);
+  std::string header;
+  header = "torso_lift_link";
+  outfile << header;
+  std::cout<<header;
+  outfile<<'\n';
+  header = "r_wrist_roll_link";
+  outfile<< header;
+  outfile<<'\n';
   Point_t point;
   point.w = 1;
   for (std::map<std::string, PickPlaceGoal>::iterator it = object_goal_map_.begin();
       it != object_goal_map_.end();
-      ++it) {
-    snprintf(header, 128, "%s", it->first.c_str());
-    fout.write(header, 128);
-    printf("Key:%s\n", header);
+      ++it) 
+  {
 
+    outfile<< it->first.c_str();
+    outfile<<'\n';
     point.x = it->second.pick_pose.position.x;
-    point.y = it->second.pick_pose.position.y;
-    point.z = it->second.pick_pose.position.z;
-    printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+    outfile<< point.x;
+    outfile<<",";
+      point.y = it->second.pick_pose.position.y;
+      outfile<< point.y;
+    outfile<<",";
+      point.z = it->second.pick_pose.position.z;
+      outfile<< point.z;
+    outfile<<",";
+    outfile<<'\n';
     point.x = it->second.pick_pose.orientation.x;
-    point.y = it->second.pick_pose.orientation.y;
-    point.z = it->second.pick_pose.orientation.z;
-    point.w = it->second.pick_pose.orientation.w;
-    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+    outfile<< point.x;
+    outfile<<",";
+      point.y = it->second.pick_pose.orientation.y;
+      outfile<< point.y;
+      outfile<<",";
+      point.z = it->second.pick_pose.orientation.z;
+      outfile<<point.z;
+      outfile<<",";
+      point.w = it->second.pick_pose.orientation.w;
+      outfile<<point.w;
+      outfile<<",";
+      outfile<<'\n';
 
-    point.x = it->second.place_pose.position.x;
-    point.y = it->second.place_pose.position.y;
-    point.z = it->second.place_pose.position.z;
-    printf("Position: x: %f, y: %f, z: %f\n", point.x, point.y, point.z);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
+      point.x = it->second.place_pose.position.x;
+    outfile<< point.x;
+    outfile<<",";
+      point.y = it->second.place_pose.position.y;
+      outfile<< point.y;
+    outfile<<",";
+      point.z = it->second.place_pose.position.z;
+      outfile<< point.z;
+    outfile<<",";
+    outfile<<'\n';
     point.x = it->second.place_pose.orientation.x;
-    point.y = it->second.place_pose.orientation.y;
-    point.z = it->second.place_pose.orientation.z;
-    point.w = it->second.place_pose.orientation.w;
-    printf("Orientation: x: %f, y: %f, z: %f, w: %f\n", point.x, point.y, point.z, point.w);
-    fout.write(reinterpret_cast<char*>(&point), sizeof(point));
-  
-}}
+    outfile<< point.x;
+    outfile<<",";
+      point.y = it->second.place_pose.orientation.y;
+      outfile<< point.y;
+      outfile<<",";
+      point.z = it->second.place_pose.orientation.z;
+      outfile<<point.z;
+      outfile<<",";
+      point.w = it->second.place_pose.orientation.w;
+      outfile<<point.w;
+      outfile<<",";
+      outfile<<'\n';
+
+  }
+}
+
+
 
 bool PickPlace::SendGoal(geometry_msgs::Pose goal) {
   static bool success = false;
@@ -760,8 +1033,8 @@ moveit_msgs::DisplayTrajectory display_trajectory;
     // success = arm_group_.move();
   arm_group_.setNumPlanningAttempts(3);
   arm_group_.setPlanningTime(5.0);
-  arm_group_.setGoalPositionTolerance(0.05); 
-  arm_group_.setGoalOrientationTolerance(0.08); 
+  arm_group_.setGoalPositionTolerance(0.003); 
+  arm_group_.setGoalOrientationTolerance(0.0075); 
 
     moveit::planning_interface::MoveGroup::Plan motion_plan;
     success = arm_group_.plan(motion_plan);
@@ -824,7 +1097,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
   //   "planner_service_name",
   //   // goal.planner_service_name,
   //   std::string("ompl_planning/plan_kinematic_path"));
-  ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
+  //ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
   ROS_INFO("HERE!!!!!");
   // // Setup position of Joint
   // goal.motion_plan_request.goal_constraints.position_constraints.resize(1);
@@ -841,7 +1114,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
   // goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
-  arm_group_.setGoalPositionTolerance(0.05); 
+  arm_group_.setGoalPositionTolerance(0.003); 
 
   // // Setup Orientation
   // goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
@@ -855,7 +1128,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_roll_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
-  arm_group_.setGoalOrientationTolerance(0.08);
+  arm_group_.setGoalOrientationTolerance(0.0075);
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
 
   return goal;
@@ -865,95 +1138,95 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
 // TODO JB: ADDED FUNCTIONALITY TO CREATE SCENE OBJECTS
 void PickPlace::SetSceneObjects() {
 
-//----------------------------------------
-// define objects 
-sleep(2.0);
-moveit_msgs::CollisionObject collision_object1;
-moveit_msgs::CollisionObject collision_object2;
-moveit_msgs::CollisionObject collision_object3;
-collision_object1.header.frame_id = arm_group_.getPlanningFrame();
-collision_object2.header.frame_id = arm_group_.getPlanningFrame();
-collision_object3.header.frame_id = arm_group_.getPlanningFrame();
+// //----------------------------------------
+// // define objects 
+// sleep(2.0);
+// moveit_msgs::CollisionObject collision_object1;
+// moveit_msgs::CollisionObject collision_object2;
+// moveit_msgs::CollisionObject collision_object3;
+// collision_object1.header.frame_id = arm_group_.getPlanningFrame();
+// collision_object2.header.frame_id = arm_group_.getPlanningFrame();
+// collision_object3.header.frame_id = arm_group_.getPlanningFrame();
 
-// -------
-/* Define a bowl to add to the world. */
-/* The id of the object is used to identify it. */
-collision_object1.id = "bowl";
-shape_msgs::SolidPrimitive primitive;
-primitive.type = primitive.BOX;
-primitive.dimensions.resize(3);
-primitive.dimensions[0] = 0.1;
-primitive.dimensions[1] = 0.1;
-primitive.dimensions[2] = 0.1;
-/* A pose for the bowl (specified relative to frame_id) */
-geometry_msgs::Pose bowl_pose;
-bowl_pose.orientation.w = 1.0;
-bowl_pose.position.x =  0.5;
-bowl_pose.position.y =  -0.2;
-bowl_pose.position.z =  0.5; //objects_n3_v2.bin 
-// bowl_pose.position.z =  0.3;
+// // -------
+// /* Define a bowl to add to the world. */
+// /* The id of the object is used to identify it. */
+// collision_object1.id = "bowl";
+// shape_msgs::SolidPrimitive primitive;
+// primitive.type = primitive.BOX;
+// primitive.dimensions.resize(3);
+// primitive.dimensions[0] = 0.1;
+// primitive.dimensions[1] = 0.1;
+// primitive.dimensions[2] = 0.1;
+// /* A pose for the bowl (specified relative to frame_id) */
+// geometry_msgs::Pose bowl_pose;
+// bowl_pose.orientation.w = 1.0;
+// bowl_pose.position.x =  0.5;
+// bowl_pose.position.y =  -0.2;
+// bowl_pose.position.z =  0.5; //objects_n3_v2.bin 
+// // bowl_pose.position.z =  0.3;
 
-collision_object1.primitives.push_back(primitive);
-collision_object1.primitive_poses.push_back(bowl_pose);
-collision_object1.operation = collision_object1.ADD;
+// collision_object1.primitives.push_back(primitive);
+// collision_object1.primitive_poses.push_back(bowl_pose);
+// collision_object1.operation = collision_object1.ADD;
 
-collision_objects_.push_back(collision_object1);
+// collision_objects_.push_back(collision_object1);
 
-// -------
-/* Define a cup to add to the world. */
-/* The id of the object is used to identify it. */
-collision_object2.id = "cup";
-primitive.type = primitive.BOX;
-primitive.dimensions.resize(3);
-primitive.dimensions[0] = 0.1;
-primitive.dimensions[1] = 0.1;
-primitive.dimensions[2] = 0.2;
-geometry_msgs::Pose cup_pose;
-cup_pose.orientation.w = 1.0;
-cup_pose.position.x =  0.4;
-cup_pose.position.y =  -0.35;
-cup_pose.position.z =  0.55; //objects_n3_v2.bin 
-// cup_pose.position.z =  0.35;
+// // -------
+// /* Define a cup to add to the world. */
+// /* The id of the object is used to identify it. */
+// collision_object2.id = "cup";
+// primitive.type = primitive.BOX;
+// primitive.dimensions.resize(3);
+// primitive.dimensions[0] = 0.1;
+// primitive.dimensions[1] = 0.1;
+// primitive.dimensions[2] = 0.2;
+// geometry_msgs::Pose cup_pose;
+// cup_pose.orientation.w = 1.0;
+// cup_pose.position.x =  0.4;
+// cup_pose.position.y =  -0.35;
+// cup_pose.position.z =  0.55; //objects_n3_v2.bin 
+// // cup_pose.position.z =  0.35;
 
-collision_object2.primitives.push_back(primitive);
-collision_object2.primitive_poses.push_back(cup_pose);
-collision_object2.operation = collision_object2.ADD;
+// collision_object2.primitives.push_back(primitive);
+// collision_object2.primitive_poses.push_back(cup_pose);
+// collision_object2.operation = collision_object2.ADD;
 
-collision_objects_.push_back(collision_object2);
+// collision_objects_.push_back(collision_object2);
 
-// -------
-/* Define a plate to add to the world. */
-/* The id of the object is used to identify it. */
-collision_object3.id = "plate";
-primitive.type = primitive.BOX;
-primitive.dimensions.resize(3);
-primitive.dimensions[0] = 0.3;
-primitive.dimensions[1] = 0.05;
-primitive.dimensions[2] = 0.25;
-geometry_msgs::Pose plate_pose;
-plate_pose.orientation.w = 1.0;
-plate_pose.position.x =  0.5;
-plate_pose.position.y =  -0.45;
-plate_pose.position.z =  0.575; //objects_n3_v2.bin 
-// plate_pose.position.z =  0.375;
+// // -------
+// /* Define a plate to add to the world. */
+// /* The id of the object is used to identify it. */
+// collision_object3.id = "plate";
+// primitive.type = primitive.BOX;
+// primitive.dimensions.resize(3);
+// primitive.dimensions[0] = 0.3;
+// primitive.dimensions[1] = 0.05;
+// primitive.dimensions[2] = 0.25;
+// geometry_msgs::Pose plate_pose;
+// plate_pose.orientation.w = 1.0;
+// plate_pose.position.x =  0.5;
+// plate_pose.position.y =  -0.45;
+// plate_pose.position.z =  0.575; //objects_n3_v2.bin 
+// // plate_pose.position.z =  0.375;
 
-collision_object3.primitives.push_back(primitive);
-collision_object3.primitive_poses.push_back(plate_pose);
-collision_object3.operation = collision_object3.ADD;
+// collision_object3.primitives.push_back(primitive);
+// collision_object3.primitive_poses.push_back(plate_pose);
+// collision_object3.operation = collision_object3.ADD;
 
-collision_objects_.push_back(collision_object3);
+// collision_objects_.push_back(collision_object3);
 
 
-//----------------------------------------
-// Add objects to world
+// //----------------------------------------
+// // Add objects to world
 
-// if collision_objects_.primitives.empty()
+// // if collision_objects_.primitives.empty()
 
-ROS_INFO("Add an object into the world");
-planning_scene_interface_.addCollisionObjects(collision_objects_);
+// ROS_INFO("Add an object into the world");
+// planning_scene_interface_.addCollisionObjects(collision_objects_);
 
-/* Sleep so we have time to see the object in RViz */
-sleep(2.0);
+// /* Sleep so we have time to see the object in RViz */
+// sleep(2.0);
 }
 
 
