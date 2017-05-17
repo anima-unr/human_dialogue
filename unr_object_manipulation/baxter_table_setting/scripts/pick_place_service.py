@@ -157,9 +157,9 @@ class PickPlace(object):
         pose_target.orientation.y = pose.orientation.y
         pose_target.orientation.z = pose.orientation.z
         pose_target.orientation.w = pose.orientation.w
-        pose_target.position.x = pose.orientation.x
-        pose_target.position.y = pose.orientation.y
-        pose_target.position.z = pose.orientation.z
+        pose_target.position.x = pose.position.x
+        pose_target.position.y = pose.position.y
+        pose_target.position.z = pose.position.z
 
         # set things
         self._limb.set_pose_target(pose_target)
