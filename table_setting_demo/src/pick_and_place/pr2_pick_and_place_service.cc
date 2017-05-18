@@ -105,22 +105,22 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
   const char *static_object_str[] = {
     "cup",
     "bowl",
-    // "soda",
+    "soda",
     "neutral",
-    // "placemat",
+    "placemat",
     // "wineglass",
     "plate"
   };
   const char *object_str[] = {
     "neutral",
-    // "placemat",
+    "placemat",
     "cup",
     "plate",
     // "fork",
     // "spoon",
     // "knife",
     "bowl",
-    // "soda",
+    "soda",
     // "wineglass"
   };
   objects_ = std::vector<std::string>(object_str,
