@@ -58,13 +58,17 @@ static const char *static_object_str[] = {
   "fork",
   "spoon",
   "knife",
-  "cup",
+  //"cup",
   "bowl",
   "soda",
   "neutral",
   "placemat",
   "wineglass",
-  "plate"
+  "plate",
+  // tkdjflkajsd;fnaskdf;
+  "Cup",
+  "Tea",
+  "Sugar"
 };
 
 TableObject::TableObject() {}
