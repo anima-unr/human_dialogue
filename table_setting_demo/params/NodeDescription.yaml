@@ -111,7 +111,7 @@ Nodes:
     parent: 'THEN_0_0_001'
     # children: ['NONE']
     peers: ['NONE']
-    object: cup
+    object: Cup
 
 #   PLACE_3_1_011:
 #     mask:
@@ -132,7 +132,7 @@ Nodes:
     parent: 'AND_3_0_003'
     # children: ['NONE']
     peers: ['NONE']
-    object: plate
+    object: Tea
 
 # this is the bowl!!!
   PLACE_3_0_013:
@@ -143,4 +143,4 @@ Nodes:
     parent: 'AND_3_0_003'
     # children: ['NONE']
     peers: ['NONE']
-    object: bowl
+    object: Sugar
