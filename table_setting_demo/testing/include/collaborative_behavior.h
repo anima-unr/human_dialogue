@@ -1,5 +1,5 @@
 /*
-baxter_demos
+table_setting_demo
 Copyright (C) 2015  Luke Fraser
 
 This program is free software: you can redistribute it and/or modify
@@ -15,19 +15,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef INCLUDE_TABLE_SETTING_TABLE_OBJECT_H_
-#define INCLUDE_TABLE_SETTING_TABLE_OBJECT_H_
-#include <string>
-#include "robotics_task_tree_eval/behavior.h"
-#include "robotics_task_tree_eval/node_types.h"
-#include "remote_mutex/remote_mutex.h"
-
-namespace task_net { 
-
-class TableObject : public Behavior {
+#ifndef TESTING_INCLUDE_COLLABORATIVE_TEST_H_
+#define TESTING_INCLUDE_COLLABORATIVE_TEST_H_
+#include "table_setting_demo/table_object_behavior.h"
+namespace task_net {
+class CollabTestBehavior : public TableObject {
  public:
-  TableObject();
-  TableObject(NodeId_t name, NodeList peers, NodeList children,
+  CollabTestBehavior();
+  CollabTestBehavior(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
     std::string mutex_topic,
@@ -36,24 +31,15 @@ class TableObject : public Behavior {
     std::vector<float> neutral_pos,
     bool use_local_callback_queue = false,
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
-  virtual ~TableObject();
-  virtual void UpdateActivationPotential();
+  virtual ~CollabTestBehavior();
+  // virtual void UpdateActivationPotential();
  protected:
-  virtual void PickAndPlace(std::string object);
   virtual bool Precondition();
   virtual bool ActivationPrecondition();
   virtual void Work();
-  virtual bool PickAndPlaceDone();
   virtual bool CheckWork();
   virtual void UndoWork();
-
- protected:
-  mutex::RemoteMutex mut;
-  std::string object_;
-  std::string object_id_;
-  std::vector<float> object_pos;
-  std::vector<float> neutral_object_pos;
-  bool dynamic_object;
+  virtual void UpdateActivationPotential();
 };
-}  // namespace task_net
-#endif  // INCLUDE_TABLE_SETTING_TABLE_OBJECT_H_
+};  // namespace task_net
+#endif  // TESTING_INCLUDE_COLLABORATIVE_TEST_H_

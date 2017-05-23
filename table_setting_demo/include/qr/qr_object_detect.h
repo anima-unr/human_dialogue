@@ -81,7 +81,7 @@ class QrObjectsTrack {
   bool GetObject(std::string object, std::string &object_id);
   bool ObjectInView(std::string object);
  private:
-  cv::Ptr<cv::MultiTracker> tracker;
+  cv::Ptr<cv::MultiTrackerTLD> tracker;
   std::vector<cv::Rect2d> tracking_regions;
   std::vector<std::string> object_list_;
 };

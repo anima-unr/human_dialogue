@@ -40,7 +40,7 @@ class RemoteMutexService {
   recording_toolkit::FilePrintRecorder record_object;
 
   explicit RemoteMutexService(const char* name)
-      : record_object("/home/luke/Documents/ws/Data/remote_mutex.csv",
+      : record_object("~/catkin_ws/src/Distributed_Collaborative_Task_Tree/Data/remote_mutex.csv",
         100) {
     locked = false;
     owner = "";

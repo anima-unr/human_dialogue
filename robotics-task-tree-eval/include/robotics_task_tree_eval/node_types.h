@@ -80,6 +80,7 @@ struct ControlMessage {
   float activation_level;
   float activation_potential;
   bool done;
+  bool active;
 };
 
 typedef std::vector<NodeId_t> NodeList;
@@ -257,6 +258,7 @@ struct Serializer<task_net::ControlMessage_t> {
     stream.next(t.activation_level);
     stream.next(t.activation_potential);
     stream.next(t.done);
+    stream.next(t.active);
   }
 
   ROS_DECLARE_ALLINONE_SERIALIZER;

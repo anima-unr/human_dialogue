@@ -58,13 +58,21 @@ static const char *static_object_str[] = {
   "fork",
   "spoon",
   "knife",
-  "cup",
+  //"cup",
   "bowl",
   "soda",
   "neutral",
   "placemat",
   "wineglass",
-  "plate"
+  "plate",
+  // tkdjflkajsd;fnaskdf;
+  "Cup",
+  "Tea",
+  "Sugar",
+  "Left_Bread",
+  "Right_Bread",
+  "Meat",
+  "Lettuce"
 };
 
 TableObject::TableObject() {}
@@ -112,6 +120,8 @@ TableObject::~TableObject() {}
 
 void TableObject::UpdateActivationPotential() {
   float dist;
+  // ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
+
   // Get object neutral position and object position 
   //   from service call potentially
   if (!dynamic_object) {
@@ -120,7 +130,13 @@ void TableObject::UpdateActivationPotential() {
     float z = pow(neutral_object_pos[2] - object_pos[2], 2);
     dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
     state_.activation_potential = 1.0f / dist;
+
+    // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
+    // ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);
+    // ROS_INFO("x %f y %f z %f dist %f activation_potential %f", x, y, z, dist, state_.activation_potential);
+
   } else {
+    ROS_INFO("Dynamic object here soooo get activation diffly");
     table_setting_demo::object_position pos_msg;
     table_setting_demo::ObjectTransformation pose_msg;
     // Check if object available in scene
@@ -204,9 +220,11 @@ void TableObject::Work() {
   PickAndPlace(object_id_.c_str());
   while (!PickAndPlaceDone()) {
     boost::this_thread::sleep(boost::posix_time::millisec(500));
+      // ROS_INFO("TableObject::Work: waiting for pick and place to be done!");
   }
   // Check if succeeded and try again
   mut.Release();
+  ROS_INFO("TableObject::Work: Released mutex!");
 }
 float CalcPositionDistance(std::vector<float> pos_a, std::vector<float> pos_b) {
   // LOG_INFO("TX: %f TY: %f TZ: %f, 3X: %f 3Y: %f 3Z: %f", pos_a);
