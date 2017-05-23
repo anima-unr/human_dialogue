@@ -68,7 +68,11 @@ static const char *static_object_str[] = {
   // tkdjflkajsd;fnaskdf;
   "Cup",
   "Tea",
-  "Sugar"
+  "Sugar",
+  "Left_Bread",
+  "Right_Bread",
+  "Meat",
+  "Lettuce"
 };
 
 TableObject::TableObject() {}

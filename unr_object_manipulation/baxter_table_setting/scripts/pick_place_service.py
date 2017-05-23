@@ -67,7 +67,7 @@ class PickPlace(object):
         dash_io = baxter_interface.DigitalIO(side + '_upper_button')
         self.calibrating = False
         self.object_calib = -1
-        self.objects = ['neutral', 'Cup', 'Tea', 'Sugar']
+        self.objects = ['neutral', 'Cup', 'Tea', 'Sugar', 'Left_Bread', 'Right_Bread', 'Lettuce', 'Meat']
         # self.objects = ['neutral', 'placemat', 'cup', 'plate', 'fork', 'spoon', 'knife', 'bowl', 'soda', 'wineglass']
         # self.objects = ['neutral',  'cup', 'plate', 'bowl']
         # self.objects = ['neutral', 'bowl']
