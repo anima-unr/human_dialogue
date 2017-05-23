@@ -14,10 +14,18 @@
 #include <termios.h>
 #include <unistd.h>
 
+/*
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
+*/
+
+#include "ros/ros.h"
+#include "active_perception/Vision_Service.h"
+#include "active_perception/Vision_Message.h"
+
+#include <tf/transform_listener.h>
 
 int getch() {
   static termios oldt, newt;
@@ -96,7 +104,7 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
 
   const char *dynamic_object_str[] = {
     // "cup",
-    // "bowl",
+     "bowl",
     // "soda",
     // "fork",
     // "spoon",
@@ -109,7 +117,7 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
     "neutral",
     "placemat",
     // "wineglass",
-    "plate"
+    //"plate"
   };
   const char *object_str[] = {
     "neutral",
@@ -224,25 +232,65 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   // Check if Object is dynamic or static
   if (dynamic) {
     // request object tracked position
-    pos_msg.request.object_id = object;
-    if (!ros::service::call("qr_get_object_position", pos_msg)) {
-      ROS_ERROR("Service: [%s] not available!", "qr_get_object_position");
-    }
-    // Request object 3D transform
-    if (pos_msg.response.position.size() > 0) {
-      pose_msg.request.x = pos_msg.response.position[0];
-      pose_msg.request.y = pos_msg.response.position[1];
-      pose_msg.request.w = pos_msg.response.position[2];
-      pose_msg.request.h = pos_msg.response.position[3];
-      pose_msg.request.object = object;
+ //    pos_msg.request.object_id = object;
+ //    if (!ros::service::call("vision_service", pos_msg)) {
+ //      ROS_ERROR("Service: [%s] not available!", "Vision service");
+ //      //to-do: santosh: change to get vision service to get location of one object.
+ //      pose_msg.response.transform.transform.translation.x = 0;
+ //      pose_msg.response.transform.transform.translation.y = 0;
+ //      pose_msg.response.transform.transform.translation.z = 0;
+ //    }
+ // else {
+ //      pose_msg.response.transform.transform.translation.x = 0;
+ //      pose_msg.response.transform.transform.translation.y = 0;
+ //      pose_msg.response.transform.transform.translation.z = 0;
+ //    }
 
-      if (!ros::service::call("object_transformation", pose_msg)) {
-        ROS_ERROR("Service: [%s] not available!", "object_transformation");
+
+//---------------------------------------------------------------------------------------
+    ros::NodeHandle n;
+    ros::ServiceClient client = n.serviceClient<active_perception::Vision_Service>("/CV_Objects");
+    active_perception::Vision_Service srv;
+
+    tf::TransformListener listener;
+    geometry_msgs::PointStamped kinect_obj_pnt;
+    geometry_msgs::PointStamped world_obj_pnt;
+   
+    srv.request.Label = object;
+    if (client.call(srv))
+    {
+      ROS_INFO("Being served!!!");
+      //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+      active_perception::Vision_Message msg;
+      msg = srv.response.object_location;
+      ROS_INFO("Frame id is %s", msg.Frameid.c_str());
+      ROS_INFO("x = %f", msg.Pos.x);
+      ROS_INFO("y = %f", msg.Pos.y);
+      ROS_INFO("z = %f", msg.Pos.z);
+      ROS_INFO("Is available: %u", msg.Found);
+      if (msg.Found == true)
+      {
+        kinect_obj_pnt.header.frame_id = msg.Frameid;
+        kinect_obj_pnt.header.stamp = ros::Time();
+        kinect_obj_pnt.point.x = msg.Pos.x;
+        kinect_obj_pnt.point.y = msg.Pos.y;
+        kinect_obj_pnt.point.z = msg.Pos.z;
+
+        try
+        {
+          listener.transformPoint("torso_lift_link", kinect_obj_pnt, world_obj_pnt);
+          ROS_INFO("============= transformed");
+        }
+        catch(tf::TransformException& ex)
+        {
+          ROS_ERROR("Received an exception while trying to transform the point");
+        }
       }
-    } else {
-      pose_msg.response.transform.transform.translation.x = 0;
-      pose_msg.response.transform.transform.translation.y = 0;
-      pose_msg.response.transform.transform.translation.z = 0;
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service vision_server");
+      //return 1;
     }
 
     // Transform pose into world space
@@ -835,7 +883,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::s
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
   // goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
-  arm_group_.setGoalPositionTolerance(0.05); 
+  arm_group_.setGoalPositionTolerance(0.003); 
 
   // // Setup Orientation
   // goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
@@ -852,7 +900,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseFromPoints(std::string frame_id, std::s
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
-  arm_group_.setGoalOrientationTolerance(0.08);
+  arm_group_.setGoalOrientationTolerance(0.0075);
 
   return goal;
 } 
@@ -975,7 +1023,6 @@ void PickPlace::SaveCalibration(std::string filename) {
   }
 }
 
-
 bool PickPlace::SendGoal(geometry_msgs::Pose goal) {
   static bool success = false;
   if (nh_.ok()) {
@@ -1004,8 +1051,8 @@ moveit_msgs::DisplayTrajectory display_trajectory;
     // success = arm_group_.move();
   arm_group_.setNumPlanningAttempts(3);
   arm_group_.setPlanningTime(5.0);
-  arm_group_.setGoalPositionTolerance(0.05); 
-  arm_group_.setGoalOrientationTolerance(0.08); 
+  arm_group_.setGoalPositionTolerance(0.003); 
+  arm_group_.setGoalOrientationTolerance(0.0075); 
 
     moveit::planning_interface::MoveGroup::Plan motion_plan;
     success = arm_group_.plan(motion_plan);
@@ -1068,7 +1115,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
   //   "planner_service_name",
   //   // goal.planner_service_name,
   //   std::string("ompl_planning/plan_kinematic_path"));
-  ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
+  //ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
   ROS_INFO("HERE!!!!!");
   // // Setup position of Joint
   // goal.motion_plan_request.goal_constraints.position_constraints.resize(1);
@@ -1085,7 +1132,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_shape.dimensions.push_back(0.05);
   // goal.motion_plan_request.goal_constraints.position_constraints[0].constraint_region_orientation.w = 1.0;
   // goal.motion_plan_request.goal_constraints.position_constraints[0].weight = 0.8;
-  arm_group_.setGoalPositionTolerance(0.05); 
+  arm_group_.setGoalPositionTolerance(0.003); 
 
   // // Setup Orientation
   // goal.motion_plan_request.goal_constraints.orientation_constraints.resize(1);
@@ -1099,7 +1146,7 @@ geometry_msgs::Pose PickPlace::GetArmPoseGoal() {
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_roll_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_pitch_tolerance = 0.08;
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].absolute_yaw_tolerance = 0.08;
-  arm_group_.setGoalOrientationTolerance(0.08);
+  arm_group_.setGoalOrientationTolerance(0.0075);
   // goal.motion_plan_request.goal_constraints.orientation_constraints[0].weight = 0.8;
 
   return goal;

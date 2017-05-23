@@ -35,7 +35,7 @@ catkin_package(
   DEPENDS system_lib
 )
 
-find_package(Eigen3 REQUIRED)
+find_package(Eigen REQUIRED)
 include_directories(
   include
   ${EIGEN_INCLUDE_DIRS}
