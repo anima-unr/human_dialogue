@@ -1,0 +1,5 @@
+<launch>
+	<group ns="pr2">
+    	<include file="$(find onr_pr2_moveit_config)/launch/move_group.launch" />
+	</group>
+</launch>

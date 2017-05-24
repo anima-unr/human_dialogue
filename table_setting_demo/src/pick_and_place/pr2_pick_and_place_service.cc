@@ -22,8 +22,8 @@
 */
 
 #include "ros/ros.h"
-#include "active_perception/Vision_Service.h"
-#include "active_perception/Vision_Message.h"
+#include "active_vision_msgs/Vision_Service.h"
+#include "active_vision_msgs/Vision_Message.h"
 
 #include <tf/transform_listener.h>
 
@@ -261,8 +261,8 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
 
 //---------------------------------------------------------------------------------------
     ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<active_perception::Vision_Service>("/CV_Objects");
-    active_perception::Vision_Service srv;
+    ros::ServiceClient client = n.serviceClient<active_vision_msgs::Vision_Service>("/CV_Objects");
+    active_vision_msgs::Vision_Service srv;
 
     tf::TransformListener listener;
     geometry_msgs::PointStamped kinect_obj_pnt;
@@ -273,7 +273,7 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
     {
       ROS_INFO("Being served!!!");
       //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
-      active_perception::Vision_Message msg;
+      active_vision_msgs::Vision_Message msg;
       msg = srv.response.object_location;
       ROS_INFO("Frame id is %s", msg.Frameid.c_str());
       ROS_INFO("x = %f", msg.Pos.x);

@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   geometry_msgs
+  active_vision_msgs
   moveit_ros_planning_interface
 )
 if ($ENV{ROBOT} MATCHES "pr2")
