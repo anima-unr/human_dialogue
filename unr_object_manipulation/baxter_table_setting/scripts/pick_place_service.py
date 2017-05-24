@@ -141,8 +141,8 @@ class PickPlace(object):
         self._limb.set_pose_target(pose_target)
         self._limb.set_num_planning_attempts(3);
         self._limb.set_planning_time(5.0);
-        self._limb.set_goal_position_tolerance(0.1)
-        self._limb.set_goal_orientation_tolerance(0.1)
+        self._limb.set_goal_position_tolerance(0.01)
+        self._limb.set_goal_orientation_tolerance(0.01)
 
         return pose_target
 
@@ -166,8 +166,8 @@ class PickPlace(object):
         self._limb.set_pose_target(pose_target)
         self._limb.set_num_planning_attempts(5);
         self._limb.set_planning_time(10.0);
-        self._limb.set_goal_position_tolerance(0.1)
-        self._limb.set_goal_orientation_tolerance(0.1)
+        self._limb.set_goal_position_tolerance(0.01)
+        self._limb.set_goal_orientation_tolerance(0.01)
 
         print("\tPlanning...")
         plan1 = self._limb.plan()
