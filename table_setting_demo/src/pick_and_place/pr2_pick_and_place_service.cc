@@ -107,35 +107,54 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
 
   const char *dynamic_object_str[] = {
     // "cup",
-     "bowl",
+     //"bowl",
     // "soda",
     // "fork",
     // "spoon",
     // "knife"
+    "Lettuce",
+    "Cup",
+    "Tea",
+    "Sugar", 
+    // "Meat",
+    // "Right_Bread", 
+    // "Left_Bread",
   };
   const char *static_object_str[] = {
 
     // "cup",
     //"bowl",
     // "soda",
-
-    "neutral",
-    "placemat",
+    // "Lettuce",
+    // "Cup",
+    // "Tea",
+    // "Sugar", 
+    "Meat",
+    "Right_Bread", 
+    "Left_Bread",
+    "neutral"
+    //"placemat",
     // "wineglass",
     //"plate"
   };
   const char *object_str[] = {
-    "neutral",
-
+    
     // "placemat",
     // "cup",
     //"plate",
-
+    "Lettuce",
+    "Cup",
+    "Tea",
+    "Sugar", 
+    "Meat",
+    "Right_Bread", 
+    "Left_Bread",
+    "neutral"
     // "fork",
     // "spoon",
     // "knife",
-    "bowl",
-    "soda",
+    //"bowl",
+    //"soda",
     // "wineglass"
   };
   objects_ = std::vector<std::string>(object_str,
@@ -158,6 +177,8 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
   // TODO JB: Create the scene objects!
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
   SetSceneObjects();
+  SetSceneBounds();
+
 } 
 
 PickPlace::~PickPlace() {}
@@ -190,6 +211,8 @@ void TransformPoseWorldToLocal(
 
 void PickPlace::PickAndPlaceImpl(std::string object) {
   printf("Picking up Object: %s\n", object.c_str());
+  geometry_msgs::Pose pick_pose_offset;
+  geometry_msgs::Pose place_pose_offset;
   // check if dyanamic or static object
   if (stop)
     return;
@@ -227,7 +250,14 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
   // printf("\n  goal ori pick place imp x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
   // ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
-  if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+  //if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+  pick_pose_offset = object_goal_map_[object.c_str()].pick_pose;
+  pick_pose_offset.position.z = pick_pose_offset.position.z + 0.2; 
+  pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
+  pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
+  printf("\n  goal pos x %f  y %f  z %f \n", pick_pose_offset.position.x, pick_pose_offset.position.y, pick_pose_offset.position.z);
+  printf("\n  goal ori x %f  y %f  z %f  w %f\n", pick_pose_offset.orientation.x, pick_pose_offset.orientation.y, pick_pose_offset.orientation.z, pick_pose_offset.orientation.w);
+  if (!SendGoal(pick_pose_offset)) {
     ROS_INFO("Goal ERROR!!!!");
     return;
   } 
@@ -256,7 +286,7 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
 
 //---------------------------------------------------------------------------------------
     ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<active_perception::Vision_Service>("/CV_Objects");
+    ros::ServiceClient client = n.serviceClient<active_perception::Vision_Service>("/PR2/CV_Objects");
     active_perception::Vision_Service srv;
 
     tf::TransformListener listener;
@@ -264,6 +294,7 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
     geometry_msgs::PointStamped world_obj_pnt;
    
     srv.request.Label = object;
+    ROS_INFO("Just before service :-(");
     if (client.call(srv))
     {
       ROS_INFO("Being served!!!");
@@ -277,7 +308,7 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
       ROS_INFO("Is available: %u", msg.Found);
       if (msg.Found == true)
       {
-        kinect_obj_pnt.header.frame_id = msg.Frameid;
+        kinect_obj_pnt.header.frame_id = "head_mount_kinect_rgb_optical_frame";//msg.Frameid;
         kinect_obj_pnt.header.stamp = ros::Time();
         kinect_obj_pnt.point.x = msg.Pos.x;
         kinect_obj_pnt.point.y = msg.Pos.y;
@@ -285,7 +316,12 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
 
         try
         {
+          ROS_INFO("Waiting for Tf");
+          listener.waitForTransform("torso_lift_link", "head_mount_kinect_rgb_link", ros::Time::now(), ros::Duration(5.0));
           listener.transformPoint("torso_lift_link", kinect_obj_pnt, world_obj_pnt);
+          ROS_INFO("world x = %f", world_obj_pnt.point.x);
+          ROS_INFO("world y = %f", world_obj_pnt.point.y);
+          ROS_INFO("world z = %f", world_obj_pnt.point.z);
           ROS_INFO("============= transformed");
         }
         catch(tf::TransformException& ex)
@@ -374,9 +410,16 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
     return;
   //TODO JB: object_goal_map_["neutral"].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
   ROS_INFO("Goal: Neutral PICK");
-      printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
-    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
-  if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+  //     printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
+  //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
+  // if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+    pick_pose_offset = object_goal_map_[object.c_str()].pick_pose;
+    pick_pose_offset.position.z = pick_pose_offset.position.z + 0.2; 
+    pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
+    pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
+    printf("\n  goal pos x %f  y %f  z %f \n", pick_pose_offset.position.x, pick_pose_offset.position.y, pick_pose_offset.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", pick_pose_offset.orientation.x, pick_pose_offset.orientation.y, pick_pose_offset.orientation.z, pick_pose_offset.orientation.w);
+  if (!SendGoal(pick_pose_offset)) {
     ROS_INFO("Goal ERROR!!!!");
     ROS_INFO("Detach the object from the robot");
     index = getIndex(object);
@@ -391,9 +434,16 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   ROS_INFO("     State is now PLACING");
   //TODO JB: object_goal_map_["neutral"].place_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
   ROS_INFO("Goal: Neutral PLACE");
-    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
-    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
-  if (!SendGoal(object_goal_map_["neutral"].place_pose)) {
+  //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
+  //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
+  // if (!SendGoal(object_goal_map_["neutral"].place_pose)) {
+  place_pose_offset = object_goal_map_[object.c_str()].place_pose;
+    place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
+    place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+    place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+    printf("\n  goal pos x %f  y %f  z %f \n", place_pose_offset.position.x, place_pose_offset.position.y, place_pose_offset.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
+  if (!SendGoal(place_pose_offset)) {
     ROS_INFO("Goal ERROR!!!!");
     return;
   }
@@ -428,23 +478,31 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
     return;
    //TODO JB: object_goal_map_["neutral"].place_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
   ROS_INFO("Goal: Neutral PLACE");
-    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
-    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
-  if (!SendGoal(object_goal_map_["neutral"].place_pose)) {
+  //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
+  //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
+  // if (!SendGoal(object_goal_map_["neutral"].place_pose)) {
+  place_pose_offset = object_goal_map_[object.c_str()].place_pose;
+    place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
+    place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+    place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+    printf("\n  goal pos x %f  y %f  z %f \n", place_pose_offset.position.x, place_pose_offset.position.y, place_pose_offset.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
+  if (!SendGoal(place_pose_offset)) {  
     ROS_INFO("Goal ERROR!!!!");
     return;
   }
 
   if (stop)
     return;
+  // !!! Don't want to move back to pick as unncessesary with +z instead of neutral
   //TODO JB: object_goal_map_["neutral"].pick_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
-  ROS_INFO("Goal: Neutral PICK");
-    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
-    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
-  if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
-    ROS_INFO("Goal ERROR!!!!");
-    return;
-  }
+  // ROS_INFO("Goal: Neutral PICK");
+  //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
+  //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
+  // if (!SendGoal(object_goal_map_["neutral"].pick_pose)) {
+  //   ROS_INFO("Goal ERROR!!!!");
+  //   return;
+  // }
   // since check uses this to verify done, put this here!
   state_ = PLACED;
   ROS_INFO("     State is now PLACED");
@@ -1273,6 +1331,50 @@ int PickPlace::getIndex(std::string object) {
   return -1;
 
 }
+
+// TODO JB: ADDED FUNCTIONALITY TO CREATE TABLE
+void PickPlace::SetSceneBounds() {
+
+// define objects 
+sleep(2.0);
+moveit_msgs::CollisionObject collision_object1;
+collision_object1.header.frame_id = arm_group_.getPlanningFrame();
+
+// -------
+/* Define a table to add to the world. */
+/* The id of the object is used to identify it. */
+collision_object1.id = "table";
+shape_msgs::SolidPrimitive primitive;
+primitive.type = primitive.BOX;
+primitive.dimensions.resize(3);
+primitive.dimensions[0] = 1;
+primitive.dimensions[1] = 2;
+primitive.dimensions[2] = 0.85;
+/* A pose for the table (specified relative to frame_id) */
+geometry_msgs::Pose table_pose;
+table_pose.orientation.w = 0;
+table_pose.position.x =  0.86;
+table_pose.position.y =  0;
+table_pose.position.z =  0.3; //objects_n3_v2.bin 
+
+collision_object1.primitives.push_back(primitive);
+collision_object1.primitive_poses.push_back(table_pose);
+collision_object1.operation = collision_object1.ADD;
+
+collision_objects_.push_back(collision_object1);
+
+//----------------------------------------
+// Add objects to world
+
+// if collision_objects_.primitives.empty()
+
+ROS_INFO("Add an object into the world");
+planning_scene_interface_.addCollisionObjects(collision_objects_);
+
+/* Sleep so we have time to see the object in RViz */
+sleep(2.0);
+}
+
 
 
 }  // namespace pr2
