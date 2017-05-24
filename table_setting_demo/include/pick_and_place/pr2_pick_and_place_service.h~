@@ -8,7 +8,7 @@
 //-----
 //JB TODO: #include <arm_navigation_msgs/MoveArmAction.h>
 #include "moveit_msgs/PlanningScene.h"
-//#include "moveit_msgs/ApplyPlanningScene.h"
+#include "moveit_msgs/ApplyPlanningScene.h"
 #include "moveit_msgs/CollisionObject.h"
 #include "moveit_msgs/AttachedCollisionObject.h"
 #include "moveit_msgs/DisplayTrajectory.h"
@@ -29,21 +29,13 @@
 #include <table_setting_demo/pick_and_place.h>
 #include <table_setting_demo/pick_and_place_state.h>
 #include <table_setting_demo/pick_and_place_stop.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string>
 #include <iostream>
+#include <stdint.h>
 #include <fstream>
-#include "ros/ros.h"
-#include "table_setting_demo/pick_and_place.h"
-#include "actionlib/client/simple_action_client.h"
-#include "pr2_controllers_msgs/Pr2GripperCommandAction.h"
-#include "tf/transform_listener.h"
-// #include "table_setting_demo/pick_and_place.h"
-#include "table_setting_demo/pick_and_place_state.h"
-#include "table_setting_demo/pick_and_place_stop.h"
 
 namespace pr2 {
 
@@ -124,7 +116,6 @@ class PickPlace {
 
 // TODO JB: ADDED FUNCTIONALITY TO CREATE SCENE OBJECTS
   void SetSceneObjects();
-  void SetSceneBounds();
   int getIndex(std::string object);
 
  private:
