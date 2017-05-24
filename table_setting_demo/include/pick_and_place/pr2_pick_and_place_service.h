@@ -124,6 +124,7 @@ class PickPlace {
 
 // TODO JB: ADDED FUNCTIONALITY TO CREATE SCENE OBJECTS
   void SetSceneObjects();
+  void SetSceneBounds();
   int getIndex(std::string object);
 
  private:

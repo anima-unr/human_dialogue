@@ -143,6 +143,8 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
   // TODO JB: Create the scene objects!
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
   SetSceneObjects();
+  SetSceneBounds();
+  
 } 
 
 PickPlace::~PickPlace() {}
@@ -1244,7 +1246,6 @@ void PickPlace::SetSceneObjects() {
 // sleep(2.0);
 }
 
-
 int PickPlace::getIndex(std::string object) {
 
   // for index in vector collision_objects
@@ -1259,6 +1260,49 @@ int PickPlace::getIndex(std::string object) {
   }
   return -1;
 
+}
+
+// TODO JB: ADDED FUNCTIONALITY TO CREATE TABLE
+void PickPlace::SetSceneBounds() {
+
+// define objects 
+sleep(2.0);
+moveit_msgs::CollisionObject collision_object1;
+collision_object1.header.frame_id = arm_group_.getPlanningFrame();
+
+// -------
+/* Define a table to add to the world. */
+/* The id of the object is used to identify it. */
+collision_object1.id = "table";
+shape_msgs::SolidPrimitive primitive;
+primitive.type = primitive.BOX;
+primitive.dimensions.resize(3);
+primitive.dimensions[0] = 1;
+primitive.dimensions[1] = 2;
+primitive.dimensions[2] = 0.82;
+/* A pose for the table (specified relative to frame_id) */
+geometry_msgs::Pose table_pose;
+table_pose.orientation.w = 0;
+table_pose.position.x =  0.86;
+table_pose.position.y =  0;
+table_pose.position.z =  0.3; //objects_n3_v2.bin 
+
+collision_object1.primitives.push_back(primitive);
+collision_object1.primitive_poses.push_back(table_pose);
+collision_object1.operation = collision_object1.ADD;
+
+collision_objects_.push_back(collision_object1);
+
+//----------------------------------------
+// Add objects to world
+
+// if collision_objects_.primitives.empty()
+
+ROS_INFO("Add an object into the world");
+planning_scene_interface_.addCollisionObjects(collision_objects_);
+
+/* Sleep so we have time to see the object in RViz */
+sleep(2.0);
 }
 
 
