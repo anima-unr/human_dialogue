@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   message_generation
   rosbag
+  cmake_modules
 )
 
 find_package(orocos_kdl)
