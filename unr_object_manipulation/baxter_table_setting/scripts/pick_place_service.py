@@ -188,7 +188,12 @@ class PickPlace(object):
         self.state = STATE.NEUTRAL
         # TODO: JB Added
         # self._limb.move_to_joint_positions(self.object_pick_joint_angles['neutral'])
-        self.moveToPose(self.object_pick_poses['neutral'])
+        # self.moveToPose(self.object_pick_poses['neutral'])
+        pick_pose_offset = self.object_pick_poses[req.object]
+        pick_pose_offset.position.z = pick_pose_offset.position.z + 0.2; 
+        pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
+        pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
+        self.moveToPose(pick_pose_offset)
         if self.stop:
             return
         self._gripper.command_position(100.0)
@@ -211,7 +216,12 @@ class PickPlace(object):
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_pick_joint_angles['neutral'])
-        self.moveToPose(self.object_pick_poses['neutral'])
+        # self.moveToPose(self.object_pick_poses['neutral'])
+        pick_pose_offset = self.object_pick_poses[req.object]
+        pick_pose_offset.position.z = pick_pose_offset.position.z + 0.2; 
+        pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
+        pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
+        self.moveToPose(pick_pose_offset)
         if self.stop:
             return
         print "Placing Down Object:" + req.object
@@ -219,7 +229,12 @@ class PickPlace(object):
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles['neutral'])
-        self.moveToPose(self.object_place_poses['neutral'])
+        # self.moveToPose(self.object_place_poses['neutral'])
+        place_pose_offset = self.object_place_poses[req.object]
+        place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
+        place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+        place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+        self.moveToPose(place_pose_offset)
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles[req.object])
@@ -234,7 +249,12 @@ class PickPlace(object):
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles['neutral'])
-        self.moveToPose(self.object_place_poses['neutral'])
+        # self.moveToPose(self.object_place_poses['neutral'])
+        place_pose_offset = self.object_place_poses[req.object]
+        place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
+        place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+        place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+        self.moveToPose(place_pose_offset)
         if self.stop:
             return
         self._gripper.command_position(0.0)
