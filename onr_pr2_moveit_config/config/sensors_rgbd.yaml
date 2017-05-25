@@ -4,7 +4,7 @@ sensors:
    max_range: 5.0
    frame_subsample: 1
    point_subsample: 1
-   padding_scale: 4.0
+   padding_scale: 2.0
    padding_offset: 0.03
 
 
@@ -14,7 +14,7 @@ sensors:
    max_range: 15.0
    frame_subsample: 1
    point_subsample: 1
-   padding_scale: 4.0
+   padding_scale: 2.0
    padding_offset: 0.03
    filtered_cloud_topic: tilt_scan_self_filtered_cloud
 
