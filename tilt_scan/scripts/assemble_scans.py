@@ -8,7 +8,7 @@ from pr2_msgs.msg import *
 
 
 def scanner():
-	pub = rospy.Publisher('/tilt_cloud', PointCloud, queue_size=10)
+	pub = rospy.Publisher('/tilt_cloud', PointCloud2, queue_size=10)
 	rospy.init_node("test_client")
 
 	rospy.wait_for_service("pr2/laser_tilt_controller/set_periodic_cmd")
@@ -22,12 +22,12 @@ def scanner():
 	rospy.sleep(3)
 	while not rospy.is_shutdown():
 		try:
-			assemble_scans = rospy.ServiceProxy('assemble_scans', AssembleScans)
+			assemble_scans = rospy.ServiceProxy('assemble_scans2', AssembleScans2)
 			time = rospy.Time().now()
 			then = time - rospy.Duration(3)
 			resp = assemble_scans(then, time)
 			print 'searching from: %f to %f' % (then.to_sec() , time.to_sec())
-			print "Got cloud with %u points" % len(resp.cloud.points)
+			print "Got cloud with %u points" % len(resp.cloud.data)
 		
 			pub.publish(resp.cloud)
 
