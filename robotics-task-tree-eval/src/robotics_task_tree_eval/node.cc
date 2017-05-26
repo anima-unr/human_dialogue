@@ -77,6 +77,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.activation_level = 0.0f;
   state_.activation_potential = 0.0f;
   state_.peer_active = false;
+  state_.peer_done = false;
 
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());
