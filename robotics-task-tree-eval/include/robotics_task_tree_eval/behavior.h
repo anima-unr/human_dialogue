@@ -81,6 +81,21 @@ class OrBehavior: public Behavior {
   uint32_t seed;
   uint32_t random_child_selection;
 };
+class DummyBehavior: public Behavior {
+ public:
+  DummyBehavior();
+  DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
+    NodeId_t parent,
+    State_t state,
+    bool use_local_callback_queue = false,
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+  virtual ~DummyBehavior();
+  void UpdateActivationPotential();
+  void Work();
+ protected:
+  virtual bool Precondition();
+  virtual uint32_t SpreadActivation();
+};
 class WhileBehavior: public Behavior {};
 }  // namespace task_net
 #endif  // INCLUDE_BEHAVIOR_H_

@@ -54,11 +54,11 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   name_   = node_dict_[GetBitmask(name.topic)];
 
   for (NodeListIterator it = peers.begin(); it != peers.end(); ++it) {
-    peers_.push_back(node_dict_[GetBitmask(it->topic)]);
-    printf("NODE::PEERS_: %s\n", peers_[0]->topic.c_str());
-    // NOTE: THIS IS PROBABLY IN THE WRONG SPOT NOW BUT IT WAS CAUSING ISSUES BELOW!
+    if(strcmp(it->topic.c_str(), "NONE") != 0) {
+      peers_.push_back(node_dict_[GetBitmask(it->topic)]);
+      // NOTE: THIS IS PROBABLY IN THE WRONG SPOT NOW BUT IT WAS CAUSING ISSUES BELOW!
+    }
   }
-  // printf("NODE::PEERS_: %s\n", peers_[0]->topic.c_str());
 
   for (NodeListIterator it = children.begin(); it != children.end(); ++it) {
     children_.push_back(node_dict_[GetBitmask(it->topic)]);
@@ -262,7 +262,7 @@ void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
 // IDEA: This thread may be able to start the thread then become the work watcher
 // IDEA: The work watcher may need to funtion earlier than the work thread is started.
 void WorkThread(Node *node) {
-      // ROS_INFO("Node::WorkThread was called!!!!\n");
+      ROS_INFO("Node::WorkThread was called!!!!\n");
 
   boost::unique_lock<boost::mutex> lock(node->work_mut);
   while (!node->state_.active) {
@@ -482,7 +482,7 @@ void Node::PublishDoneParent() {
   msg->done = state_.done;
   msg->active = state_.active;
   parent_pub_.publish(msg);
-  // printf("Publish Status: %s\n", msg->data.c_str());
+  // printf("Publish Status: %d\n", msg->done);
 }
 
 bool Node::IsDone() {

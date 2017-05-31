@@ -33,7 +33,9 @@ Behavior::Behavior(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state) {}
+      state) {  
+      // printf("Behavior::Behavior WAS CALLED\n");
+}
 Behavior::~Behavior() {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +51,9 @@ AndBehavior::AndBehavior(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state) {}
+      state) {
+        // printf("AndBehavior::AndBehavior WAS CALLED\n");
+    }
 AndBehavior::~AndBehavior() {}
 
 void AndBehavior::UpdateActivationPotential() {
@@ -103,6 +107,7 @@ ThenBehavior::ThenBehavior(NodeId_t name, NodeList peers, NodeList children,
       parent,
       state) {
   // Initialize activation queue
+      // printf("ThenBehavior::ThenBehavior WAS CALLED\n");
   for (NodeListPtrIterator it = children_.begin(); it != children_.end();
       ++it) {
     activation_queue_.push(*it);
@@ -164,6 +169,7 @@ OrBehavior::OrBehavior(NodeId_t name, NodeList peers, NodeList children,
       state) {
   seed = static_cast<uint32_t>(time(NULL));
   random_child_selection = rand_r(&seed) % children_.size();
+  // printf("OrBehavior::OrBehavior WAS CALLED\n");
 }
 OrBehavior::~OrBehavior() {}
 
@@ -201,4 +207,49 @@ uint32_t OrBehavior::SpreadActivation() {
 
   SendToChild(children_[random_child_selection]->mask, msg);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// DUMMY PLACE BEHAVIOR
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+DummyBehavior::DummyBehavior() {}
+DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
+    NodeId_t parent,
+    State_t state,
+    bool use_local_callback_queue,
+    boost::posix_time::millisec mtime) : Behavior(name,
+      peers,
+      children,
+      parent,
+      state) {
+        // printf("DummyBehavior::DummyBehavior WAS CALLED\n");
+    }
+DummyBehavior::~DummyBehavior() {}
+
+void DummyBehavior::UpdateActivationPotential() {
+    // ROS_INFO("AndBehavior::UpdateActivationPotential was called!!!!\n");
+
+  state_.activation_potential = 100;
+}
+
+bool DummyBehavior::Precondition() {
+    // ROS_INFO("AndBehavior::Precondition was called!!!!\n");
+  return true;
+}
+
+uint32_t DummyBehavior::SpreadActivation() {
+    // ROS_INFO("AndBehavior::SpreadActivation was called!!!!");
+  // ControlMessagePtr_t msg(new ControlMessage_t);
+  // msg->sender = mask_;
+  // msg->activation_level = 1.0f;
+  // msg->done = false;
+}
+
+void DummyBehavior::Work() {
+  ROS_INFO("DummyBehavior::Work: waiting for pause to be done!");
+  boost::this_thread::sleep(boost::posix_time::millisec(10000));
+  ROS_INFO("DummyBehavior::Work: Done!");
+}
+
 }  // namespace task_net
