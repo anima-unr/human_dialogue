@@ -102,6 +102,7 @@ class Node {
   friend void WorkThread(Node* node);
   friend void RecordThread(Node* node);
   friend void CheckThread(Node* node);
+  friend void PeerCheckThread(Node *node); 
 
   virtual void RecordToFile();
  private:
@@ -157,6 +158,7 @@ class Node {
   boost::thread *update_thread;
   boost::thread *work_thread;
   boost::thread *check_thread;
+  boost::thread *peer_check_thread;
 
   // Mutex
   boost::mutex mut;

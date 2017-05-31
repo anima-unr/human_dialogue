@@ -60,6 +60,7 @@ struct State {
   NodeBitmask owner;  // If owner is null node is inactive
   bool active;
   bool done;
+  bool check_peer;
   float activation_level;
   float activation_potential;
   bool peer_active;

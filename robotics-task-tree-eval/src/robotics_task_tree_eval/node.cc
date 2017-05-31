@@ -78,6 +78,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.activation_potential = 0.0f;
   state_.peer_active = false;
   state_.peer_done = false;
+  state_.check_peer = false;
 
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());
@@ -128,18 +129,29 @@ void Node::GenerateNodeBitmaskMap() {
 }
 void Node::Activate() {
     // ROS_INFO("Node::Activate was called!!!!\n");
-  if (!state_.active && !state_.peer_active && !state_.peer_done) {
-    if (ActivationPrecondition()) {
-      LOG_INFO("Activating Node: %s", name_->topic.c_str());
-      printf("\t\tNode::Activate  Activating Node: %s\n\n", name_->topic.c_str());
-      {
-        boost::lock_guard<boost::mutex> lock(work_mut);
-        state_.active = true;
-        // Send activation to peers to avoid race condition
-        PublishStateToPeers();
+
+  ROS_INFO("NODE::ACTIVATE: peer is now: %d!!!", state_.peer_active);
+
+ // if thread is okay, run this??
+    state_.check_peer = true; // TODO JB: Remove this as it is forcing this to always happen so code will still run!
+ if(state_.check_peer) {
+      ROS_INFO("NODE::ACTIVATE: peer has made it into the if statement!!!");
+    if (!state_.active && !state_.peer_active && !state_.peer_done) {
+      if (ActivationPrecondition()) {
+        LOG_INFO("Activating Node: %s", name_->topic.c_str());
+        printf("\t\tNode::Activate Activating Node: %s\n\n", name_->topic.c_str());
+        {
+          boost::lock_guard<boost::mutex> lock(work_mut);
+          state_.active = true;
+          // Send activation to peers to avoid race condition
+          PublishStateToPeers();
+        }
+        cv.notify_all();
       }
-      cv.notify_all();
     }
+    state_.check_peer = false;
+    ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");
+    
   }
 }
 
@@ -249,7 +261,7 @@ void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
 
 // Main Loop of Update Thread. spins once every mtime milliseconds
 void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
-    // ROS_INFO("Node::UpdateThread was called!!!!\n");
+    ROS_INFO("Node::UpdateThread was called!!!!\n");
   while (true) {
     node->Update();
     boost::this_thread::sleep(mtime);
@@ -278,6 +290,35 @@ void WorkThread(Node *node) {
   node->working = false;
   node->PublishDoneParent();
   node->PublishStateToPeers();
+}
+
+// TODO JB: implementation for peer thread!
+void PeerCheckThread(Node *node) {
+      ROS_INFO("Node::PeerCheckThread was called!!!!\n");
+
+  // wait for checking to be asked!
+  boost::unique_lock<boost::mutex> lock(node->work_mut);
+   while (!node->state_.check_peer) {
+    ROS_INFO("PeerCheckThread is waiting!");
+    // DO I NEED TO MAKE ANOTHER MUTEX?!?!
+    node->cv.wait(lock);
+  }
+  // LOG_INFO("check peer thread Initialized");
+    ROS_INFO("PeerCheckThread is initialized! SET TO FALSE");
+  node->state_.check_peer = true; //try to force this to remain in the activate loop to verify the thread is getting called correctly, which its not....
+  // notify peers I want to start this node --- we don't have a method of this yet...?
+
+  // notify and send status and activation potential to peers
+
+  // wait for full loop
+
+  // if no peers updated status, then I can be active
+
+
+  // set state variable to pass the if statement inside Active fxn
+    // loop that I am trying to figure out how to activate correctly....
+    // if !state_.active && !state_.peer_active && !state_.peer_done
+
 }
 
 void CheckThread(Node *node) {
@@ -350,6 +391,7 @@ void Node::NodeInit(boost::posix_time::millisec mtime) {
   update_thread = new boost::thread(&UpdateThread, this, mtime);
   work_thread   = new boost::thread(&WorkThread, this);
   check_thread  = new boost::thread(&CheckThread, this);
+  peer_check_thread  = new boost::thread(&PeerCheckThread, this);
 
   // Initialize recording Thread
   std::string filename = "~/catkin_ws/src/Distributed_Collaborative_Task_Tree/Data/" + name_->topic + "_Data_.csv";
