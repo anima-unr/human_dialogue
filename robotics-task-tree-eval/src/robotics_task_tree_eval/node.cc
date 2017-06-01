@@ -33,6 +33,9 @@ namespace task_net {
 #define ACTIVATION_THESH 0.1
 #define ACTIVATION_FALLOFF 0.95f
 
+void PeerCheckThread(Node *node);
+
+
 Node::Node() {
   state_.active = false;
   state_.done = false;
@@ -79,6 +82,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.peer_active = false;
   state_.peer_done = false;
   state_.check_peer = false;
+  state_.peer_okay = false;
 
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());
@@ -130,12 +134,17 @@ void Node::GenerateNodeBitmaskMap() {
 void Node::Activate() {
     // ROS_INFO("Node::Activate was called!!!!\n");
 
-  ROS_INFO("NODE::ACTIVATE: peer is now: %d!!!", state_.peer_active);
+  ROS_INFO("NODE::Activate: Will now launch thread!!!!");
+  // peer_check_thread  = new boost::thread(boost::bind(&task_net::Node::PeerCheckThread, this));
+  state_.check_peer = true;
+  peer_check_thread  = new boost::thread(&PeerCheckThread, this);
 
  // if thread is okay, run this??
-    state_.check_peer = true; // TODO JB: Remove this as it is forcing this to always happen so code will still run!
- if(state_.check_peer) {
-      ROS_INFO("NODE::ACTIVATE: peer has made it into the if statement!!!");
+    // state_.check_peer = true; // TODO JB: Remove this as it is forcing this to always happen so code will still run!
+    // maybe to make this logic easier, use two diff state vars, one to get passed the while loop 
+    // in the thread and one that the thread sets to true or false to deal with this loop here
+ if(state_.peer_okay) {
+      ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
     if (!state_.active && !state_.peer_active && !state_.peer_done) {
       if (ActivationPrecondition()) {
         LOG_INFO("Activating Node: %s", name_->topic.c_str());
@@ -150,6 +159,7 @@ void Node::Activate() {
       }
     }
     state_.check_peer = false;
+    state_.peer_okay = false;
     ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");
     
   }
@@ -294,18 +304,18 @@ void WorkThread(Node *node) {
 
 // TODO JB: implementation for peer thread!
 void PeerCheckThread(Node *node) {
-      ROS_INFO("Node::PeerCheckThread was called!!!!\n");
+      // ROS_INFO("Node::PeerCheckThread was called!!!!\n");
 
   // wait for checking to be asked!
-  boost::unique_lock<boost::mutex> lock(node->work_mut);
+  boost::unique_lock<boost::mutex> lockp(node->peer_mut);
    while (!node->state_.check_peer) {
     ROS_INFO("PeerCheckThread is waiting!");
     // DO I NEED TO MAKE ANOTHER MUTEX?!?!
-    node->cv.wait(lock);
+    node->cv.wait(lockp);
   }
   // LOG_INFO("check peer thread Initialized");
-    ROS_INFO("PeerCheckThread is initialized! SET TO FALSE");
-  node->state_.check_peer = true; //try to force this to remain in the activate loop to verify the thread is getting called correctly, which its not....
+    ROS_INFO("PeerCheckThread is initialized! SET TO TRUE -- impl logic here");
+  node->state_.peer_okay = true; //try to force this to remain in the activate loop to verify the thread is getting called correctly, which its not....
   // notify peers I want to start this node --- we don't have a method of this yet...?
 
   // notify and send status and activation potential to peers

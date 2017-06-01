@@ -61,6 +61,7 @@ struct State {
   bool active;
   bool done;
   bool check_peer;
+  bool peer_okay;
   float activation_level;
   float activation_potential;
   bool peer_active;

@@ -163,6 +163,7 @@ class Node {
   // Mutex
   boost::mutex mut;
   boost::mutex work_mut;
+  boost::mutex peer_mut;
 
   // Recording Mutex
   boost::thread *record_thread;
