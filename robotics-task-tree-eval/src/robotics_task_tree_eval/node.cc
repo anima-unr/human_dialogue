@@ -135,14 +135,22 @@ void Node::Activate() {
     // ROS_INFO("Node::Activate was called!!!!\n");
 
   ROS_INFO("NODE::Activate: Will now launch thread!!!!");
-  // peer_check_thread  = new boost::thread(boost::bind(&task_net::Node::PeerCheckThread, this));
   state_.check_peer = true;
-  peer_check_thread  = new boost::thread(&PeerCheckThread, this);
+  // TODO JB: have this only spin a new thread if the thread doesn't already exist
+ 
+  // create peer_check thread if it isn't already running 
+  bool thread_active;
+  thread_active = peer_check_thread->timed_join(boost::posix_time::millisec(0)); // this is not working correctly!!!
+  // printf("\n\nactive? %d\n\n", thread_active);
+  if(!thread_active) {
+    peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
+    printf("\n\nThread was not active, so has been created!\n\n");
+  }
+  else {
+        printf("\n\nThread was already active\n\n");
+      }
 
  // if thread is okay, run this??
-    // state_.check_peer = true; // TODO JB: Remove this as it is forcing this to always happen so code will still run!
-    // maybe to make this logic easier, use two diff state vars, one to get passed the while loop 
-    // in the thread and one that the thread sets to true or false to deal with this loop here
  if(state_.peer_okay) {
       ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
     if (!state_.active && !state_.peer_active && !state_.peer_done) {
@@ -153,10 +161,13 @@ void Node::Activate() {
           boost::lock_guard<boost::mutex> lock(work_mut);
           state_.active = true;
           // Send activation to peers to avoid race condition
-          PublishStateToPeers();
+          // this will publish the updated state to say I am now active
+          PublishStateToPeers(); 
         }
         cv.notify_all();
-      }
+        // TODO JB: kill the thread now
+        peer_check_thread->interrupt();
+        }
     }
     state_.check_peer = false;
     state_.peer_okay = false;
@@ -310,24 +321,32 @@ void PeerCheckThread(Node *node) {
   boost::unique_lock<boost::mutex> lockp(node->peer_mut);
    while (!node->state_.check_peer) {
     ROS_INFO("PeerCheckThread is waiting!");
-    // DO I NEED TO MAKE ANOTHER MUTEX?!?!
     node->cv.wait(lockp);
   }
   // LOG_INFO("check peer thread Initialized");
-    ROS_INFO("PeerCheckThread is initialized! SET TO TRUE -- impl logic here");
+  ROS_INFO("PeerCheckThread is initialized! SET TO TRUE -- impl logic here");
+  sleep(10);
   node->state_.peer_okay = true; //try to force this to remain in the activate loop to verify the thread is getting called correctly, which its not....
-  // notify peers I want to start this node --- we don't have a method of this yet...?
+  // notify peers I want to start this node 
+  // by sending status and activation potential to peers
 
-  // notify and send status and activation potential to peers
+  // wait for full loop so can recieved data back from peers
 
-  // wait for full loop
+  // for each peer, check status
+  // (might have to change logic to take highest of all peers?!?)
+  // for now just assume only 1 peer!!!
 
-  // if no peers updated status, then I can be active
+    // if peer done, then peer_okay = False (since already completed, I can't activate) 
 
+    // otherwise if peer active
 
-  // set state variable to pass the if statement inside Active fxn
-    // loop that I am trying to figure out how to activate correctly....
-    // if !state_.active && !state_.peer_active && !state_.peer_done
+        // if my activation potential/level (which one? potential right)
+        // is > my peer's activation potentional/level, then peer_okay = True
+
+        // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
+
+    // otherwise, peer is not active and peer is not done so I can activate, peer_okay = True
+
 
 }
 
