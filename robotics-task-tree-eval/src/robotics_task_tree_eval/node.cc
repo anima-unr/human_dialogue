@@ -136,15 +136,12 @@ void Node::Activate() {
 
   ROS_INFO("NODE::Activate: Will now launch thread!!!!");
   state_.check_peer = true;
-  // TODO JB: have this only spin a new thread if the thread doesn't already exist
- 
+  // TODO JB: have this only spin a new thread if the thread doesn't already exist 
   // create peer_check thread if it isn't already running 
-  bool thread_active;
-  thread_active = peer_check_thread->timed_join(boost::posix_time::millisec(0)); // this is not working correctly!!!
-  // printf("\n\nactive? %d\n\n", thread_active);
-  if(!thread_active) {
+  if(!peer_check_thread) {
     peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
     printf("\n\nThread was not active, so has been created!\n\n");
+    peer_check_thread->detach(); 
   }
   else {
         printf("\n\nThread was already active\n\n");
@@ -167,6 +164,7 @@ void Node::Activate() {
         cv.notify_all();
         // TODO JB: kill the thread now
         peer_check_thread->interrupt();
+        peer_check_thread = NULL;
         }
     }
     state_.check_peer = false;
@@ -325,8 +323,9 @@ void PeerCheckThread(Node *node) {
   }
   // LOG_INFO("check peer thread Initialized");
   ROS_INFO("PeerCheckThread is initialized! SET TO TRUE -- impl logic here");
-  sleep(10);
+  boost::this_thread::sleep(boost::posix_time::millisec(10000));
   node->state_.peer_okay = true; //try to force this to remain in the activate loop to verify the thread is getting called correctly, which its not....
+  printf("\nPeercheckthread is at end!!!!\n");
   // notify peers I want to start this node 
   // by sending status and activation potential to peers
 
@@ -420,7 +419,7 @@ void Node::NodeInit(boost::posix_time::millisec mtime) {
   update_thread = new boost::thread(&UpdateThread, this, mtime);
   work_thread   = new boost::thread(&WorkThread, this);
   check_thread  = new boost::thread(&CheckThread, this);
-  peer_check_thread  = new boost::thread(&PeerCheckThread, this);
+  // peer_check_thread  = new boost::thread(&PeerCheckThread, this);
 
   // Initialize recording Thread
   std::string filename = "~/catkin_ws/src/Distributed_Collaborative_Task_Tree/Data/" + name_->topic + "_Data_.csv";
