@@ -149,7 +149,7 @@ void Node::Activate() {
  // if thread is okay, run this??
  if(state_.peer_okay) {
       ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
-    // if (!state_.active && !state_.peer_active && !state_.peer_done) {
+    if (!state_.active && !state_.done) {
       if (ActivationPrecondition()) {
         ROS_INFO("Activating Node: %s", name_->topic.c_str());
         // printf("\t\tNode::Activate Activating Node: %s\n\n", name_->topic.c_str());
@@ -166,7 +166,7 @@ void Node::Activate() {
         peer_check_thread->interrupt();
         peer_check_thread = NULL;
         }
-    // }
+    }
     state_.check_peer = false;
     state_.peer_okay = false;
     ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");
@@ -327,7 +327,7 @@ void PeerCheckThread(Node *node) {
   node->PublishStateToPeers(); 
 
   // wait for full loop so can recieved data back from peers
-  boost::this_thread::sleep(boost::posix_time::millisec(10000));  
+  boost::this_thread::sleep(boost::posix_time::millisec(5000));  
 
   // for each peer, check status
   // (might have to change logic to take highest of all peers?!?)
