@@ -248,7 +248,7 @@ uint32_t DummyBehavior::SpreadActivation() {
 
 void DummyBehavior::Work() {
   ROS_INFO("DummyBehavior::Work: waiting for pause to be done!");
-  boost::this_thread::sleep(boost::posix_time::millisec(10000));
+  boost::this_thread::sleep(boost::posix_time::millisec(5000));
   ROS_INFO("DummyBehavior::Work: Done!");
 }
 

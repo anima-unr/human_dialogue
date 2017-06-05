@@ -134,29 +134,29 @@ void Node::GenerateNodeBitmaskMap() {
 void Node::Activate() {
     // ROS_INFO("Node::Activate was called!!!!\n");
 
-  ROS_INFO("NODE::Activate: Will now launch thread!!!!");
   state_.check_peer = true;
   // TODO JB: have this only spin a new thread if the thread doesn't already exist 
   // create peer_check thread if it isn't already running 
   if(!peer_check_thread) {
     peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
-    printf("\n\nThread was not active, so has been created!\n\n");
+    printf("\n\tThread was not active, so has been created!\n");
     peer_check_thread->detach(); 
   }
   else {
-        printf("\n\nThread was already active\n\n");
+        printf("\n\tThread was already active\n");
       }
 
  // if thread is okay, run this??
  if(state_.peer_okay) {
       ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
-    if (!state_.active && !state_.peer_active && !state_.peer_done) {
+    // if (!state_.active && !state_.peer_active && !state_.peer_done) {
       if (ActivationPrecondition()) {
-        LOG_INFO("Activating Node: %s", name_->topic.c_str());
-        printf("\t\tNode::Activate Activating Node: %s\n\n", name_->topic.c_str());
+        ROS_INFO("Activating Node: %s", name_->topic.c_str());
+        // printf("\t\tNode::Activate Activating Node: %s\n\n", name_->topic.c_str());
         {
           boost::lock_guard<boost::mutex> lock(work_mut);
           state_.active = true;
+          ROS_INFO("State was set to true!");
           // Send activation to peers to avoid race condition
           // this will publish the updated state to say I am now active
           PublishStateToPeers(); 
@@ -166,7 +166,7 @@ void Node::Activate() {
         peer_check_thread->interrupt();
         peer_check_thread = NULL;
         }
-    }
+    // }
     state_.check_peer = false;
     state_.peer_okay = false;
     ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");
@@ -322,31 +322,59 @@ void PeerCheckThread(Node *node) {
     node->cv.wait(lockp);
   }
   // LOG_INFO("check peer thread Initialized");
-  ROS_INFO("PeerCheckThread is initialized! SET TO TRUE -- impl logic here");
-  boost::this_thread::sleep(boost::posix_time::millisec(10000));
-  node->state_.peer_okay = true; //try to force this to remain in the activate loop to verify the thread is getting called correctly, which its not....
-  printf("\nPeercheckthread is at end!!!!\n");
   // notify peers I want to start this node 
   // by sending status and activation potential to peers
+  node->PublishStateToPeers(); 
 
   // wait for full loop so can recieved data back from peers
+  boost::this_thread::sleep(boost::posix_time::millisec(10000));  
 
   // for each peer, check status
   // (might have to change logic to take highest of all peers?!?)
   // for now just assume only 1 peer!!!
+  for (NodeListPtr::iterator it = node->peers_.begin();
+      it != node->peers_.end(); ++it) {
+
+    // printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),(*it)->state.active,(*it)->state.done);
+    printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
+    printf("\n\nMe   DATA:\t%s\n\tactive: %d\tdone:%d\n\n", node->name_->topic.c_str(),node->state_.active,node->state_.done);
+
 
     // if peer done, then peer_okay = False (since already completed, I can't activate) 
-
+    // if((*it)->state.done) {
+    if(node->state_.peer_done) {
+       printf("\n\nPeerCheckThread: Case 1!!\n\n");
+      node->state_.peer_okay = false; 
+    }
     // otherwise if peer active
+    // else if ((*it)->state.active) {
+    else if (node->state_.peer_active) {
+      // if ((*it)->state.activation_potential < node->state_.activation_potential) {
+      //   // if my activation potential/level (which one? potential right)
+      //   // is > my peer's activation potentional/level, then peer_okay = True
+      //   // NOTE: I don't think this will ever happen, becuase I am not active yet so if
+      //   // my peer is already active, then it made it through this process and so it wont
+      //   // be stopped from doing work already?!?!
+      //  printf("\n\nPeerCheckThread: Case 2!!\n\n");
+      //  node->state_.peer_okay = true; 
+      // }
+      //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
+      // else{ 
+       printf("\n\nPeerCheckThread: Case 3!!\n\n");
+      node->state_.peer_okay = false; 
+      // }
 
-        // if my activation potential/level (which one? potential right)
-        // is > my peer's activation potentional/level, then peer_okay = True
-
-        // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
-
+    }
     // otherwise, peer is not active and peer is not done so I can activate, peer_okay = True
-
-
+    else if (!node->state_.peer_done && !node->state_.peer_active) {
+       printf("\n\nPeerCheckThread: Case 4!!\n\n");
+      node->state_.peer_okay = true; 
+    }
+    else {
+      printf("\n\nERROR! PeerCheckThread: Undefined case! Please redo logic!\n\n");
+    }
+  }
+  printf("\nPeercheckthread is at end!!!!\n");
 }
 
 void CheckThread(Node *node) {

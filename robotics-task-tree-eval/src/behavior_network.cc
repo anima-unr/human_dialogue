@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
           }
         }
         // get peers
+        peers_param.clear();
         if (nh_.getParam((param_prefix + nodes[i]
               + "/" + param_ext_peers).c_str(), peers_param_str)) {
             for (int j = 0; j < peers_param_str.size(); ++j) {
