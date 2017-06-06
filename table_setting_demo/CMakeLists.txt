@@ -217,6 +217,21 @@ if (${BUILD_TABLE_SETTING_DEMO})
     ${Boost_LIBRARIES}
   )
 
+# multi 
+  add_executable(multi_robot_demo
+    src/multi_robot_network.cc
+    src/table_object_behavior.cpp
+  )
+  target_link_libraries(multi_robot_demo
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+  add_dependencies(multi_robot_demo
+    table_setting_demo_generate_messages_cpp
+  )
+
+
+
   # BUILD OBJECT TRANSFORMATION service
   add_executable(object_trans_service
     src/3d_object_transformation_service/3d_object_trans_service.cc
