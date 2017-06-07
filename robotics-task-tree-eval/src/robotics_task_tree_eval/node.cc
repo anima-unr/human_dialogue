@@ -327,7 +327,7 @@ void PeerCheckThread(Node *node) {
   node->PublishStateToPeers(); 
 
   // wait for full loop so can recieved data back from peers
-  boost::this_thread::sleep(boost::posix_time::millisec(5000));  
+  boost::this_thread::sleep(boost::posix_time::millisec(10000));  
 
   // for each peer, check status
   // (might have to change logic to take highest of all peers?!?)
@@ -360,8 +360,12 @@ void PeerCheckThread(Node *node) {
       // }
       //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
       // else{ 
-       printf("\n\nPeerCheckThread: Case 3!!\n\n");
+       printf("\n\nPeerCheckThread: Case 3!!\n");
       node->state_.peer_okay = false; 
+      // lower my activation level for this node
+      printf("\tCurr level: %f\n", node->state_.activation_level);
+      node->state_.activation_level = ACTIVATION_FALLOFF*node->state_.activation_level;
+      printf("\tNew level: %f\n\n", node->state_.activation_level);
       // }
 
     }

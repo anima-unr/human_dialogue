@@ -91,6 +91,7 @@ class DummyBehavior: public Behavior {
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~DummyBehavior();
   void UpdateActivationPotential();
+  bool ActivationPrecondition();
   void Work();
  protected:
   virtual bool Precondition();

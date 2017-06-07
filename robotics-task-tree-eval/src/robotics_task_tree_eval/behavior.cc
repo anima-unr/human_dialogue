@@ -248,8 +248,14 @@ uint32_t DummyBehavior::SpreadActivation() {
 
 void DummyBehavior::Work() {
   ROS_INFO("DummyBehavior::Work: waiting for pause to be done!");
-  boost::this_thread::sleep(boost::posix_time::millisec(5000));
+  boost::this_thread::sleep(boost::posix_time::millisec(10000));
+  mut.Release();
   ROS_INFO("DummyBehavior::Work: Done!");
+}
+
+bool DummyBehavior::ActivationPrecondition() {
+  return mut.Lock(state_.activation_potential);
+  return true;
 }
 
 }  // namespace task_net
