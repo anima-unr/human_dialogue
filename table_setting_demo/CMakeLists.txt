@@ -217,6 +217,20 @@ if (${BUILD_TABLE_SETTING_DEMO})
     ${Boost_LIBRARIES}
   )
 
+# dummy multi  
+  add_executable(dummy_multi_demo
+    src/dummy_multi_network.cpp
+    src/table_object_behavior.cpp
+  )
+  target_link_libraries(dummy_multi_demo
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+  add_dependencies(dummy_multi_demo
+    table_setting_demo_generate_messages_cpp
+  )
+
+
 # multi 
   add_executable(multi_robot_demo
     src/multi_robot_network.cc

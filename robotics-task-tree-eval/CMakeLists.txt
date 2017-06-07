@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  remote_mutex
 )
 
 if( "${CMAKE_BUILD_TYPE}" STREQUAL Debug )

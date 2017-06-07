@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
+#include "remote_mutex/remote_mutex.h"
+
 
 namespace task_net {
 typedef std::vector<NodeId_t>::iterator NodeId_t_iterator;
