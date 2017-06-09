@@ -224,7 +224,7 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state) {
+      state), mut_arm(name.topic.c_str(), "/right_arm_mutex") {
         // printf("DummyBehavior::DummyBehavior WAS CALLED\n");
     }
 DummyBehavior::~DummyBehavior() {}
@@ -251,13 +251,16 @@ uint32_t DummyBehavior::SpreadActivation() {
 void DummyBehavior::Work() {
   ROS_INFO("DummyBehavior::Work: waiting for pause to be done!");
   boost::this_thread::sleep(boost::posix_time::millisec(10000));
-  mut.Release();
+  mut_arm.Release();
   ROS_INFO("DummyBehavior::Work: Done!");
+  ROS_INFO("\tDmmyBehavior::MUTEX IS RELEASED!");
 }
 
 bool DummyBehavior::ActivationPrecondition() {
-  return mut.Lock(state_.activation_potential);
-  return true;
+  ROS_INFO("\tDmmyBehavior::MUTEX IS LOCKING!");
+
+  return mut_arm.Lock(state_.activation_potential);
+  // return true;
 }
 
 }  // namespace task_net

@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <queue>
 #include "robotics_task_tree_eval/node.h"
+#include "remote_mutex/remote_mutex.h"
+
 namespace task_net {
 class Behavior: public Node {
  public:
@@ -96,6 +98,7 @@ class DummyBehavior: public Behavior {
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
+  mutex::RemoteMutex mut_arm;
 };
 class WhileBehavior: public Behavior {};
 }  // namespace task_net

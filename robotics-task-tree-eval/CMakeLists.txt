@@ -130,6 +130,7 @@ add_executable(robotics_task_tree_eval_net
 target_link_libraries(robotics_task_tree_eval_net
   ${catkin_LIBRARIES}
   robotics_task_tree
+  remote_mutex
 )
 
 add_dependencies(robotics_task_tree_eval_net

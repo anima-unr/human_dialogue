@@ -326,8 +326,16 @@ void PeerCheckThread(Node *node) {
   // by sending status and activation potential to peers
   node->PublishStateToPeers(); 
 
+  // TODO: In the futurre maybe make a recieve from peers call here to ensure
+  // that this happens right since the timing of the return from the check 
+  // causing issues for THEN without some hard-coded offset as below?!?!
+
   // wait for full loop so can recieved data back from peers
-  boost::this_thread::sleep(boost::posix_time::millisec(10000));  
+  // NOTE: Due to the exact same timing in the THEN case, change the loop time to deal
+  //       with latency for the different sets of nodes
+  int buff = node->state_.owner.robot;
+  printf("\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, 500+(buff*1500));
+  boost::this_thread::sleep(boost::posix_time::millisec(500+(buff*1500)));  
 
   // for each peer, check status
   // (might have to change logic to take highest of all peers?!?)
