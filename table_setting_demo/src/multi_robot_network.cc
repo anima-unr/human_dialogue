@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
                                         false);
             // printf("\ttask_net::AND %d\n",task_net::AND);
             break;
-          case task_net::PLACE:
+          case task_net::BEHAVIOR:
             // ROS_INFO("Children Size: %lu", children_param.size());
             object = name_param.topic.c_str();
            // get the name of the object of corresponding node:
@@ -187,6 +187,7 @@ int main(int argc, char *argv[]) {
             //                             state,
             //                             false);
             // printf("\ttask_net::PLACE %d\n",task_net::PLACE);
+            printf("/ObjectPositions/%s\n\n",obj_name.c_str());
             break;
           case task_net::ROOT:
           default:
