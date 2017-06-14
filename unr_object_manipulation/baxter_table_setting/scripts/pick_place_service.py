@@ -2,7 +2,8 @@
 
 import collections
 
-from copy import deepcopy
+# from copy import deepcopy
+import copy
 
 import rospy
 
@@ -105,6 +106,7 @@ class PickPlace(object):
                 # self.object_pick_poses[self.objects[self.object_calib]] = self._limb.endpoint_pose()
                 pose = self.GetArmPoseGoal()
                 self.object_pick_poses[self.objects[self.object_calib]] = pose
+                print(pose)
                 print "Calibrated"
                 self.calibrating = False
             else:
@@ -113,6 +115,7 @@ class PickPlace(object):
                 # self.object_place_poses[self.objects[self.object_calib]] = self._limb.endpoint_pose()
                 pose = self.GetArmPoseGoal()
                 self.object_place_poses[self.objects[self.object_calib]] = pose
+                print(pose)
                 print "Calibrated"
                 self.calibrating = False
 
@@ -141,8 +144,8 @@ class PickPlace(object):
         self._limb.set_pose_target(pose_target)
         self._limb.set_num_planning_attempts(3);
         self._limb.set_planning_time(5.0);
-        self._limb.set_goal_position_tolerance(0.01)
-        self._limb.set_goal_orientation_tolerance(0.01)
+        # self._limb.set_goal_position_tolerance(0.005)
+        # self._limb.set_goal_orientation_tolerance(0.005)
 
         return pose_target
 
@@ -166,8 +169,8 @@ class PickPlace(object):
         self._limb.set_pose_target(pose_target)
         self._limb.set_num_planning_attempts(5);
         self._limb.set_planning_time(10.0);
-        self._limb.set_goal_position_tolerance(0.01)
-        self._limb.set_goal_orientation_tolerance(0.01)
+        # self._limb.set_goal_position_tolerance(0.005)
+        # self._limb.set_goal_orientation_tolerance(0.005)
 
         print("\tPlanning...")
         plan1 = self._limb.plan()
@@ -189,10 +192,11 @@ class PickPlace(object):
         # TODO: JB Added
         # self._limb.move_to_joint_positions(self.object_pick_joint_angles['neutral'])
         # self.moveToPose(self.object_pick_poses['neutral'])
-        pick_pose_offset = self.object_pick_poses[req.object]
+        pick_pose_offset = copy.deepcopy(self.object_pick_poses)
+        pick_pose_offset = pick_pose_offset[req.object]
         pick_pose_offset.position.z = pick_pose_offset.position.z + 0.2; 
-        pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
-        pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
+        # pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
+        # pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
         self.moveToPose(pick_pose_offset)
         if self.stop:
             return
@@ -217,10 +221,11 @@ class PickPlace(object):
             return
         # self._limb.move_to_joint_positions(self.object_pick_joint_angles['neutral'])
         # self.moveToPose(self.object_pick_poses['neutral'])
-        pick_pose_offset = self.object_pick_poses[req.object]
+        pick_pose_offset = copy.deepcopy(self.object_pick_poses)
+        pick_pose_offset = pick_pose_offset[req.object]
         pick_pose_offset.position.z = pick_pose_offset.position.z + 0.2; 
-        pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
-        pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
+        # pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
+        # pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
         self.moveToPose(pick_pose_offset)
         if self.stop:
             return
@@ -230,10 +235,11 @@ class PickPlace(object):
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles['neutral'])
         # self.moveToPose(self.object_place_poses['neutral'])
-        place_pose_offset = self.object_place_poses[req.object]
+        place_pose_offset = copy.deepcopy(self.object_place_poses)
+        place_pose_offset = place_pose_offset[req.object]
         place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
-        place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
-        place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+        # place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+        # place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
         self.moveToPose(place_pose_offset)
         if self.stop:
             return
@@ -250,10 +256,11 @@ class PickPlace(object):
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles['neutral'])
         # self.moveToPose(self.object_place_poses['neutral'])
-        place_pose_offset = self.object_place_poses[req.object]
+        place_pose_offset = copy.deepcopy(self.object_place_poses)
+        place_pose_offset = place_pose_offset[req.object]
         place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
-        place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
-        place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+        # place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+        # place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
         self.moveToPose(place_pose_offset)
         if self.stop:
             return
@@ -440,6 +447,7 @@ class PickPlace(object):
 
                 print key
                 print self.object_pick_poses[key]
+                print self.object_place_poses[key]
 
         f.close()
 
