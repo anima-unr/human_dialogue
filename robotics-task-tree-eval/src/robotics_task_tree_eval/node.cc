@@ -134,14 +134,21 @@ void Node::GenerateNodeBitmaskMap() {
 void Node::Activate() {
     // ROS_INFO("Node::Activate was called!!!!\n");
 
-  state_.check_peer = true;
   // TODO JB: have this only spin a new thread if the thread doesn't already exist 
   // create peer_check thread if it isn't already running 
   if(!peer_check_thread) {
+    state_.check_peer = true;
     peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
     printf("\n\tThread was not active, so has been created!\n");
     peer_check_thread->detach(); 
   }
+  // if peer check thread reached the end, then kill it?
+  else if(!state_.check_peer){
+    printf("\n\nThread has finished, killing it!\n\n");
+      peer_check_thread->interrupt();
+      peer_check_thread = NULL;
+    }
+  // still running so leave alone
   else {
         printf("\n\tThread was already active\n");
       }
@@ -149,7 +156,8 @@ void Node::Activate() {
  // if thread is okay, run this??
  if(state_.peer_okay) {
       ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
-    if (!state_.active && !state_.done) {
+    // if (!state_.active && !state_.done) {
+    if (!state_.done) {
       if (ActivationPrecondition()) {
         ROS_INFO("Activating Node: %s", name_->topic.c_str());
         // printf("\t\tNode::Activate Activating Node: %s\n\n", name_->topic.c_str());
@@ -163,11 +171,10 @@ void Node::Activate() {
         }
         cv.notify_all();
         // TODO JB: kill the thread now
-        peer_check_thread->interrupt();
-        peer_check_thread = NULL;
+        // peer_check_thread->interrupt();
+        // peer_check_thread = NULL;
         }
     }
-    state_.check_peer = false;
     state_.peer_okay = false;
     ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");
     
@@ -356,9 +363,10 @@ void PeerCheckThread(Node *node) {
     }
     // otherwise if peer active
     // else if ((*it)->state.active) {
-    else if (node->state_.peer_active) {
-      // if ((*it)->state.activation_potential < node->state_.activation_potential) {
-      //   // if my activation potential/level (which one? potential right)
+    // NOTE: THIS DOESNT WORK IF OR NODE IF OTHER CHILD IS ACTIVE!!! FIX THIS LOGIC HERE!!!!
+    else if (node->state_.peer_active ) {
+      // if (node->state_.active && ((*it)->state.activation_potential < node->state_.activation_potential)) {
+      //   // if I'm already active and my activation potential/level (which one? potential right)
       //   // is > my peer's activation potentional/level, then peer_okay = True
       //   // NOTE: I don't think this will ever happen, becuase I am not active yet so if
       //   // my peer is already active, then it made it through this process and so it wont
@@ -366,13 +374,14 @@ void PeerCheckThread(Node *node) {
       //  printf("\n\nPeerCheckThread: Case 2!!\n\n");
       //  node->state_.peer_okay = true; 
       // }
-      //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
+      // //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
       // else{ 
        printf("\n\nPeerCheckThread: Case 3!!\n");
       node->state_.peer_okay = false; 
       // lower my activation level for this node
       printf("\tCurr level: %f\n", node->state_.activation_level);
       node->state_.activation_level = ACTIVATION_FALLOFF*node->state_.activation_level;
+      node->state_.activation_potential = ACTIVATION_FALLOFF*node->state_.activation_potential;
       printf("\tNew level: %f\n\n", node->state_.activation_level);
       // }
 
@@ -386,7 +395,9 @@ void PeerCheckThread(Node *node) {
       printf("\n\nERROR! PeerCheckThread: Undefined case! Please redo logic!\n\n");
     }
   }
+  boost::this_thread::sleep(boost::posix_time::millisec(2000));
   printf("\nPeercheckthread is at end!!!!\n");
+  node->state_.check_peer = false;
 }
 
 void CheckThread(Node *node) {
