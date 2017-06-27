@@ -15,6 +15,35 @@
 
 table_task_sim::SimState simstate;
 
+/**
+	lookup_object_by_name
+		finds index of object in simstate by name
+
+	args:
+		objname: name of object to find
+
+	returns:
+		index of object if found
+		-1 if object not found
+
+**/
+
+int lookup_object_by_name( std::string objname )
+{
+	for( int i = 0; i < simstate.objects.size(); i++ )
+	{
+		if ( objname.compare( simstate.objects[i].name ) == 0 )
+		{
+			//object found
+			return i;
+		}
+	}
+
+	// got through entire object list and did not find object
+	return -1;
+}
+
+
 bool pick(table_task_sim::PickUpObject::Request  &req,
           table_task_sim::PickUpObject::Response &res)
 {
@@ -22,42 +51,65 @@ bool pick(table_task_sim::PickUpObject::Request  &req,
 	res.result = 0;
 
 	// find object with the name to use
-	for( int i = 0; i < simstate.objects.size(); i++ )
+	int idx = lookup_object_by_name(req.object_name);
+
+	if( idx < 0 )
 	{
-		if ( req.object_name.compare( simstate.objects[i].name ) == 0 )
-		{
-			// object found 
-
-			// set robot's goal to match object
-			simstate.robots[req.robot_id].goal = simstate.objects[i].pose;
-			float dist = 999;
-			ros::Rate loop_rate( 10 );
-
-			// wait for robot to reach goal
-			do {
-				float xdist = simstate.robots[req.robot_id].goal.position.x - simstate.robots[req.robot_id].pose.position.x;
-				float ydist = simstate.robots[req.robot_id].goal.position.y - simstate.robots[req.robot_id].pose.position.y;
-				dist = hypot(ydist,xdist);
-				ROS_INFO ("robot [%d] moving to [%s] dist: %f", req.robot_id, req.object_name.c_str(), dist);
-				loop_rate.sleep();
-
-			} while( dist > 0.0001 );
-
-			simstate.robots[req.robot_id].holding = req.object_name;
-
-			return true;
-		}
+		// object not found return true, but respond with failure code
+		res.result = 1;
+		return true;
 	}
 
-	res.result = 1;
+	// object found 
+
+	// set robot's goal to match object
+	simstate.robots[req.robot_id].goal = simstate.objects[idx].pose;
+	float dist = 999;
+	ros::Rate loop_rate( 10 );
+
+	// wait for robot to reach goal
+	do {
+		float xdist = simstate.robots[req.robot_id].goal.position.x - simstate.robots[req.robot_id].pose.position.x;
+		float ydist = simstate.robots[req.robot_id].goal.position.y - simstate.robots[req.robot_id].pose.position.y;
+		dist = hypot(ydist,xdist);
+		ROS_INFO ("robot [%d] moving to [%s] dist: %f", req.robot_id, req.object_name.c_str(), dist);
+		loop_rate.sleep();
+	} while( dist > 0.0001 );
+
+	simstate.robots[req.robot_id].holding = req.object_name;
+
+	res.result = 0;
 	return true;
 }
 
 bool place(table_task_sim::PlaceObject::Request		&req,
 		   table_task_sim::PlaceObject::Response	&res)
 {
+	if( simstate.robots[req.robot_id].holding.compare("") == 0 )
+	{
+		// not holding anything
+		res.result = 1;
+		return true;
+	}
 
+	// move to place goal
+	simstate.robots[req.robot_id].goal = req.goal;
+	float dist = 999;
 
+	ros::Rate loop_rate( 10 );
+
+	// wait for robot to reach goal
+	do {
+		float xdist = simstate.robots[req.robot_id].goal.position.x - simstate.robots[req.robot_id].pose.position.x;
+		float ydist = simstate.robots[req.robot_id].goal.position.y - simstate.robots[req.robot_id].pose.position.y;
+		dist = hypot(ydist,xdist);
+		loop_rate.sleep();
+	} while( dist > 0.0001 );
+
+	// drop object
+	simstate.robots[req.robot_id].holding = std::string("");
+	
+	res.result = 0;
 	return true;
 }
 
@@ -184,6 +236,7 @@ int main(int argc, char* argv[] )
 
 	// declare subscribers
 	ros::ServiceServer pick_service = nh.advertiseService("pick_service", pick);
+	ros::ServiceServer place_service = nh.advertiseService("place_service", place);
 
 	// declare publishers
 	ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("markers", 1000);
@@ -226,7 +279,12 @@ int main(int argc, char* argv[] )
 			}
 
 			// if the robot is holding an object, move the object to where the robot is
-			if( )
+			if( simstate.robots[i].holding.length() > 0 )
+			{
+				// find object with the name in holding
+				int idx = lookup_object_by_name(simstate.robots[i].holding);
+				simstate.objects[idx].pose.position = simstate.robots[i].pose.position;
+			}
 
 		}
 
