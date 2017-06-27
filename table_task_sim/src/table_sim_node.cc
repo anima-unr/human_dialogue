@@ -7,12 +7,15 @@
 #include <table_task_sim/PlaceObject.h>
 #include <geometry_msgs/Pose.h>
 
+// used to make sure that markers for robots/goals/objects do not collide and overwrite each other
 #define OBJ_PFX 1000
 #define ROB_PFX 2000
 #define GOAL_PFX 3000
 
+// defines top speed of robot TODO: define in a file
 #define TOP_SPEED 0.1
 
+// message object used to store current sim state (published each simulator time_step)
 table_task_sim::SimState simstate;
 
 /**
@@ -42,6 +45,22 @@ int lookup_object_by_name( std::string objname )
 	// got through entire object list and did not find object
 	return -1;
 }
+
+/**
+	pick
+		implements service PickUpObject.srv
+		moves robot to object's location and then sets the robot as holding the object
+		fails if object with name in req does not exist
+		blocks until object is held (or failure)
+
+	args:
+		req: robot id and object to pick up (name as string)
+		res: result (0 if successful, 1 if failure)
+
+	returns:
+		true: if service was successfully called
+		false: never
+**/
 
 
 bool pick(table_task_sim::PickUpObject::Request  &req,
@@ -82,6 +101,23 @@ bool pick(table_task_sim::PickUpObject::Request  &req,
 	return true;
 }
 
+/**
+	place
+		implements service PlaceObject.srv
+		moves robot and held object to goal location and then stops holding object
+		fails if robot is not holding an object
+		blocks until goal is reached (or failure)
+
+	args:
+		req: robot id and goal location (Pose)
+		res: result (0 if successful, 1 if failure)
+
+	returns:
+		true: if service was successfully called
+		false: never
+**/
+
+
 bool place(table_task_sim::PlaceObject::Request		&req,
 		   table_task_sim::PlaceObject::Response	&res)
 {
@@ -95,7 +131,6 @@ bool place(table_task_sim::PlaceObject::Request		&req,
 	// move to place goal
 	simstate.robots[req.robot_id].goal = req.goal;
 	float dist = 999;
-
 	ros::Rate loop_rate( 10 );
 
 	// wait for robot to reach goal
@@ -112,6 +147,19 @@ bool place(table_task_sim::PlaceObject::Request		&req,
 	res.result = 0;
 	return true;
 }
+
+/**
+	publish_markers(mp)
+		publishes markers for viewing simulator state in rviz
+		creates marker message and adds table surface, robots, goals, and objects
+		populates information from simstate variable
+
+	args:
+		mp: ros publisher (previously instantiated in main)
+
+	returns:
+		void
+**/
 
 void publish_markers(ros::Publisher *mp)
 {
@@ -183,6 +231,15 @@ void publish_markers(ros::Publisher *mp)
 
 	}
 }
+
+/**
+	populate_state()
+		function to populate the initial state variables
+		TODO: read from file or parameter service (probably file) instead of hard-coded values
+
+	args: none
+	returns: void
+**/
 
 void populate_state()
 {
@@ -268,12 +325,12 @@ int main(int argc, char* argv[] )
 			// if dist is less than top speed / dir
 			if( dist < r )
 			{
-				// robot has reached goal
+				// robot has reached goal in this iter, just set the current pos to the goal
 				simstate.robots[i].pose = simstate.robots[i].goal;
 			}
 			else
 			{
-				// move direction of travel top speed / dir
+				// move direction of travel top speed / duration
 				simstate.robots[i].pose.position.x += r * cos(theta);
 				simstate.robots[i].pose.position.y += r * sin(theta);
 			}
@@ -284,9 +341,8 @@ int main(int argc, char* argv[] )
 				// find object with the name in holding
 				int idx = lookup_object_by_name(simstate.robots[i].holding);
 				simstate.objects[idx].pose.position = simstate.robots[i].pose.position;
-			}
-
-		}
+			} 
+		} // for i
 
 		// publish markers
 		publish_markers(&marker_pub);
@@ -296,8 +352,7 @@ int main(int argc, char* argv[] )
 
 		last_iter = curr_time;
 		loop_rate.sleep();
-	}
-
+	} // while ros::ok()
 
 	return 0;
 }
