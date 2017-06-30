@@ -16,12 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "robotics_task_tree_eval/behavior.h"
+#include <table_task_sim/PickUpObject.h>
+#include <table_task_sim/PlaceObject.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
 #include "remote_mutex/remote_mutex.h"
-#include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/Pose.h"
 
 namespace task_net {
 typedef std::vector<NodeId_t>::iterator NodeId_t_iterator;
@@ -278,28 +280,38 @@ void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
  // ROS_INFO("\n\n\n\n\npick %d place %d", pick, place);
 
   // define the things to pass to the service ...
-  geometry_msgs::PoseStamped pose;
-  pose.pose.position.x = -0.25;
-  pose.pose.position.y = -.025;
-  pose.pose.position.z = 0;
-  pose.pose.orientation.x = 0;
-  pose.pose.orientation.y = 0;
-  pose.pose.orientation.z = 0;
-  pose.pose.orientation.w = 1;
+  geometry_msgs::Pose pose;
+  pose.position.x = -0.25;
+  pose.position.y = -.025;
+  pose.position.z = 0;
+  pose.orientation.x = 0;
+  pose.orientation.y = 0;
+  pose.orientation.z = 0;
+  pose.orientation.w = 1;
 
-  // // call the pick service
-  // if(ros::service::call("pick_service", (int)robot_des, object)) {
+  // pick
+  table_task_sim::PickUpObject req_pick;
+  req_pick.request.robot_id = (int)robot_des;
+  req_pick.request.object_name = object;
+  // table_task_sim::PickUpObject::Response res_pick; //to know if it failed or not...
 
-  //   ROS_INFO("\n\n\n\t\t THE PICK SERVICE WAS CALLED!!");
+  // place
+  table_task_sim::PlaceObject req_place;
+  req_place.request.robot_id = (int)robot_des;
+  req_place.request.goal = pose;
+  // table_task_sim::PlaceObject::Response res_place; //to know if it failed or not...
 
 
-  //   // call the place service
-  //   if(ros::service::call("place_service", (int)robot_des, pose)) {
-  //     ROS_INFO("\n\n\t\t THE PLACE SERVICE WAS CALLED!!\n\n\n");
+  // call the pick service
+  if(ros::service::call("pick_service", req_pick)) {
 
-  //   }
+    ROS_INFO("\n\n\n\t\t THE PICK SERVICE WAS CALLED!!");
 
-  // }
+    // call the place service
+    if(ros::service::call("place_service", req_place)) {
+      ROS_INFO("\n\n\t\t THE PLACE SERVICE WAS CALLED!!\n\n\n");
+    }
+  }
 
 
 
