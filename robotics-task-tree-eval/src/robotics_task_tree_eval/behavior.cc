@@ -269,17 +269,14 @@ void DummyBehavior::Work() {
 }
 
 void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
-  // table_setting_demo::pick_and_place msg;
-  // msg.request.object = object;
-  // if (ros::service::call("pick_and_place_object", msg)) {
-  // }
 
- // bool pick, place;
- // pick = ros::service::waitForService("pick_service"); 
- // place = ros::service::waitForService("place_service"); 
- // ROS_INFO("\n\n\n\n\npick %d place %d", pick, place);
+  // pick
+  table_task_sim::PickUpObject req_pick;
+  req_pick.request.robot_id = (int)robot_des;
+  req_pick.request.object_name = object;
+  // table_task_sim::PickUpObject::Response res_pick; //to know if it failed or not...
 
-  // define the things to pass to the service ...
+  // place
   geometry_msgs::Pose pose;
   pose.position.x = -0.25;
   pose.position.y = -.025;
@@ -289,18 +286,10 @@ void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
   pose.orientation.z = 0;
   pose.orientation.w = 1;
 
-  // pick
-  table_task_sim::PickUpObject req_pick;
-  req_pick.request.robot_id = (int)robot_des;
-  req_pick.request.object_name = object;
-  // table_task_sim::PickUpObject::Response res_pick; //to know if it failed or not...
-
-  // place
   table_task_sim::PlaceObject req_place;
   req_place.request.robot_id = (int)robot_des;
   req_place.request.goal = pose;
   // table_task_sim::PlaceObject::Response res_place; //to know if it failed or not...
-
 
   // call the pick service
   if(ros::service::call("pick_service", req_pick)) {
@@ -312,8 +301,6 @@ void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
       ROS_INFO("\n\n\t\t THE PLACE SERVICE WAS CALLED!!\n\n\n");
     }
   }
-
-
 
 }
 
