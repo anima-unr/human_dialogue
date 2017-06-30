@@ -31,10 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 typedef std::vector<std::string> NodeParam;
-enum ROBOT {
-  PR2=0, 
-  BAXTER=1
-} ;
+// enum ROBOT {
+//   PR2=0, 
+//   BAXTER=1
+// } ;
 
 
 void EndingFunc(int signal) {

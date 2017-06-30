@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <vector>
 #include "remote_mutex/remote_mutex.h"
-
+#include "geometry_msgs/PoseStamped.h"
 
 namespace task_net {
 typedef std::vector<NodeId_t>::iterator NodeId_t_iterator;
@@ -219,14 +219,18 @@ DummyBehavior::DummyBehavior() {}
 DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
+    std::string object,
+    ROBOT robot_des,
     bool use_local_callback_queue,
     boost::posix_time::millisec mtime) : Behavior(name,
       peers,
       children,
       parent,
       state), mut_arm(name.topic.c_str(), "/right_arm_mutex") {
-        // printf("DummyBehavior::DummyBehavior WAS CALLED\n");
-    }
+        // printf("DummyBehavior::DummyBehavior WAS CALLED\n
+    object_ = object;
+    robot_des_ = robot_des;
+}
 DummyBehavior::~DummyBehavior() {}
 
 void DummyBehavior::UpdateActivationPotential() {
@@ -250,10 +254,62 @@ uint32_t DummyBehavior::SpreadActivation() {
 
 void DummyBehavior::Work() {
   ROS_INFO("DummyBehavior::Work: waiting for pause to be done!");
-  boost::this_thread::sleep(boost::posix_time::millisec(10000));
+  // boost::this_thread::sleep(boost::posix_time::millisec(10000));
+
+  PickAndPlace(object_, robot_des_);
+    // while (!PickAndPlaceDone()) {
+      boost::this_thread::sleep(boost::posix_time::millisec(500));
+        // ROS_INFO("TableObject::Work: waiting for pick and place to be done!");
+    // }
   mut_arm.Release();
   ROS_INFO("DummyBehavior::Work: Done!");
   ROS_INFO("\tDmmyBehavior::MUTEX IS RELEASED!");
+}
+
+void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
+  // table_setting_demo::pick_and_place msg;
+  // msg.request.object = object;
+  // if (ros::service::call("pick_and_place_object", msg)) {
+  // }
+
+ // bool pick, place;
+ // pick = ros::service::waitForService("pick_service"); 
+ // place = ros::service::waitForService("place_service"); 
+ // ROS_INFO("\n\n\n\n\npick %d place %d", pick, place);
+
+  // define the things to pass to the service ...
+  geometry_msgs::PoseStamped pose;
+  pose.pose.position.x = -0.25;
+  pose.pose.position.y = -.025;
+  pose.pose.position.z = 0;
+  pose.pose.orientation.x = 0;
+  pose.pose.orientation.y = 0;
+  pose.pose.orientation.z = 0;
+  pose.pose.orientation.w = 1;
+
+  // // call the pick service
+  // if(ros::service::call("pick_service", (int)robot_des, object)) {
+
+  //   ROS_INFO("\n\n\n\t\t THE PICK SERVICE WAS CALLED!!");
+
+
+  //   // call the place service
+  //   if(ros::service::call("place_service", (int)robot_des, pose)) {
+  //     ROS_INFO("\n\n\t\t THE PLACE SERVICE WAS CALLED!!\n\n\n");
+
+  //   }
+
+  // }
+
+
+
+}
+
+bool DummyBehavior::PickAndPlaceDone() {
+  // table_setting_demo::pick_and_place msg;
+  // msg.request.object = object_;
+  // ros::service::call("pick_and_place_check", msg);
+  // return msg.response.success;
 }
 
 bool DummyBehavior::ActivationPrecondition() {

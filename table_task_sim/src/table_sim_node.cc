@@ -256,10 +256,10 @@ void populate_state()
 	o.scale.z = 0.05;
 	o.color.b = 1.0;
 	o.color.a = 0.9;
-	o.name = "meat";
+	o.name = "Left_Bread";
 	simstate.objects.push_back(o);
 
-	o.name = "lettuce";
+	o.name = "Lettuce";
 	o.pose.position.x = 0.25;
 	o.color.r = 1.0;
 	simstate.objects.push_back(o);

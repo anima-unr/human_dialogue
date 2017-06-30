@@ -31,10 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 typedef std::vector<std::string> NodeParam;
-enum ROBOT {
-  PR2=0, 
-  BAXTER=1
-} ;
+// enum ROBOT {
+//   PR2=0, 
+//   BAXTER=1
+// } ;
 
 
 void EndingFunc(int signal) {
@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
   task_net::NodeList children_param;
   task_net::NodeId_t parent_param;
   NodeParam nodes;
+  std::string obj_name;
   
   // get the robot  
   std::string Robot;
@@ -162,7 +163,7 @@ int main(int argc, char *argv[]) {
             // ROS_INFO("Children Size: %lu", children_param.size());
             // object = name_param.topic.c_str();
            // get the name of the object of corresponding node:
-            // nh_.getParam((param_prefix + nodes[i] + "/object").c_str(), obj_name);
+            nh_.getParam((param_prefix + nodes[i] + "/object").c_str(), obj_name);
             // set up network for corresponding node:
             // ros::param::get(("/ObjectPositions/"+obj_name).c_str(), object_pos);
             // network[i] = new task_net::TableObject(name_param,
@@ -180,6 +181,8 @@ int main(int argc, char *argv[]) {
                                         children_param,
                                         parent_param,
                                         state,
+                                        obj_name,
+                                        robot_des,
                                         false);
             // printf("\ttask_net::PLACE %d\n",task_net::PLACE);
             break;

@@ -22,6 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "robotics_task_tree_eval/node.h"
 #include "remote_mutex/remote_mutex.h"
 
+enum ROBOT {
+  PR2=0, 
+  BAXTER=1
+} ;
+
 namespace task_net {
 class Behavior: public Node {
  public:
@@ -89,16 +94,23 @@ class DummyBehavior: public Behavior {
   DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
+    std::string object,
+    ROBOT robot_des,
     bool use_local_callback_queue = false,
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~DummyBehavior();
   void UpdateActivationPotential();
   bool ActivationPrecondition();
+  void PickAndPlace(std::string object, ROBOT robot_des);
+  bool PickAndPlaceDone();
   void Work();
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
   mutex::RemoteMutex mut_arm;
+  std::string object_;
+  ROBOT robot_des_;
+
 };
 class WhileBehavior: public Behavior {};
 }  // namespace task_net

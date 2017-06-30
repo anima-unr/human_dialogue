@@ -29,10 +29,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "robotics_task_tree_eval/node_types.h"
 
 typedef std::vector<std::string> NodeParam;
-enum ROBOT {
-  PR2=0, 
-  BAXTER=1
-} ;
+// enum ROBOT {
+//   PR2=0, 
+//   BAXTER=1
+// } ;
 
 
 void EndingFunc(int signal) {
@@ -173,12 +173,14 @@ int main(int argc, char *argv[]) {
             //                           neutral_object_pos,
             //                           object_pos,
             //                           false);
-            network[i] = new task_net::DummyBehavior(name_param,
-                                        peers_param,
-                                        children_param,
-                                        parent_param,
-                                        state,
-                                        false);
+            // network[i] = new task_net::DummyBehavior(name_param,
+            //                             peers_param,
+            //                             children_param,
+            //                             parent_param,
+            //                             state,
+            //                             false);
+            network[i] = new task_net::DummyBehavior();
+
             // printf("\ttask_net::PLACE %d\n",task_net::PLACE);
             break;
           case task_net::ROOT:

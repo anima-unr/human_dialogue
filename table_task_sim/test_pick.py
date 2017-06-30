@@ -15,9 +15,9 @@ def pick_client():
         p.position.x = -0.25
         p.position.y = -0.25
         p.position.z = 0
-        resp1 = pick(1, "meat")
+        resp1 = pick(1, "Left_Bread")
         resp1 = place(1, p)
-        resp1 = pick(1, "lettuce")
+        resp1 = pick(1, "Lettuce")
         p.position.x = -0.15
         p.position.y = -0.15
         p.position.z = 0
