@@ -6,7 +6,7 @@
 #   R0OT,         // 4
 # } NodeTypes_t;
 
-NodeList: ['ROOT_4_0_000', 'THEN_0_0_001', 'PLACE_3_0_002', 'PLACE_3_0_003']
+NodeList: ['ROOT_4_0_000', 'OR_1_0_001', 'PLACE_3_0_002', 'PLACE_3_0_003']
 Nodes: 
   ROOT_4_0_000:
     mask:
@@ -14,11 +14,11 @@ Nodes:
       robot: 0
       node: 0
     parent: 'NONE'
-    children: ['THEN_0_0_001']
+    children: ['OR_1_0_001']
     peers: ['NONE']
-  THEN_0_0_001:
+  OR_1_0_001:
     mask:
-      type: 0
+      type: 1
       robot: 0
       node: 1
     parent: ROOT_4_0_000
@@ -29,7 +29,7 @@ Nodes:
       type: 3
       robot: 0
       node: 2
-    parent: THEN_0_0_001
+    parent: OR_1_0_001
     peers: ['NONE']
     object: Left_Bread
   PLACE_3_0_003:
@@ -37,6 +37,6 @@ Nodes:
       type: 3
       robot: 0
       node: 3
-    parent: THEN_0_0_001
+    parent: OR_1_0_001
     peers: ['NONE']
     object: Right_Bread
