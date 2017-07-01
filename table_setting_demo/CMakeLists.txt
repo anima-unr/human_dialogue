@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   active_vision_msgs
   moveit_ros_planning_interface
+  robotics_task_tree_eval
 )
 if ($ENV{ROBOT} MATCHES "pr2")
   option(BUILD_TABLE_SETTING_DEMO "build table setting demo" OFF)
@@ -28,6 +29,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
     remote_mutex
     tabletop_segmenter
     moveit_ros_planning_interface
+    robotics_task_tree_eval
   )
   find_package(PCL REQUIRED COMPONENTS
     common
@@ -212,6 +214,8 @@ if (${BUILD_TABLE_SETTING_DEMO})
     src/table_setting_demo.cpp
     src/table_object_behavior.cpp
   )
+  add_dependencies(table_setting_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
   target_link_libraries(table_setting_demo
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
@@ -222,6 +226,9 @@ if (${BUILD_TABLE_SETTING_DEMO})
     src/dummy_multi_network.cpp
     src/table_object_behavior.cpp
   )
+
+  add_dependencies(dummy_multi_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
   target_link_libraries(dummy_multi_demo
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
