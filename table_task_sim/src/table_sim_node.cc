@@ -6,6 +6,7 @@
 #include <table_task_sim/PickUpObject.h>
 #include <table_task_sim/PlaceObject.h>
 #include <geometry_msgs/Pose.h>
+#include <yaml-cpp/yaml.h>
 
 // used to make sure that markers for robots/goals/objects do not collide and overwrite each other
 #define OBJ_PFX 1000
@@ -14,6 +15,9 @@
 
 // defines top speed of robot TODO: define in a file
 #define TOP_SPEED 0.1
+
+// filename for yaml config file
+table_task_sim::SimState load_state_from_file(std::string filename);
 
 // message object used to store current sim state (published each simulator time_step)
 table_task_sim::SimState simstate;
@@ -241,44 +245,52 @@ void publish_markers(ros::Publisher *mp)
 	returns: void
 **/
 
-void populate_state()
+void populate_state(std::string filename)
 {
-	table_task_sim::Object o;
-	o.pose.position.x = 0.0;
-	o.pose.position.y = 0.0;
-	o.pose.position.z = 0.0;
-	o.pose.orientation.x = 0.0;
-	o.pose.orientation.y = 0.0;
-	o.pose.orientation.z = 0.0;
-	o.pose.orientation.w = 1.0;
-	o.scale.x = 0.05;
-	o.scale.y = 0.05;
-	o.scale.z = 0.05;
-	o.color.b = 1.0;
-	o.color.a = 0.9;
-	o.name = "Left_Bread";
-	simstate.objects.push_back(o);
+	YAML::Node config = YAML::LoadFile(filename.c_str());
+	if( config.IsNull() )
+	{
+		ROS_ERROR( "file not found: [%s]", filename.c_str());
+	}
 
-	o.name = "Lettuce";
-	o.pose.position.x = 0.25;
-	o.color.r = 1.0;
-	simstate.objects.push_back(o);
+	YAML::Node objects = config["objects"];
+	for( int i = 0; i < objects.size(); i++ )
+	{
+		table_task_sim::Object obj;
+		obj.name = objects[i]["name"].as<std::string>();
+		ROS_INFO( "loading object: [%s]", obj.name.c_str() );
+		obj.pose.position.x = objects[i]["location"]["x"].as<double>();
+		obj.pose.position.y = objects[i]["location"]["y"].as<double>();
+		obj.pose.position.z = 0.0;
+		obj.pose.orientation.x = 0.0;
+		obj.pose.orientation.y = 0.0;
+		obj.pose.orientation.z = 0.0;
+		obj.pose.orientation.w = 1.0;
+		obj.scale.x = objects[i]["scale"]["x"].as<double>();
+		obj.scale.y = objects[i]["scale"]["y"].as<double>();
+		obj.scale.z = objects[i]["scale"]["z"].as<double>();
+		obj.color.r = objects[i]["color"]["r"].as<double>();
+		obj.color.g = objects[i]["color"]["g"].as<double>();
+		obj.color.b = objects[i]["color"]["b"].as<double>();
+		obj.color.a = objects[i]["color"]["a"].as<double>();
+		simstate.objects.push_back(obj);
+	}
 
-	table_task_sim::Robot r;
-	r.pose.position.x = 0;
-	r.pose.position.y = -0.45;
-	r.pose.position.z = 0;
-	r.color.r = 1.0;
-	r.color.a = 0.9;
-	r.goal = r.pose;
-	simstate.robots.push_back(r);
+	YAML::Node robots = config["robots"];
+	for( int i = 0; i < robots.size(); i++ )
+	{
+		table_task_sim::Robot rob;
+		rob.pose.position.x = robots[i]["location"]["x"].as<double>();
+		rob.pose.position.y = robots[i]["location"]["y"].as<double>();
+		rob.pose.position.z = 0.0;
+		rob.color.r = robots[i]["color"]["r"].as<double>();
+		rob.color.g = robots[i]["color"]["g"].as<double>();
+		rob.color.b = robots[i]["color"]["b"].as<double>();
+		rob.color.a = robots[i]["color"]["a"].as<double>();
+		rob.goal = rob.pose;
 
-	r.pose.position.y = 0.45;
-	r.color.g = 0.5;
-	r.goal = r.pose;
-	r.goal.position.x = -0.5;
-	simstate.robots.push_back(r);
-
+		simstate.robots.push_back(rob);
+	}
 }
 
 
@@ -286,10 +298,22 @@ int main(int argc, char* argv[] )
 {
 	ros::init(argc, argv, "table_sim");
 	ros::NodeHandle nh;
-	ros::Rate loop_rate(100);
+	ros::NodeHandle nh_priv("~");
 
-	// populate data (TODO replace with file I/O)
-	populate_state();
+	ros::Rate loop_rate(100);
+	
+	std::string filename;
+	if( nh_priv.getParam("filename", filename) ) 
+	{
+		ROS_INFO( "simulator loading config from filename: [%s]", filename.c_str() );
+		// populate data (TODO replace with file I/O)
+		populate_state(filename);
+	}
+	else
+	{
+		ROS_INFO( "file not found... [%s]", filename.c_str() );
+		return 1;
+	}
 
 	// declare subscribers
 	ros::ServiceServer pick_service = nh.advertiseService("pick_service", pick);

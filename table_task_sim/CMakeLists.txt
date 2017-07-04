@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+#find_package(yaml-cpp REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -111,7 +112,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES table_task_sim
   CATKIN_DEPENDS roscpp rospy visualization_msgs message_runtime
-#  DEPENDS system_lib
+  DEPENDS yaml-cpp
 )
 
 ###########
@@ -138,7 +139,9 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(${PROJECT_NAME}_node src/table_sim_node.cc)
+ add_executable(${PROJECT_NAME}_node
+  src/table_sim_node.cc
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,7 +155,7 @@ include_directories(
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_node
-   ${catkin_LIBRARIES}
+   ${catkin_LIBRARIES} yaml-cpp
  )
 
 #############
