@@ -247,21 +247,21 @@ if (${BUILD_TABLE_SETTING_DEMO})
 
 
   # BUILD OBJECT TRANSFORMATION service
-  add_executable(object_trans_service
-    src/3d_object_transformation_service/3d_object_trans_service.cc
-    src/3d_object_transformation_service/3d_object_transformation_service.cc
-  )
-  target_link_libraries(object_trans_service
-    ${Boost_LIBRARIES}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${PCL_COMMON_LIBRARIES}
-    ${PCL_IO_LIBRARIES}
-  )
+  #add_executable(object_trans_service
+   # src/3d_object_transformation_service/3d_object_trans_service.cc
+   # src/3d_object_transformation_service/3d_object_transformation_service.cc
+  #)
+  #target_link_libraries(object_trans_service
+  #  ${Boost_LIBRARIES}
+  #  ${catkin_LIBRARIES}
+  # ${OpenCV_LIBS}
+  # ${PCL_COMMON_LIBRARIES}
+  # ${PCL_IO_LIBRARIES}
+  #)
 
-  add_dependencies(object_trans_service
-    table_setting_demo_generate_messages_cpp
-  )
+  #add_dependencies(object_trans_service
+  #  table_setting_demo_generate_messages_cpp
+  #)
 
   #if (NOT ${QR_FOUND})
    # message( FATAL_ERROR "QR Library not found cannot build table demo")
