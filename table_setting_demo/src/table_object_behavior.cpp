@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Quaternion.h"
+#include "visualization_msgs/Marker.h"
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/JointState.h"
 #include "table_setting_demo/table_setting_demo_types.h"
@@ -110,6 +111,9 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
     object_id_ = object;
   }
 
+  // debugging - declare publisher for manip markers
+  marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
+  ready_to_publish_ = true;
   // Check size of initial position of objects
   if (pos.size() <= 0)
     object_pos = std::vector<float>(3);
@@ -125,12 +129,65 @@ void TableObject::UpdateActivationPotential() {
   // Get object neutral position and object position 
   //   from service call potentially
   if (!dynamic_object) {
+
+    // debugging: publish TF frames to make sure objects positions are understood
+    if( ready_to_publish_ )
+    {
+      visualization_msgs::Marker marker;
+      marker.header.frame_id = "/base_footprint";
+      marker.header.stamp = ros::Time::now();
+      marker.ns = "manip_shapes";
+      marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 0;
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.type = visualization_msgs::Marker::SPHERE;
+      marker.pose.position.x = object_pos[0];
+      marker.pose.position.y = object_pos[1];
+      marker.pose.position.z = object_pos[2];
+      marker.pose.orientation.x = 0.0;
+      marker.pose.orientation.y = 0.0;
+      marker.pose.orientation.z = 0.0;
+      marker.pose.orientation.w = 1.0;
+      marker.scale.x = 0.1;
+      marker.scale.y = 0.1;
+      marker.scale.z = 0.1;
+      marker.color.r = 0.0f;
+      marker.color.g = 1.0f;
+      marker.color.b = 0.0f;
+      marker.color.a = 1.0;
+      marker.lifetime = ros::Duration();
+      marker_pub_.publish(marker);
+
+      marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 1;
+      marker.pose.position.x = neutral_object_pos[0];
+      marker.pose.position.x = neutral_object_pos[1];
+      marker.pose.position.x = neutral_object_pos[2];
+      marker.color.r = 1.0f;
+      marker.color.g = 0.0f;
+      marker.color.b = 0.0f;
+      marker_pub_.publish(marker);
+    }
+
+    // calculate distance
+
+    float x = pow(neutral_object_pos[0] - object_pos[0], 2);
+    float y = pow(neutral_object_pos[1] - object_pos[1], 2);
+    float z = pow(neutral_object_pos[2] - object_pos[2], 2);
+    dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
+
+    // activation potential = 1 / dist
+
+    state_.activation_potential = 1.0f / dist;
+    ROS_INFO("OBJ(%s): updating activation potential: %0.2f", object_.c_str(), state_.activation_potential);
+
+
+    // original code (changing to be in reference to hand pose not neutral)
+    /*
     float x = pow(neutral_object_pos[0] - object_pos[0], 2);
     float y = pow(neutral_object_pos[1] - object_pos[1], 2);
     float z = pow(neutral_object_pos[2] - object_pos[2], 2);
     dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
     state_.activation_potential = 1.0f / dist;
-
+    */
     // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
     // ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);
     // ROS_INFO("x %f y %f z %f dist %f activation_potential %f", x, y, z, dist, state_.activation_potential);

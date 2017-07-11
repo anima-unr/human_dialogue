@@ -49,11 +49,17 @@ class TableObject : public Behavior {
 
  protected:
   mutex::RemoteMutex mut;
+
   std::string object_;
   std::string object_id_;
   std::vector<float> object_pos;
   std::vector<float> neutral_object_pos;
   bool dynamic_object;
+
+  // debugging info
+  ros::NodeHandle nh_;
+  bool ready_to_publish_ = false;
+  ros::Publisher marker_pub_;
 };
 }  // namespace task_net
 #endif  // INCLUDE_TABLE_SETTING_TABLE_OBJECT_H_
