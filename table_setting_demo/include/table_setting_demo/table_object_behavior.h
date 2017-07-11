@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "robotics_task_tree_eval/behavior.h"
 #include "robotics_task_tree_eval/node_types.h"
 #include "remote_mutex/remote_mutex.h"
+#include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
 
 namespace task_net { 
 
@@ -56,8 +58,14 @@ class TableObject : public Behavior {
   std::vector<float> neutral_object_pos;
   bool dynamic_object;
 
-  // debugging info
+  // frame info
+  std::string root_frame_;
+  std::string manip_frame_;
+
   ros::NodeHandle nh_;
+  tf::TransformListener tf_listener_;
+
+  // debugging info
   bool ready_to_publish_ = false;
   ros::Publisher marker_pub_;
 };

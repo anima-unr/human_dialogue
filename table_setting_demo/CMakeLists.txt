@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   active_vision_msgs
   moveit_ros_planning_interface
   robotics_task_tree_eval
+  tf
 )
 if ($ENV{ROBOT} MATCHES "pr2")
   option(BUILD_TABLE_SETTING_DEMO "build table setting demo" OFF)
@@ -30,6 +31,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
     tabletop_segmenter
     moveit_ros_planning_interface
     robotics_task_tree_eval
+    tf
   )
   find_package(PCL REQUIRED COMPONENTS
     common

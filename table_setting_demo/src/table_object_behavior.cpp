@@ -111,6 +111,11 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
     object_id_ = object;
   }
 
+  // set root/manip frames
+  nh_.getParam("root_frame", root_frame_);
+  nh_.getParam("manip_frame", manip_frame_);
+  //tf_listener_ = new TransformListener();
+
   // debugging - declare publisher for manip markers
   marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
   ready_to_publish_ = true;
@@ -126,6 +131,24 @@ void TableObject::UpdateActivationPotential() {
   float dist;
   // ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
 
+  // manipulator position defaults to neutral_obj_pos
+  float mx = neutral_object_pos[0];  
+  float my = neutral_object_pos[1];
+  float mz = neutral_object_pos[2];
+
+  // get PR2 hand position (and store in mx, my, mz)
+  tf::StampedTransform transform;
+  try{
+    tf_listener_.lookupTransform(root_frame_, manip_frame_, ros::Time(0), transform);
+    mx = transform.getOrigin().x();
+    my = transform.getOrigin().y();
+    mz = transform.getOrigin().z();
+    ROS_INFO( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
+  }
+  catch( tf::TransformException ex)
+  {
+    ROS_WARN( "could not get transform between [%s] and [%s] (%s), relying on neutral_obj_pos", root_frame_.c_str(), manip_frame_.c_str(), ex.what());
+  }
   // Get object neutral position and object position 
   //   from service call potentially
   if (!dynamic_object) {
@@ -134,7 +157,7 @@ void TableObject::UpdateActivationPotential() {
     if( ready_to_publish_ )
     {
       visualization_msgs::Marker marker;
-      marker.header.frame_id = "/base_footprint";
+      marker.header.frame_id = root_frame_;
       marker.header.stamp = ros::Time::now();
       marker.ns = "manip_shapes";
       marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 0;
@@ -158,20 +181,22 @@ void TableObject::UpdateActivationPotential() {
       marker_pub_.publish(marker);
 
       marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 1;
-      marker.pose.position.x = neutral_object_pos[0];
-      marker.pose.position.x = neutral_object_pos[1];
-      marker.pose.position.x = neutral_object_pos[2];
+      marker.pose.position.x = mx;
+      marker.pose.position.y = my;
+      marker.pose.position.z = mz;
       marker.color.r = 1.0f;
       marker.color.g = 0.0f;
       marker.color.b = 0.0f;
       marker_pub_.publish(marker);
+
+      ROS_INFO( "\nid: %d\n", marker.id );
     }
 
     // calculate distance
 
-    float x = pow(neutral_object_pos[0] - object_pos[0], 2);
-    float y = pow(neutral_object_pos[1] - object_pos[1], 2);
-    float z = pow(neutral_object_pos[2] - object_pos[2], 2);
+    float x = pow(mx - object_pos[0], 2);
+    float y = pow(my - object_pos[1], 2);
+    float z = pow(mz - object_pos[2], 2);
     dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
 
     // activation potential = 1 / dist

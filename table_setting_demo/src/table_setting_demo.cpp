@@ -139,8 +139,8 @@ class TableSetting {
                                     state,
                                     "/right_arm_mutex",
                                     obj_name.c_str(),
-                                    neutral_object_pos,
                                     object_pos,
+                                    neutral_object_pos,
                                     false);
 
           // if (object =="PLACE_3_0_010") {
@@ -152,8 +152,8 @@ class TableSetting {
           //                           state,
           //                           "/right_arm_mutex",
           //                           "cup",
-          //                           neutral_object_pos,
           //                           object_pos,
+          //                           neutral_object_pos,
           //                           false);
 
           // } else if (object =="PLACE_3_0_012") {
@@ -165,8 +165,8 @@ class TableSetting {
           //                           state,
           //                           "/right_arm_mutex",
           //                           "plate",
-          //                           neutral_object_pos,
           //                           object_pos,
+          //                           neutral_object_pos,
           //                           false);
           // } else if (object =="PLACE_3_0_013") {
           //   ros::param::get("/ObjectPositions/bowl", object_pos);
@@ -177,8 +177,8 @@ class TableSetting {
           //                           state,
           //                           "/right_arm_mutex",
           //                           "bowl",
-          //                           neutral_object_pos,
           //                           object_pos,
+          //                           neutral_object_pos,
           //                           false);
           // } else {
           //   printf("ERROR - wrong node for tree: %s\n", name_param.topic.c_str());
