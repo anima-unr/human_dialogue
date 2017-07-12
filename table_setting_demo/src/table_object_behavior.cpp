@@ -239,9 +239,12 @@ void TableObject::UpdateActivationPotential() {
       if (!ros::service::call("object_transformation", pose_msg)) {
         ROS_ERROR("Service [%s] is not available!", "object_transformation");
       } else {
-        float x = pow(neutral_object_pos[0] - pose_msg.response.transform.transform.translation.x,2);
-        float y = pow(neutral_object_pos[1] - pose_msg.response.transform.transform.translation.y,2);
-        float z = pow(neutral_object_pos[2] - pose_msg.response.transform.transform.translation.z,2);
+        // float x = pow(neutral_object_pos[0] - pose_msg.response.transform.transform.translation.x,2);
+        // float y = pow(neutral_object_pos[1] - pose_msg.response.transform.transform.translation.y,2);
+        // float z = pow(neutral_object_pos[2] - pose_msg.response.transform.transform.translation.z,2);
+        float x = pow(mx - pose_msg.response.transform.transform.translation.x,2);
+        float y = pow(my - pose_msg.response.transform.transform.translation.y,2);
+        float z = pow(mz - pose_msg.response.transform.transform.translation.z,2);
         dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
         state_.activation_potential = 1.0f / dist;
       }
