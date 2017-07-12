@@ -89,7 +89,8 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state), mut(name.topic.c_str(), mutex_topic) {
+      state), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_() {
+  ready_to_publish_ = false;
   object_ = object;
   object_pos = pos;
   neutral_object_pos = neutral_pos;
@@ -132,10 +133,30 @@ void TableObject::UpdateActivationPotential() {
   // ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
 
   // manipulator position defaults to neutral_obj_pos
-  float mx = neutral_object_pos[0];  
-  float my = neutral_object_pos[1];
-  float mz = neutral_object_pos[2];
+  float mx, my, mz, ox, oy, oz;
+  if( neutral_object_pos.size() == 0 )
+  {
+    ROS_WARN( "neutral_object_pos size is 0, that's weird..." );
+    mx = my = mz = 0;
+  }
+  else
+  {
+    mx = neutral_object_pos[0];  
+    my = neutral_object_pos[1];
+    mz = neutral_object_pos[2];
+  }
 
+  if( object_pos.size() == 0 )
+  {
+    ROS_WARN( "object_pos size is 0, that's weird..." );
+    ox = oy = oz = 0;
+  }
+  else
+  {
+    ox = object_pos[0];  
+    oy = object_pos[1];
+    oz = object_pos[2];
+  }
   // get PR2 hand position (and store in mx, my, mz)
   tf::StampedTransform transform;
   try{
@@ -163,9 +184,9 @@ void TableObject::UpdateActivationPotential() {
       marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 0;
       marker.action = visualization_msgs::Marker::ADD;
       marker.type = visualization_msgs::Marker::SPHERE;
-      marker.pose.position.x = object_pos[0];
-      marker.pose.position.y = object_pos[1];
-      marker.pose.position.z = object_pos[2];
+      marker.pose.position.x = ox;
+      marker.pose.position.y = oy;
+      marker.pose.position.z = oz;
       marker.pose.orientation.x = 0.0;
       marker.pose.orientation.y = 0.0;
       marker.pose.orientation.z = 0.0;
@@ -194,14 +215,18 @@ void TableObject::UpdateActivationPotential() {
 
     // calculate distance
 
-    float x = pow(mx - object_pos[0], 2);
-    float y = pow(my - object_pos[1], 2);
-    float z = pow(mz - object_pos[2], 2);
+    /*float x = pow(mx - ox, 2);
+    float y = pow(my - oy, 2);
+    float z = pow(mz - oz, 2);
     dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
+    */
+    dist = hypot(my - oy, mx - ox);
 
     // activation potential = 1 / dist
+    if( fabs(dist) > 0.00001 )
+      state_.activation_potential = 1.0f / dist;
+    else state_.activation_potential = 0.00001;
 
-    state_.activation_potential = 1.0f / dist;
     ROS_INFO("OBJ(%s): updating activation potential: %0.2f", object_.c_str(), state_.activation_potential);
 
 

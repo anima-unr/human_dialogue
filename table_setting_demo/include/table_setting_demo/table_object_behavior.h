@@ -37,7 +37,8 @@ class TableObject : public Behavior {
     std::vector<float> pos,
     std::vector<float> neutral_pos,
     bool use_local_callback_queue = false,
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000)
+    );
   virtual ~TableObject();
   virtual void UpdateActivationPotential();
  protected:
