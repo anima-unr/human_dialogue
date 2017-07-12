@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Quaternion.h"
+#include "visualization_msgs/Marker.h"
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/JointState.h"
 #include "table_setting_demo/table_setting_demo_types.h"
@@ -89,6 +90,10 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
       children,
       parent,
       state), mut(name.topic.c_str(), mutex_topic) {
+
+  ready_to_publish_ = false;
+  first_time_ = true;
+
   object_ = object;
   object_pos = pos;
   neutral_object_pos = neutral_pos;
@@ -115,21 +120,104 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
     object_pos = std::vector<float>(3);
   if (neutral_pos.size() <= 0)
     neutral_object_pos = std::vector<float>(3);
+
+
+  // set root/manip frames
+  nh_.getParam("root_frame", root_frame_);
+  nh_.getParam("manip_frame", manip_frame_);
+  //tf_listener_ = new TransformListener();
+
+  // debugging - declare publisher for manip markers
+  marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
+  sleep(3);
+  ready_to_publish_ = true;
+
 }
 TableObject::~TableObject() {}
 
 void TableObject::UpdateActivationPotential() {
   float dist;
-  // ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
+  ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
+
+  
+  // manipulator position defaults to neutral_obj_pos
+  float mx, my, mz;
+  mx = my = mz = 0;
+  //float mx = neutral_object_pos[0];  
+  //float my = neutral_object_pos[1];
+  //float mz = neutral_object_pos[2];
+ 
+  // get PR2 hand position (and store in mx, my, mz)
+  tf::StampedTransform transform;
+  try{
+    ROS_INFO( "trying transform" );
+    tf_listener_.lookupTransform(root_frame_, manip_frame_, ros::Time(0), transform);
+    mx = transform.getOrigin().x();
+    my = transform.getOrigin().y();
+    mz = transform.getOrigin().z();
+    ROS_INFO( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
+  }
+  catch( tf::TransformException ex)
+  {
+    ROS_WARN( "could not get transform between [%s] and [%s] (%s), relying on neutral_obj_pos", root_frame_.c_str(), manip_frame_.c_str(), ex.what());
+  }
 
   // Get object neutral position and object position 
   //   from service call potentially
   if (!dynamic_object) {
-    float x = pow(neutral_object_pos[0] - object_pos[0], 2);
-    float y = pow(neutral_object_pos[1] - object_pos[1], 2);
-    float z = pow(neutral_object_pos[2] - object_pos[2], 2);
+    ROS_INFO ("static objects");
+
+    // debugging: publish TF frames to make sure objects positions are understood
+    if( ready_to_publish_ )
+    {
+      visualization_msgs::Marker marker;
+      marker.header.frame_id = root_frame_;
+      marker.header.stamp = ros::Time::now();
+      marker.ns = "manip_shapes";
+      marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 0;
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.type = visualization_msgs::Marker::SPHERE;
+      marker.pose.position.x = object_pos[0];
+      marker.pose.position.y = object_pos[1];
+      marker.pose.position.z = object_pos[2];
+      marker.pose.orientation.x = 0.0;
+      marker.pose.orientation.y = 0.0;
+      marker.pose.orientation.z = 0.0;
+      marker.pose.orientation.w = 1.0;
+      marker.scale.x = 0.1;
+      marker.scale.y = 0.1;
+      marker.scale.z = 0.1;
+      marker.color.r = 0.0f;
+      marker.color.g = 1.0f;
+      marker.color.b = 0.0f;
+      marker.color.a = 1.0;
+      marker.lifetime = ros::Duration();
+      ROS_INFO( "\nid: %d\n", marker.id );
+
+      marker_pub_.publish(marker);
+  
+      marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 1;
+      marker.pose.position.x = mx;
+      marker.pose.position.y = my;
+      marker.pose.position.z = mz;
+        marker.color.r = 1.0f;
+        marker.color.g = 0.0f;
+        marker.color.b = 0.0f;
+        marker_pub_.publish(marker);
+ 
+      ROS_INFO( "\nid: %d\n", marker.id );
+      }
+
+    float x = pow(mx - object_pos[0], 2);
+    float y = pow(my - object_pos[1], 2);
+    float z = pow(mz - object_pos[2], 2);
+
     dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
-    state_.activation_potential = 1.0f / dist;
+
+    if( dist > .00000001 )
+      state_.activation_potential = 1.0f / dist;
+    else state_.activation_potential = .00000001;
+    ROS_INFO( "activation_potential %f", state_.activation_potential );
 
     // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
     // ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);

@@ -139,8 +139,8 @@ class TableSetting {
                                     state,
                                     "/right_arm_mutex",
                                     obj_name.c_str(),
-                                    neutral_object_pos,
                                     object_pos,
+                                    neutral_object_pos,
                                     false);
 
           // if (object =="PLACE_3_0_010") {

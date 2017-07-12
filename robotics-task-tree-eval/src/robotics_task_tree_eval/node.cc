@@ -134,30 +134,30 @@ void Node::GenerateNodeBitmaskMap() {
 void Node::Activate() {
     // ROS_INFO("Node::Activate was called!!!!\n");
 
-  // TODO JB: have this only spin a new thread if the thread doesn't already exist 
-  // create peer_check thread if it isn't already running 
-  if(!peer_check_thread) {
-    state_.check_peer = true;
-    peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
-    printf("\n\tThread was not active, so has been created!\n");
-    peer_check_thread->detach(); 
-  }
-  // if peer check thread reached the end, then kill it?
-  else if(!state_.check_peer){
-    printf("\n\nThread has finished, killing it!\n\n");
-      peer_check_thread->interrupt();
-      peer_check_thread = NULL;
-    }
-  // still running so leave alone
-  else {
-        printf("\n\tThread was already active\n");
-      }
+ //  // TODO JB: have this only spin a new thread if the thread doesn't already exist 
+ //  // create peer_check thread if it isn't already running 
+ //  if(!peer_check_thread) {
+ //    state_.check_peer = true;
+ //    peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
+ //    printf("\n\tThread was not active, so has been created!\n");
+ //    peer_check_thread->detach(); 
+ //  }
+ //  // if peer check thread reached the end, then kill it?
+ //  else if(!state_.check_peer){
+ //    printf("\n\nThread has finished, killing it!\n\n");
+ //      peer_check_thread->interrupt();
+ //      peer_check_thread = NULL;
+ //    }
+ //  // still running so leave alone
+ //  else {
+ //        printf("\n\tThread was already active\n");
+ //      }
 
- // if thread is okay, run this??
- if(state_.peer_okay) {
-      ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
-    // if (!state_.active && !state_.done) {
-    if (!state_.done) {
+ // // if thread is okay, run this??
+ // if(state_.peer_okay) {
+ //      ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
+    if (!state_.active && !state_.done) {
+    // if (!state_.done) {
       if (ActivationPrecondition()) {
         ROS_INFO("Activating Node: %s", name_->topic.c_str());
         // printf("\t\tNode::Activate Activating Node: %s\n\n", name_->topic.c_str());
@@ -174,10 +174,9 @@ void Node::Activate() {
         // peer_check_thread->interrupt();
         // peer_check_thread = NULL;
         }
-    }
-    state_.peer_okay = false;
-    ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");
-    
+    // }
+  //   state_.peer_okay = false;
+  //   ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");    
   }
 }
 

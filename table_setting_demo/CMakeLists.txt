@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   active_vision_msgs
   moveit_ros_planning_interface
+  robotics_task_tree_eval
+  tf
 )
 if ($ENV{ROBOT} MATCHES "pr2")
   option(BUILD_TABLE_SETTING_DEMO "build table setting demo" OFF)
@@ -28,6 +30,8 @@ if (${BUILD_TABLE_SETTING_DEMO})
     remote_mutex
     tabletop_segmenter
     moveit_ros_planning_interface
+    robotics_task_tree_eval
+    tf
   )
   find_package(PCL REQUIRED COMPONENTS
     common
@@ -205,7 +209,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
     add_library(table_object_behavior
       src/table_object_behavior.cpp
     )
-    add_subdirectory(testing)
+    #add_subdirectory(testing)
   endif ()
 
   add_executable(table_setting_demo
