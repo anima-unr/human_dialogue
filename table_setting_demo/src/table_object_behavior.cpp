@@ -89,8 +89,7 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state), mut(name.topic.c_str(), mutex_topic) {
-
+      state), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_() {
   ready_to_publish_ = false;
   first_time_ = true;
 
@@ -98,6 +97,8 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
   object_pos = pos;
   neutral_object_pos = neutral_pos;
   object_id_ = "";
+
+ROS_INFO("MADE IT HERE!!!!!!\n\n");
 
   // check if dynamic object
   std::vector<std::string> static_objects_ = std::vector<std::string>(
@@ -141,11 +142,26 @@ void TableObject::UpdateActivationPotential() {
 
   
   // manipulator position defaults to neutral_obj_pos
-  float mx, my, mz;
-  mx = my = mz = 0;
-  //float mx = neutral_object_pos[0];  
-  //float my = neutral_object_pos[1];
-  //float mz = neutral_object_pos[2];
+  float mx, my, mz, ox, oy, oz;
+  if( neutral_object_pos.size() == 0 ) {
+    ROS_WARN( "neutral_object_pos size is 0, that's weird..." );
+    mx = my = mz = 0;
+  }
+  else {
+    mx = neutral_object_pos[0];  
+    my = neutral_object_pos[1];
+   mz = neutral_object_pos[2];
+  }
+  
+  if( object_pos.size() == 0 ) {
+    ROS_WARN( "object_pos size is 0, that's weird..." );
+    ox = oy = oz = 0;
+  }
+  else {
+    ox = object_pos[0];  
+    oy = object_pos[1];
+    oz = object_pos[2];
+  }
  
   // get PR2 hand position (and store in mx, my, mz)
   tf::StampedTransform transform;
@@ -177,9 +193,9 @@ void TableObject::UpdateActivationPotential() {
       marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 0;
       marker.action = visualization_msgs::Marker::ADD;
       marker.type = visualization_msgs::Marker::SPHERE;
-      marker.pose.position.x = object_pos[0];
-      marker.pose.position.y = object_pos[1];
-      marker.pose.position.z = object_pos[2];
+      marker.pose.position.x = ox;
+      marker.pose.position.y = oy;
+      marker.pose.position.z = oz;
       marker.pose.orientation.x = 0.0;
       marker.pose.orientation.y = 0.0;
       marker.pose.orientation.z = 0.0;
@@ -192,31 +208,31 @@ void TableObject::UpdateActivationPotential() {
       marker.color.b = 0.0f;
       marker.color.a = 1.0;
       marker.lifetime = ros::Duration();
-      ROS_INFO( "\nid: %d\n", marker.id );
-
+      // ROS_INFO( "\nid: %d\n", marker.id );
       marker_pub_.publish(marker);
   
       marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 1;
       marker.pose.position.x = mx;
       marker.pose.position.y = my;
       marker.pose.position.z = mz;
-        marker.color.r = 1.0f;
-        marker.color.g = 0.0f;
-        marker.color.b = 0.0f;
-        marker_pub_.publish(marker);
+      marker.color.r = 1.0f;
+      marker.color.g = 0.0f;
+      marker.color.b = 0.0f;
+      marker_pub_.publish(marker);
  
       ROS_INFO( "\nid: %d\n", marker.id );
       }
 
-    float x = pow(mx - object_pos[0], 2);
-    float y = pow(my - object_pos[1], 2);
-    float z = pow(mz - object_pos[2], 2);
-
+    /*float x = pow(mx - ox, 2);
+    float y = pow(my - oy, 2);
+    float z = pow(mz - oz, 2);
     dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
+    */
+    dist = hypot(my - oy, mx - ox);
 
-    if( dist > .00000001 )
+    if( fabs(dist) > 0.00001 )
       state_.activation_potential = 1.0f / dist;
-    else state_.activation_potential = .00000001;
+    else state_.activation_potential = 0.00001;
     ROS_INFO( "activation_potential %f", state_.activation_potential );
 
     // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
