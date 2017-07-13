@@ -90,6 +90,10 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
       children,
       parent,
       state), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_() {
+
+      // DFS : kludge
+      //mtime = boost::posix_time::millisec(10);
+
   ready_to_publish_ = false;
   first_time_ = true;
 
@@ -138,7 +142,7 @@ TableObject::~TableObject() {}
 
 void TableObject::UpdateActivationPotential() {
   float dist;
-  ROS_INFO("TableObject::UpdateActivationPotential was called!!!\n");
+  ROS_DEBUG("TableObject::UpdateActivationPotential was called!!!\n");
 
   
   // manipulator position defaults to neutral_obj_pos
@@ -166,12 +170,12 @@ void TableObject::UpdateActivationPotential() {
   // get PR2 hand position (and store in mx, my, mz)
   tf::StampedTransform transform;
   try{
-    ROS_INFO( "trying transform" );
+    //ROS_INFO( "trying transform" );
     tf_listener_.lookupTransform(root_frame_, manip_frame_, ros::Time(0), transform);
     mx = transform.getOrigin().x();
     my = transform.getOrigin().y();
     mz = transform.getOrigin().z();
-    ROS_INFO( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
+    //ROS_INFO( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
   }
   catch( tf::TransformException ex)
   {
@@ -220,7 +224,7 @@ void TableObject::UpdateActivationPotential() {
       marker.color.b = 0.0f;
       marker_pub_.publish(marker);
  
-      ROS_INFO( "\nid: %d\n", marker.id );
+     //ROS_INFO( "\nid: %d\n", marker.id );
       }
 
     /*float x = pow(mx - ox, 2);

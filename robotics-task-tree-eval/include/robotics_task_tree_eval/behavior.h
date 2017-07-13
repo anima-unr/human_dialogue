@@ -30,6 +30,7 @@ class Behavior: public Node {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
+ //   boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~Behavior();
 
@@ -43,6 +44,7 @@ class ThenBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
+//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~ThenBehavior();
   void UpdateActivationPotential();
@@ -59,6 +61,7 @@ class AndBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
+//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~AndBehavior();
   void UpdateActivationPotential();
@@ -73,6 +76,7 @@ class OrBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
+//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~OrBehavior();
   void UpdateActivationPotential();
@@ -90,6 +94,7 @@ class DummyBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
+//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~DummyBehavior();
   void UpdateActivationPotential();

@@ -177,8 +177,8 @@ int main(int argc, char *argv[]) {
                                       state,
                                       "/right_arm_mutex",
                                       obj_name.c_str(),
-                                      neutral_object_pos,
                                       object_pos,
+                                      neutral_object_pos,
                                       false);
             // network[i] = new task_net::DummyBehavior(name_param,
             //                             peers_param,
