@@ -89,7 +89,7 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_() {
+      state), mut(name.mask, mutex_topic), nh_(), tf_listener_() {
 
   // flag saying whether the ROS publishers/listeners have been created
   ready_to_publish_ = false;

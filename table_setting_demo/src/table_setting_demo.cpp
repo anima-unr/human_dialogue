@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <vector>
 #include "robotics_task_tree_eval/behavior.h"
-#include "robotics_task_tree_eval/node_types.h"
+#include "robotics_task_tree_msgs/node_types.h"
 #include "table_setting_demo/table_object_behavior.h"
 
 typedef std::vector<std::string> NodeParam;
@@ -55,7 +55,7 @@ class TableSetting {
       printf("neutral: %f\n", neutral_object_pos[0]); //this is getting stuff correctly - via the pr2 pick service stuff
 
     if (nh_.getParam("NodeList", nodes)) {
-      printf("Tree Size: %d\n", nodes.size());
+      printf("Tree Size: %lu\n", nodes.size());
     }
     else { printf("No nodeList params!!!\n");
     }

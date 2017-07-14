@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define INCLUDE_TABLE_SETTING_TABLE_OBJECT_H_
 #include <string>
 #include "robotics_task_tree_eval/behavior.h"
-#include "robotics_task_tree_eval/node_types.h"
+#include "robotics_task_tree_msgs/node_types.h"
 #include "remote_mutex/remote_mutex.h"
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>

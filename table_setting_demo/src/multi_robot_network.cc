@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <map>
 #include "robotics_task_tree_eval/behavior.h"
-#include "robotics_task_tree_eval/node_types.h"
+#include "robotics_task_tree_msgs/node_types.h"
 #include "table_setting_demo/table_object_behavior.h"
 
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (nh_.getParam("NodeList", nodes)) {
-    printf("Tree Size: %d\n", nodes.size());
+    printf("Tree Size: %lu\n", nodes.size());
   }
   else { printf("No nodeList params!!!\n");
   }

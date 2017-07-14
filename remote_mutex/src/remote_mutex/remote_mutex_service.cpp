@@ -30,7 +30,7 @@ void Record(RemoteMutexService* mut);
 class RemoteMutexService {
  public:
   bool locked;
-  std::string owner;
+  task_net::NodeBitmask owner;
   ros::ServiceServer service;
   ros::NodeHandle ns;
   ros::Subscriber state_subscriber_;
@@ -48,17 +48,18 @@ class RemoteMutexService {
       : record_object("/home/janelle/pr2_baxter_ws/src/Distributed_Collaborative_Task_Tree/Data/remote_mutex.csv",
         100) {
     locked = false;
-    owner = "";
+    owner.robot = owner.type = owner.node = 0;
     activation_potential = 0.0f;
     service = ns.advertiseService(
       name,
       &RemoteMutexService::MutexRequest,
       this);
 
+    root_topic_ = "AND_2_0_006_state";
     state_subscriber_ = ns.subscribe(root_topic_, 1000, &RemoteMutexService::RootStateCallback, this );
 
     record_thread = new boost::thread(&Record, this);
-    record_object.StartRecord();;
+    record_object.StartRecord();
   }
 
   ~RemoteMutexService() {
@@ -71,8 +72,8 @@ class RemoteMutexService {
     boost::posix_time::ptime time_t_epoch(boost::gregorian::date(1970,1,1));
     boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::universal_time() - time_t_epoch;
     double seconds = (double)diff.total_seconds() + (double)diff.fractional_seconds() / 1000000.0;
-    record_object.RecordPrintf("%f, %s\n", seconds, owner.c_str());
-}
+    record_object.RecordPrintf("%f, %01d_%01d_%03d\n", seconds, owner.type, owner.robot, owner.node );
+  }
 
   void RootStateCallback( robotics_task_tree_msgs::State msg)
   {
@@ -92,50 +93,48 @@ class RemoteMutexService {
       } 
       else {
         // is this node the node that has the higest activation potential
-        if( true )
+        if( is_eq(req.mask, top_level_state_.highest) )
         {
-
-        }
-/*
-        // check if Nodes activation is the highest for a second
-        if (activation_potential < req.activation_potential) {
           mut.lock();
           activation_potential = req.activation_potential;
           mut.unlock();
-          boost::this_thread::sleep(boost::posix_time::millisec(100));
-          if (activation_potential > req.activation_potential) {
-            ROS_INFO("Not Highest Activation Potential - Denied Access: [%f / %f] %s", activation_potential, req.activation_potential, req.node.c_str());
-            res.success = false;
-          } else {
-            mut.lock();
-              locked = true;
-              owner = req.node;
-            mut.unlock();
-              res.success = true;
-              ROS_INFO("Mutex Locked - Granted Access: %s", req.node.c_str());
-          }
-
-        } */ 
+          mut.lock();
+          locked = true;
+          owner.robot = req.mask.robot;
+          owner.type = req.mask.type;
+          owner.node = req.mask.node;
+          mut.unlock();
+          res.success = true;
+          ROS_INFO("Mutex Locked - Granted Access: %01d_%01d_%03d", req.mask.type, req.mask.robot, req.mask.node);
+        }
         else {
           ROS_INFO("Not Highest Activation Potential - Denied Access: [%f / %f]", activation_potential, req.activation_potential);
           res.success = false;
         }
       }
-    } else {
-      if (locked) {
-        if (req.node == owner) {
+    } 
+    else 
+    {
+      if (locked) 
+      {
+        if (is_eq(req.mask, owner) )
+        {
           mut.lock();
           locked = false;
-          owner = "";
+          owner.robot = owner.type = owner.node = 0;
           activation_potential = 0.0f;
           mut.unlock();
           res.success = true;
           ROS_INFO("Mutex Unlocked - Granted Access: %01d_%01d_%03d", req.mask.type, req.mask.robot, req.mask.node);
-        } else {
+        } 
+        else 
+        {
           res.success = false;
           ROS_INFO("Mutex Locked - Denied Access: %01d_%01d_%03d", req.mask.type, req.mask.robot, req.mask.node);
         }
-      } else {
+      }
+      else 
+      {
         res.success = false;
         ROS_INFO("Mutex Already Unlocked: %01d_%01d_%03d", req.mask.type, req.mask.robot, req.mask.node);
       }

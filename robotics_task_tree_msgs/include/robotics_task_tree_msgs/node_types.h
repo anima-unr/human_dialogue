@@ -102,6 +102,8 @@ ROS_STATIC_ASSERT(sizeof(task_net::State_t) == sizeof(task_net::State));
 ROS_STATIC_ASSERT(sizeof(task_net::NodeBitmask) ==
   sizeof(task_net::NodeBitmask));
 
+#define is_eq(a,b) (a.robot==b.robot&&a.type==b.type&&a.node==b.node)
+
 namespace ros {
 namespace message_traits {
 // This type is fixed-size (24-bytes)
