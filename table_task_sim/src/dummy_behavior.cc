@@ -30,9 +30,15 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
 DummyBehavior::~DummyBehavior() {}
 
 void DummyBehavior::UpdateActivationPotential() {
-    // ROS_INFO("AndBehavior::UpdateActivationPotential was called!!!!\n");
+  ROS_INFO( "DummyBehavior::UpdateActivationPotential was called: [%s]\n", object_.c_str() );
 
   geometry_msgs::Point rpos, opos;
+
+  if( table_state_.robots.size() == 0 || table_state_.objects.size() == 0 )
+  {
+    ROS_WARN("state has not been populated, yet");
+    return;
+  }
 
   // get location of robot
   rpos = table_state_.robots[robot_des_].pose.position;
@@ -86,7 +92,7 @@ void DummyBehavior::Work() {
 
   PickAndPlace(object_, robot_des_);
     // while (!PickAndPlaceDone()) {
-      boost::this_thread::sleep(boost::posix_time::millisec(500));
+      //boost::this_thread::sleep(boost::posix_time::millisec(500));
         // ROS_INFO("TableObject::Work: waiting for pick and place to be done!");
     // }
   mut_arm.Release();

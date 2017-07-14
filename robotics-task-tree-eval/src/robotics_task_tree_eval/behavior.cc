@@ -61,12 +61,24 @@ AndBehavior::~AndBehavior() {}
 void AndBehavior::UpdateActivationPotential() {
     // ROS_INFO("AndBehavior::UpdateActivationPotential was called!!!!\n");
 
+  // this should choose bubble up child with highest potential
+  float highest = 0;
+  NodeBitmask nbm;
+
   float sum = 0;
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
     sum += (*it)->state.activation_potential;
+    if( (*it)->state.activation_potential > highest )
+    {
+      // save as the highest potential
+      highest = (*it)->state.activation_potential;
+      nbm = (*it)->mask;
+    }
   }
   state_.activation_potential = sum / children_.size();
+  state_.highest_potential = highest;
+  state_.highest = nbm;
 }
 
 bool AndBehavior::Precondition() {
@@ -93,6 +105,7 @@ uint32_t AndBehavior::SpreadActivation() {
     SendToChild((*it)->mask, msg);
   }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // THEN BEHAVIOR
@@ -119,12 +132,21 @@ ThenBehavior::~ThenBehavior() {}
 
 void ThenBehavior::UpdateActivationPotential() {
     // ROS_INFO("ThenBehavior::UpdateActivationPotential was called!!!!\n");
+
+  
+
   float sum = 0;
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
     sum += (*it)->state.activation_potential;
   }
   state_.activation_potential = sum / children_.size();
+
+  // this should choose bubble up first child
+  NodeListPtrIterator it = children_.begin();
+  state_.highest_potential = (*it)->state.activation_potential;
+  state_.highest = (*it)->mask;
+
 }
 
 bool ThenBehavior::Precondition() {
@@ -180,16 +202,22 @@ void OrBehavior::UpdateActivationPotential() {
   float max = 0;
   int max_child_index = 0, index = 0;
 
+  // this should choose bubble up child with highest potential
+  NodeBitmask nbm;
+
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
     float value = (*it)->state.activation_potential;
     if (value > max) {
       max = value;
       max_child_index = index;
+      nbm = (*it)->mask;
     }
     index++;
   }
   state_.activation_potential = max;
+  state_.highest_potential = max;
+  state_.highest = nbm;
   random_child_selection = max_child_index;
 }
 

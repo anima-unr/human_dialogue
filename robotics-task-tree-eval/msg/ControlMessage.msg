@@ -3,3 +3,5 @@ float32 activation_level
 float32 activation_potential
 bool done
 bool active
+NodeBitmask highest
+float32 highest_potential

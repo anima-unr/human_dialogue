@@ -27,7 +27,7 @@ enum ROBOT {
   BAXTER=1
 } ;
 
-#define BEHAVIOR_SLEEP_TIME 1000
+#define BEHAVIOR_SLEEP_TIME 10
 
 namespace task_net {
 class Behavior: public Node {

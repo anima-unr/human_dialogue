@@ -66,6 +66,8 @@ struct State {
   float activation_potential;
   bool peer_active;
   bool peer_done;
+  NodeBitmask highest;
+  float highest_potential;
 };
 typedef State State_t;
 struct NodeId {
@@ -83,6 +85,8 @@ struct ControlMessage {
   float activation_potential;
   bool done;
   bool active;
+  NodeBitmask highest;
+  float highest_potential;
 };
 
 typedef std::vector<NodeId_t> NodeList;

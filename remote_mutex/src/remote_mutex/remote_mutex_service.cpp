@@ -80,7 +80,7 @@ class RemoteMutexService {
           mut.lock();
           activation_potential = req.activation_potential;
           mut.unlock();
-          boost::this_thread::sleep(boost::posix_time::millisec(10000));
+          boost::this_thread::sleep(boost::posix_time::millisec(100));
           if (activation_potential > req.activation_potential) {
             ROS_INFO("Not Highest Activation Potential - Denied Access: [%f / %f] %s", activation_potential, req.activation_potential, req.node.c_str());
             res.success = false;

@@ -84,6 +84,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.peer_done = false;
   state_.check_peer = false;
   state_.peer_okay = false;
+  state_.highest_potential = 0.0;
   thread_running_ = false;
 
   // Get bitmask
@@ -517,7 +518,7 @@ void Node::ActivationFalloff() {
   state_.activation_level *= ACTIVATION_FALLOFF;
 }
 // Main Loop of the Node type Each Node Will have this fucnction called at each
-// times step to process node properties. Each node should run in its own thread
+// time step to process node properties. Each node should run in its own thread
 void Node::Update() {
       // ROS_INFO("Node::Update was called!!!!\n");
 
@@ -555,7 +556,7 @@ void Node::Work() {
 bool Node::CheckWork() {
     // ROS_INFO("Node::CheckWork was called!!!!\n");
   // LOG_INFO("Checking Work");
-  boost::this_thread::sleep(boost::posix_time::millisec(100));
+  boost::this_thread::sleep(boost::posix_time::millisec(10));
   return true;
 }
 
@@ -670,6 +671,7 @@ uint32_t Node::SpreadActivation() {
       // ROS_INFO("Node::SpreadActivation was called!!!!\n");
 
 }
+
 void Node::InitializeSubscriber(NodeId_t *node) {
     // ROS_INFO("Node::InitializeSubscriber was called!!!!\n");
   std::string peer_topic = node->topic + "_peer";
