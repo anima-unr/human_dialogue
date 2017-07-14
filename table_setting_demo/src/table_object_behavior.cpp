@@ -188,44 +188,6 @@ void TableObject::UpdateActivationPotential() {
     ROS_WARN( "could not get transform between [%s] and [%s] (%s), relying on neutral_obj_pos", root_frame_.c_str(), manip_frame_.c_str(), ex.what());
   }
 
-  // manipulator position defaults to neutral_obj_pos
-  float mx, my, mz, ox, oy, oz;
-  if( neutral_object_pos.size() == 0 )
-  {
-    ROS_WARN( "neutral_object_pos size is 0, that's weird..." );
-    mx = my = mz = 0;
-  }
-  else
-  {
-    mx = neutral_object_pos[0];  
-    my = neutral_object_pos[1];
-    mz = neutral_object_pos[2];
-  }
-
-  if( object_pos.size() == 0 )
-  {
-    ROS_WARN( "object_pos size is 0, that's weird..." );
-    ox = oy = oz = 0;
-  }
-  else
-  {
-    ox = object_pos[0];  
-    oy = object_pos[1];
-    oz = object_pos[2];
-  }
-  // get PR2 hand position (and store in mx, my, mz)
-  tf::StampedTransform transform;
-  try{
-    tf_listener_.lookupTransform(root_frame_, manip_frame_, ros::Time(0), transform);
-    mx = transform.getOrigin().x();
-    my = transform.getOrigin().y();
-    mz = transform.getOrigin().z();
-    ROS_DEBUG( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
-  }
-  catch( tf::TransformException ex)
-  {
-    ROS_WARN( "could not get transform between [%s] and [%s] (%s), relying on neutral_obj_pos", root_frame_.c_str(), manip_frame_.c_str(), ex.what());
-  }
   // Get object neutral position and object position 
   //   from service call potentially
   if (!dynamic_object) {

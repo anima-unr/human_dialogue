@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(robotics_task_tree_eval)
 
-set(CMAKE_CXX_FLAGS "-g3")
+set(CMAKE_CXX_FLAGS "--std=c++11 -g3")
 
 
 #include(cmake/CPlusPlusCompiler.cmake)

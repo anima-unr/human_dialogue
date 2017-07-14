@@ -51,7 +51,8 @@ class TableSetting {
     std::vector<float> object_pos;
 
     ros::param::get("/ObjectPositions/neutral", neutral_object_pos);
-    printf("neutral: %f\n", neutral_object_pos[0]); //this is getting stuff correctly - via the pr2 pick service stuff
+    if( neutral_object_pos.size() > 0 )
+      printf("neutral: %f\n", neutral_object_pos[0]); //this is getting stuff correctly - via the pr2 pick service stuff
 
     if (nh_.getParam("NodeList", nodes)) {
       printf("Tree Size: %d\n", nodes.size());

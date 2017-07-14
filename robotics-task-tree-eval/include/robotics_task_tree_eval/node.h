@@ -65,9 +65,6 @@ class Node {
   virtual bool CheckWork();
   virtual void UndoWork();
 
-  bool thread_running_ = false;
-
-
  protected:
   virtual void Activate();
   virtual void Deactivate();
@@ -179,6 +176,8 @@ class Node {
 
   // Working state
   bool working;
+  bool thread_running_;
+
 };
 }  // namespace task_net
 #endif  // INCLUDE_NODE_H_

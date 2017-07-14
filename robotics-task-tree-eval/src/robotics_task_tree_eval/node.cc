@@ -39,6 +39,7 @@ void PeerCheckThread(Node *node);
 Node::Node() {
   state_.active = false;
   state_.done = false;
+  thread_running_ = false;
 }
 
 Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
@@ -83,6 +84,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.peer_done = false;
   state_.check_peer = false;
   state_.peer_okay = false;
+  thread_running_ = false;
 
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());
@@ -136,6 +138,7 @@ void Node::GenerateNodeBitmaskMap() {
     }
   }
 }
+
 void Node::Activate() {
     ROS_INFO("Node::Activate was called!!!!\n");
 
@@ -156,11 +159,15 @@ void Node::Activate() {
         peer_check_thread->join();
       }
       peer_check_thread = NULL;
-    }
+  }
   // still running so leave alone
   else {
         printf("\n\tThread was already active\n");
       }
+ // if thread is okay, run this??
+ if(state_.peer_okay) {
+      ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
+    // if (!state_.active && !state_.done) {
 
     if (!state_.done) {
       if (ActivationPrecondition()) {
