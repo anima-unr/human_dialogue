@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "robotics_task_tree_eval/behavior.h"
 #include "robotics_task_tree_eval/node_types.h"
 #include "remote_mutex/remote_mutex.h"
+#include <table_task_sim/dummy_behavior.h>
 
 
 typedef std::vector<std::string> NodeParam;
@@ -69,7 +70,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (nh_.getParam("NodeList", nodes)) {
-    printf("Tree Size: %d\n", nodes.size());
+    printf("Tree Size: %lu\n", nodes.size());
   }
   else { printf("No nodeList params!!!\n");
   }

@@ -28,6 +28,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
   find_package(catkin REQUIRED COMPONENTS
     robotics_task_tree_eval
     remote_mutex
+    message_generation
     tabletop_segmenter
     moveit_ros_planning_interface
     robotics_task_tree_eval
@@ -223,23 +224,6 @@ if (${BUILD_TABLE_SETTING_DEMO})
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
   )
-
-# dummy multi  
-  add_executable(dummy_multi_demo
-    src/dummy_multi_network.cpp
-    src/table_object_behavior.cpp
-  )
-
-  add_dependencies(dummy_multi_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-  target_link_libraries(dummy_multi_demo
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
-  )
-  add_dependencies(dummy_multi_demo
-    table_setting_demo_generate_messages_cpp
-  )
-
 
 # multi 
   add_executable(multi_robot_demo

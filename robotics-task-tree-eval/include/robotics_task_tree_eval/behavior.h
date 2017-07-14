@@ -27,6 +27,8 @@ enum ROBOT {
   BAXTER=1
 } ;
 
+#define BEHAVIOR_SLEEP_TIME 1000
+
 namespace task_net {
 class Behavior: public Node {
  public:
@@ -35,8 +37,7 @@ class Behavior: public Node {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
- //   boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~Behavior();
 
  private:
@@ -49,8 +50,7 @@ class ThenBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~ThenBehavior();
   void UpdateActivationPotential();
  protected:
@@ -66,8 +66,7 @@ class AndBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~AndBehavior();
   void UpdateActivationPotential();
  protected:
@@ -81,8 +80,7 @@ class OrBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~OrBehavior();
   void UpdateActivationPotential();
  protected:
@@ -92,31 +90,7 @@ class OrBehavior: public Behavior {
   uint32_t seed;
   uint32_t random_child_selection;
 };
-class DummyBehavior: public Behavior {
- public:
-  DummyBehavior();
-  DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
-    NodeId_t parent,
-    State_t state,
-    std::string object,
-    ROBOT robot_des,
-    bool use_local_callback_queue = false,
-//    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
-  virtual ~DummyBehavior();
-  void UpdateActivationPotential();
-  bool ActivationPrecondition();
-  void PickAndPlace(std::string object, ROBOT robot_des);
-  bool PickAndPlaceDone();
-  void Work();
- protected:
-  virtual bool Precondition();
-  virtual uint32_t SpreadActivation();
-  mutex::RemoteMutex mut_arm;
-  std::string object_;
-  ROBOT robot_des_;
 
-};
 class WhileBehavior: public Behavior {};
 }  // namespace task_net
 #endif  // INCLUDE_BEHAVIOR_H_

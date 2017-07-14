@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   geometry_msgs
   message_generation
+  robotics_task_tree_eval
+  remote_mutex
 )
 
 ## System dependencies are found with CMake's conventions
@@ -109,9 +111,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES table_task_sim
-  CATKIN_DEPENDS roscpp rospy visualization_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy visualization_msgs message_runtime robotics_task_tree_eval remote_mutex
   DEPENDS yaml-cpp
 )
 
@@ -122,7 +124,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -157,6 +159,25 @@ include_directories(
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES} yaml-cpp
  )
+
+
+# dummy multi  
+  add_executable(dummy_multi_demo
+    src/dummy_multi_network.cc
+    src/dummy_behavior.cc
+  )
+
+  add_dependencies(dummy_multi_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+  target_link_libraries(dummy_multi_demo
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+
+  #add_dependencies(dummy_multi_demo
+  #  table_setting_demo_generate_messages_cpp
+  #)
+
 
 #############
 ## Install ##

@@ -144,6 +144,7 @@ void Node::Activate() {
 
   // TODO JB: have this only spin a new thread if the thread doesn't already exist 
   // create peer_check thread if it isn't already running 
+    
   if(!peer_check_thread) {
     state_.check_peer = true;
     peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
@@ -166,6 +167,7 @@ void Node::Activate() {
       }
  // if thread is okay, run this??
  if(state_.peer_okay) {
+  
       ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
     // if (!state_.active && !state_.done) {
 
@@ -186,6 +188,7 @@ void Node::Activate() {
         // peer_check_thread->interrupt();
         // peer_check_thread = NULL;
         }
+      
     }
     state_.peer_okay = false;
     ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");    
