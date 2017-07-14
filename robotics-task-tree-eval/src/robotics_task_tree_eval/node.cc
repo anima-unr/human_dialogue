@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <string>
 #include <vector>
-#include "robotics_task_tree_eval/State.h"
+#include "robotics_task_tree_msgs/State.h"
 #include "log.h"
 
 namespace task_net {
@@ -230,9 +230,9 @@ State Node::GetState() {
   return state_;
 }
 
-void Node::SendToParent(const robotics_task_tree_eval::ControlMessage msg) {
+void Node::SendToParent(const robotics_task_tree_msgs::ControlMessage msg) {
     // ROS_INFO("Node::SendToParent was called!!!!\n");
-  ControlMessagePtr msg_temp(new robotics_task_tree_eval::ControlMessage);
+  ControlMessagePtr msg_temp(new robotics_task_tree_msgs::ControlMessage);
   *msg_temp = msg;
   parent_pub_.publish(msg_temp);
 }
@@ -241,12 +241,12 @@ void Node::SendToParent(const ControlMessagePtr_t msg) {
   parent_pub_.publish(msg);
 }
 void Node::SendToChild(NodeBitmask node,
-  const robotics_task_tree_eval::ControlMessage msg) {
+  const robotics_task_tree_msgs::ControlMessage msg) {
     // ROS_INFO("Node::SendToChild was called!!!!\n");
   // get publisher for specific node
   ros::Publisher* pub = node_dict_[node]->pub;
   // publish message to the specific child
-  ControlMessagePtr msg_temp(new robotics_task_tree_eval::ControlMessage);
+  ControlMessagePtr msg_temp(new robotics_task_tree_msgs::ControlMessage);
   *msg_temp = msg;
   pub->publish(msg_temp);
 }
@@ -255,12 +255,12 @@ void Node::SendToChild(NodeBitmask node, const ControlMessagePtr_t msg) {
   node_dict_[node]->pub->publish(msg);
 }
 void Node::SendToPeer(NodeBitmask node,
-  const robotics_task_tree_eval::ControlMessage msg) {
+  const robotics_task_tree_msgs::ControlMessage msg) {
     // ROS_INFO("Node::SendToPeer was called!!!!\n");
   // get publisher for specific node
   ros::Publisher* pub = node_dict_[node]->pub;
   // publish message to the specific child
-  ControlMessagePtr msg_temp(new robotics_task_tree_eval::ControlMessage);
+  ControlMessagePtr msg_temp(new robotics_task_tree_msgs::ControlMessage);
   *msg_temp = msg;
   pub->publish(msg_temp);
 
@@ -581,7 +581,7 @@ std::string StateToString(State state) {
 
 void Node::PublishStatus() {
   ROS_INFO("[%s]: Node::PublishStatus was called", name_->topic.c_str());
-  robotics_task_tree_eval::State msg;
+  robotics_task_tree_msgs::State msg;
   msg.owner.type = state_.owner.type;
   msg.owner.robot = state_.owner.robot;
   msg.owner.node = state_.owner.node;
@@ -719,7 +719,7 @@ void Node::InitializePublishers(NodeListPtr nodes, PubList *pub,
   for (NodeListPtrIterator it = nodes.begin(); it != nodes.end(); ++it) {
     ros::Publisher * topic = new ros::Publisher;
     *topic =
-      pub_nh_.advertise<robotics_task_tree_eval::ControlMessage>(
+      pub_nh_.advertise<robotics_task_tree_msgs::ControlMessage>(
         (*it)->topic + topic_addition,
         PUB_SUB_QUEUE_SIZE);
 
@@ -741,7 +741,7 @@ void Node::InitializePublisher(NodeId_t *node, ros::Publisher *pub,
   printf("[PUBLISHER] - Creating Topic: %s\n", node->topic.c_str());
 #endif
   (*pub) =
-    pub_nh_.advertise<robotics_task_tree_eval::ControlMessage>(node->topic,
+    pub_nh_.advertise<robotics_task_tree_msgs::ControlMessage>(node->topic,
       PUB_SUB_QUEUE_SIZE);
   node_dict_[node->mask]->pub = pub;
   // node_dict_[node.mask]->topic += topic_addition;
@@ -755,7 +755,7 @@ void Node::InitializeStatePublisher(NodeId_t *node, ros::Publisher *pub,
 #ifdef DEBUG
   printf("[PUBLISHER] - Creating Topic: %s\n", node->topic.c_str());
 #endif
-  (*pub) = pub_nh_.advertise<robotics_task_tree_eval::State>(node->topic,
+  (*pub) = pub_nh_.advertise<robotics_task_tree_msgs::State>(node->topic,
     PUB_SUB_QUEUE_SIZE);
   node_dict_[node->mask]->pub = pub;
   // node_dict_[node.mask]->topic += topic_addition;

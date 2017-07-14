@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <map>
 #include "robotics_task_tree_eval/behavior.h"
-#include "robotics_task_tree_eval/node_types.h"
+#include "robotics_task_tree_msgs/node_types.h"
 #include "remote_mutex/remote_mutex.h"
 #include <table_task_sim/dummy_behavior.h>
 

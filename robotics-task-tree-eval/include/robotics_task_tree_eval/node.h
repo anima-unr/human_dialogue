@@ -25,14 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <map>
 #include <fstream>
-#include "robotics_task_tree_eval/node_types.h"
-#include "robotics_task_tree_eval/ControlMessage.h"
+#include "robotics_task_tree_msgs/node_types.h"
+#include "robotics_task_tree_msgs/ControlMessage.h"
 
 namespace task_net {
 
-typedef boost::shared_ptr<robotics_task_tree_eval::ControlMessage const>
+typedef boost::shared_ptr<robotics_task_tree_msgs::ControlMessage const>
   ConstControlMessagePtr;
-typedef boost::shared_ptr<robotics_task_tree_eval::ControlMessage>
+typedef boost::shared_ptr<robotics_task_tree_msgs::ControlMessage>
   ControlMessagePtr;
 typedef boost::shared_ptr<ControlMessage_t const>
   ConstControlMessagePtr_t;
@@ -75,13 +75,13 @@ class Node {
 
   // Messaging
   virtual void SendToParent(
-    const robotics_task_tree_eval::ControlMessage msg);
+    const robotics_task_tree_msgs::ControlMessage msg);
   virtual void SendToParent(const ControlMessagePtr_t msg);
   virtual void SendToChild(NodeBitmask node,
-    const robotics_task_tree_eval::ControlMessage msg);
+    const robotics_task_tree_msgs::ControlMessage msg);
   virtual void SendToChild(NodeBitmask node, const ControlMessagePtr_t msg);
   virtual void SendToPeer(NodeBitmask node,
-    const robotics_task_tree_eval::ControlMessage msg);
+    const robotics_task_tree_msgs::ControlMessage msg);
   virtual void SendToPeer(NodeBitmask node, const ControlMessagePtr_t msg);
 
   // Receiving Threads

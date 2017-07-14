@@ -18,8 +18,7 @@ add_service_files(
 )
 
 generate_messages(
-  DEPENDENCIES
-  std_msgs
+  DEPENDENCIES  std_msgs robotics_task_tree_msgs
 )
 
 catkin_package(

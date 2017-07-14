@@ -1,4 +1,4 @@
-string node
+robotics_task_tree_msgs/NodeBitmask mask
 float32 activation_potential
 bool request
 ---

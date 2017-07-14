@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "robotics_task_tree_eval/State.h"
-#include "robotics_task_tree_eval/ControlMessage.h"
+#include "robotics_task_tree_msgs/State.h"
+#include "robotics_task_tree_msgs/ControlMessage.h"
 
 namespace task_net {
 
@@ -112,33 +112,33 @@ template<> struct IsSimple<task_net::NodeBitmask> : public TrueType {};
 template<>
 struct MD5Sum<task_net::NodeBitmask> {
   static const char* value() {
-    return MD5Sum<robotics_task_tree_eval::NodeBitmask>::value();
+    return MD5Sum<robotics_task_tree_msgs::NodeBitmask>::value();
   }
 
   static const char* value(const task_net::NodeBitmask& m) {
-    return MD5Sum<robotics_task_tree_eval::NodeBitmask>::value();
+    return MD5Sum<robotics_task_tree_msgs::NodeBitmask>::value();
   }
 };
 
 template<>
 struct DataType<task_net::NodeBitmask> {
   static const char* value() {
-    return DataType<robotics_task_tree_eval::NodeBitmask>::value();
+    return DataType<robotics_task_tree_msgs::NodeBitmask>::value();
   }
 
   static const char* value(const task_net::NodeBitmask& m) {
-    return DataType<robotics_task_tree_eval::NodeBitmask>::value();
+    return DataType<robotics_task_tree_msgs::NodeBitmask>::value();
   }
 };
 
 template<>
 struct Definition<task_net::NodeBitmask> {
   static const char* value() {
-    return Definition<robotics_task_tree_eval::NodeBitmask>::value();
+    return Definition<robotics_task_tree_msgs::NodeBitmask>::value();
   }
 
   static const char* value(const task_net::NodeBitmask& m) {
-    return Definition<robotics_task_tree_eval::NodeBitmask>::value();
+    return Definition<robotics_task_tree_msgs::NodeBitmask>::value();
   }
 };
 
@@ -150,33 +150,33 @@ template<> struct IsSimple<task_net::State_t> : public TrueType {};
 template<>
 struct MD5Sum<task_net::State_t> {
   static const char* value() {
-    return MD5Sum<robotics_task_tree_eval::State>::value();
+    return MD5Sum<robotics_task_tree_msgs::State>::value();
   }
 
   static const char* value(const task_net::State_t& m) {
-    return MD5Sum<robotics_task_tree_eval::State>::value();
+    return MD5Sum<robotics_task_tree_msgs::State>::value();
   }
 };
 
 template<>
 struct DataType<task_net::State_t> {
   static const char* value() {
-    return DataType<robotics_task_tree_eval::State>::value();
+    return DataType<robotics_task_tree_msgs::State>::value();
   }
 
   static const char* value(const task_net::State_t& m) {
-    return DataType<robotics_task_tree_eval::State>::value();
+    return DataType<robotics_task_tree_msgs::State>::value();
   }
 };
 
 template<>
 struct Definition<task_net::State_t> {
   static const char* value() {
-    return Definition<robotics_task_tree_eval::State>::value();
+    return Definition<robotics_task_tree_msgs::State>::value();
   }
 
   static const char* value(const task_net::State_t& m) {
-    return Definition<robotics_task_tree_eval::State>::value();
+    return Definition<robotics_task_tree_msgs::State>::value();
   }
 };
 
@@ -190,33 +190,33 @@ template<> struct IsSimple<task_net::ControlMessage_t> : public TrueType {};
 template<>
 struct MD5Sum<task_net::ControlMessage_t> {
   static const char* value() {
-    return MD5Sum<robotics_task_tree_eval::ControlMessage>::value();
+    return MD5Sum<robotics_task_tree_msgs::ControlMessage>::value();
   }
 
   static const char* value(const task_net::ControlMessage_t& m) {
-    return MD5Sum<robotics_task_tree_eval::ControlMessage>::value();
+    return MD5Sum<robotics_task_tree_msgs::ControlMessage>::value();
   }
 };
 
 template<>
 struct DataType<task_net::ControlMessage_t> {
   static const char* value() {
-    return DataType<robotics_task_tree_eval::ControlMessage>::value();
+    return DataType<robotics_task_tree_msgs::ControlMessage>::value();
   }
 
   static const char* value(const task_net::ControlMessage_t& m) {
-    return DataType<robotics_task_tree_eval::ControlMessage>::value();
+    return DataType<robotics_task_tree_msgs::ControlMessage>::value();
   }
 };
 
 template<>
 struct Definition<task_net::ControlMessage_t> {
   static const char* value() {
-    return Definition<robotics_task_tree_eval::ControlMessage>::value();
+    return Definition<robotics_task_tree_msgs::ControlMessage>::value();
   }
 
   static const char* value(const task_net::ControlMessage_t& m) {
-    return Definition<robotics_task_tree_eval::ControlMessage>::value();
+    return Definition<robotics_task_tree_msgs::ControlMessage>::value();
   }
 };
 
