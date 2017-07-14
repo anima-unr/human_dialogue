@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
  	rospy
 	message_generation
   std_msgs
+  robotics_task_tree_msgs
   timeseries_recording_toolkit
 )
 
@@ -24,7 +25,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES remote_mutex
-  DEPENDS timeseries_recording_toolkit
+  DEPENDS timeseries_recording_toolkit robotics_task_tree_msgs
 )
 
 include_directories(

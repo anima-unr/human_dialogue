@@ -13,8 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  message_generation
   remote_mutex
+  robotics_task_tree_msgs
 )
 
 if( "${CMAKE_BUILD_TYPE}" STREQUAL Debug )
@@ -64,12 +64,6 @@ endif( ${LOG_INFO_PRINTING} )
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  State.msg
-  NodeBitmask.msg
-  ControlMessage.msg
-)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -86,10 +80,10 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs
+#)
 
 ###################################
 ## catkin specific configuration ##
@@ -103,7 +97,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include include/${PACKAGE_NAME}/
   LIBRARIES robotics_task_tree
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs robotics_task_tree_msgs
 #  DEPENDS system_lib
 )
 

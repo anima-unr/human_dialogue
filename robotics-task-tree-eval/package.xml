@@ -26,17 +26,16 @@
   <!-- Authors do not have to be maintianers, but could be -->
   <!-- Example: -->
   <author email="fraser@cse.unr.edu">Luke Fraser</author>
+  <author email="dave@cse.unr.edu">David Feil-Seifer</author>
 
 
   <!-- The *_depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
   <!-- Examples: -->
   <!-- Use build_depend for packages you need at compile time: -->
-    <build_depend>message_generation</build_depend>
   <!-- Use buildtool_depend for build tool packages: -->
   <!--   <buildtool_depend>catkin</buildtool_depend> -->
   <!-- Use run_depend for packages you need at runtime: -->
-    <run_depend>message_runtime</run_depend>
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
@@ -44,10 +43,12 @@
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>remote_mutex</build_depend>
+  <build_depend>robotics_task_tree_msgs</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>remote_mutex</run_depend>
+  <run_depend>robotics_task_tree_msgs</run_depend>
 
 
 
