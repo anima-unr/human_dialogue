@@ -101,6 +101,11 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
 
 Node::~Node() {}
 
+void Node::init()
+{
+
+}
+
 void Node::InitializeBitmask(NodeId_t * node) {
     // ROS_INFO("Node::InitializeBitmask was called!!!!\n");
   node->mask = GetBitmask(node->topic);

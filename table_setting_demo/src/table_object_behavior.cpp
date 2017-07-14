@@ -164,7 +164,7 @@ void TableObject::UpdateActivationPotential() {
     mx = transform.getOrigin().x();
     my = transform.getOrigin().y();
     mz = transform.getOrigin().z();
-    ROS_INFO( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
+    ROS_DEBUG( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
   }
   catch( tf::TransformException ex)
   {
@@ -210,16 +210,8 @@ void TableObject::UpdateActivationPotential() {
       marker.color.b = 0.0f;
       marker_pub_.publish(marker);
 
-      ROS_INFO( "\nid: %d\n", marker.id );
     }
 
-    // calculate distance
-
-    /*float x = pow(mx - ox, 2);
-    float y = pow(my - oy, 2);
-    float z = pow(mz - oz, 2);
-    dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
-    */
     dist = hypot(my - oy, mx - ox);
 
     // activation potential = 1 / dist
@@ -243,7 +235,7 @@ void TableObject::UpdateActivationPotential() {
     // ROS_INFO("x %f y %f z %f dist %f activation_potential %f", x, y, z, dist, state_.activation_potential);
 
   } else {
-    ROS_INFO("Dynamic object here soooo get activation diffly");
+    ROS_DEBUG("Dynamic object here soooo get activation diffly");
     table_setting_demo::object_position pos_msg;
     table_setting_demo::ObjectTransformation pose_msg;
     // Check if object available in scene
@@ -368,7 +360,7 @@ bool TableObject::CheckWork() {
           if (dist < distance_thresh) {
             return true;
           } else {
-            ROS_INFO("RESETING  BEHAVIOR!!!!!!!!!!!!!!");
+            ROS_DEBUG("RESETING  BEHAVIOR!!!!!!!!!!!!!!");
             return false;
           }
         }

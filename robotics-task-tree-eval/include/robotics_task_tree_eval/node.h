@@ -57,6 +57,9 @@ class Node {
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
   virtual ~Node();
 
+  // DFS: tf fix
+  virtual void init();
+
   virtual void Update();
   virtual void Work();
   virtual bool CheckWork();
