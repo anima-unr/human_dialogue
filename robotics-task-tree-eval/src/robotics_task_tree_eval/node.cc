@@ -137,35 +137,30 @@ void Node::GenerateNodeBitmaskMap() {
   }
 }
 void Node::Activate() {
-    // ROS_INFO("Node::Activate was called!!!!\n");
+    ROS_INFO("Node::Activate was called!!!!\n");
 
-  // If running single robot case comment out everything between the **-- ... --** below
-
-  // **--
-
- //  if(!peer_check_thread) {
- //    state_.check_peer = true;
- //    peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
- //    printf("\n\tThread was not active, so has been created!\n");
- //    peer_check_thread->detach(); 
- //  }
- //  // if peer check thread reached the end, then kill it?
- //  else if(!state_.check_peer){
- //    printf("\n\nThread has finished, killing it!\n\n");
- //      peer_check_thread->interrupt();
- //      peer_check_thread = NULL;
- //    }
- //  // still running so leave alone
- //  else {
- //        printf("\n\tThread was already active\n");
- //      }
-
- // // if thread is okay, run this??
- // if(state_.peer_okay) {
- //      ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
- //    // if (!state_.active && !state_.done) {
-
-  // --**
+  // TODO JB: have this only spin a new thread if the thread doesn't already exist 
+  // create peer_check thread if it isn't already running 
+  if(!peer_check_thread) {
+    state_.check_peer = true;
+    peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
+    printf("\n\tThread was not active, so has been created!\n");
+    peer_check_thread->detach(); 
+  }
+  // if peer check thread reached the end, then kill it?
+  else if(!state_.check_peer){
+    printf("\n\nThread has finished, killing it! [%d] \n\n", thread_running_ );
+      if( thread_running_ ) {
+        ROS_INFO( "killing thread");
+        peer_check_thread->interrupt();
+        peer_check_thread->join();
+      }
+      peer_check_thread = NULL;
+    }
+  // still running so leave alone
+  else {
+        printf("\n\tThread was already active\n");
+      }
 
     if (!state_.done) {
       if (ActivationPrecondition()) {
@@ -186,10 +181,8 @@ void Node::Activate() {
         }
     }
     state_.peer_okay = false;
-    ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");
-    
-  // If running single robot case, comment out the next "}" line as well 
-  // }
+    ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");    
+  }
 }
 
 bool Node::ActivationPrecondition() {
@@ -331,18 +324,23 @@ void WorkThread(Node *node) {
 
 // TODO JB: implementation for peer thread!
 void PeerCheckThread(Node *node) {
-      // ROS_INFO("Node::PeerCheckThread was called!!!!\n");
-
+  ROS_INFO("Node::PeerCheckThread was called!!!!\n");
+  node->thread_running_ = true;
+try{
   // wait for checking to be asked!
   boost::unique_lock<boost::mutex> lockp(node->peer_mut);
    while (!node->state_.check_peer) {
+    boost::this_thread::interruption_point(); 
+
     ROS_INFO("PeerCheckThread is waiting!");
     node->cv.wait(lockp);
   }
   // LOG_INFO("check peer thread Initialized");
   // notify peers I want to start this node 
   // by sending status and activation potential to peers
+  boost::this_thread::interruption_point(); 
   node->PublishStateToPeers(); 
+  boost::this_thread::interruption_point(); 
 
   // TODO: In the futurre maybe make a recieve from peers call here to ensure
   // that this happens right since the timing of the return from the check 
@@ -353,13 +351,15 @@ void PeerCheckThread(Node *node) {
   //       with latency for the different sets of nodes
   int buff = node->state_.owner.robot;
   printf("\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, 500+(buff*1500));
-  boost::this_thread::sleep(boost::posix_time::millisec(500+(buff*1500)));  
+  //boost::this_thread::sleep(boost::posix_time::millisec(500+(buff*1500)));  
+  boost::this_thread::interruption_point(); 
 
   // for each peer, check status
   // (might have to change logic to take highest of all peers?!?)
   // for now just assume only 1 peer!!!
   for (NodeListPtr::iterator it = node->peers_.begin();
       it != node->peers_.end(); ++it) {
+    boost::this_thread::interruption_point(); 
 
     // printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),(*it)->state.active,(*it)->state.done);
     printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
@@ -406,9 +406,19 @@ void PeerCheckThread(Node *node) {
       printf("\n\nERROR! PeerCheckThread: Undefined case! Please redo logic!\n\n");
     }
   }
-  boost::this_thread::sleep(boost::posix_time::millisec(2000));
+  boost::this_thread::interruption_point(); 
+  //boost::this_thread::sleep(boost::posix_time::millisec(2000));
+  boost::this_thread::interruption_point(); 
   printf("\nPeercheckthread is at end!!!!\n");
   node->state_.check_peer = false;
+  boost::this_thread::interruption_point(); 
+  node->thread_running_ = false;
+}
+catch(...) {
+  ROS_WARN("THREAD INTERRUPTED\n\n\n\n");
+  node->thread_running_ = false;
+}
+  node->thread_running_ = false;
 }
 
 void CheckThread(Node *node) {
@@ -484,7 +494,7 @@ void Node::NodeInit(boost::posix_time::millisec mtime) {
   // peer_check_thread  = new boost::thread(&PeerCheckThread, this);
 
   // Initialize recording Thread
-  std::string filename = "~/catkin_ws/src/Distributed_Collaborative_Task_Tree/Data/" + name_->topic + "_Data_.csv";
+  std::string filename = "/home/janelle/pr2_baxter_ws/src/Distributed_Collaborative_Task_Tree/Data/" + name_->topic + "_Data_.csv";
   ROS_INFO("Creating Data File: %s", filename.c_str());
   record_file.open(filename.c_str());
   record_file.precision(15);

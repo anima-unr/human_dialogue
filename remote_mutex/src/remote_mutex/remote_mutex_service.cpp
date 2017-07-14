@@ -40,7 +40,7 @@ class RemoteMutexService {
   recording_toolkit::FilePrintRecorder record_object;
 
   explicit RemoteMutexService(const char* name)
-      : record_object("~/catkin_ws/src/Distributed_Collaborative_Task_Tree/Data/remote_mutex.csv",
+      : record_object("/home/janelle/pr2_baxter_ws/src/Distributed_Collaborative_Task_Tree/Data/remote_mutex.csv",
         100) {
     locked = false;
     owner = "";
@@ -69,18 +69,20 @@ class RemoteMutexService {
   bool MutexRequest(remote_mutex::remote_mutex_msg::Request &req,
       remote_mutex::remote_mutex_msg::Response &res) {
     if (req.request) {
+      ROS_INFO("asking for mutex lock [%f / %f] %s", activation_potential, req.activation_potential, req.node.c_str());
+
       if (locked) {
         res.success = false;
-        ROS_INFO("Mutex Already Locked - Denied Access: %s", req.node.c_str());
+        ROS_DEBUG("Mutex Already Locked - Denied Access: %s", req.node.c_str());
       } else {
         // check if Nodes activation is the highest for a second
         if (activation_potential < req.activation_potential) {
           mut.lock();
           activation_potential = req.activation_potential;
           mut.unlock();
-          boost::this_thread::sleep(boost::posix_time::millisec(500));
+          boost::this_thread::sleep(boost::posix_time::millisec(10000));
           if (activation_potential > req.activation_potential) {
-            ROS_INFO("Not Highest Activation Potential - Denied Access: %s", req.node.c_str());
+            ROS_INFO("Not Highest Activation Potential - Denied Access: [%f / %f] %s", activation_potential, req.activation_potential, req.node.c_str());
             res.success = false;
           } else {
             mut.lock();
@@ -91,7 +93,7 @@ class RemoteMutexService {
               ROS_INFO("Mutex Locked - Granted Access: %s", req.node.c_str());
           }
         } else {
-          ROS_INFO("Not Highest Activation Potential - Denied Access");
+          ROS_INFO("Not Highest Activation Potential - Denied Access: [%f / %f]", activation_potential, req.activation_potential);
           res.success = false;
         }
       }

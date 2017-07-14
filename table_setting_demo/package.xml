@@ -70,7 +70,6 @@
   <run_depend>moveit_ros_planning_interface</run_depend>
   <run_depend>tf</run_depend>
 
-
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->

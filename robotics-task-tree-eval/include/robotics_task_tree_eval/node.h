@@ -65,6 +65,9 @@ class Node {
   virtual bool CheckWork();
   virtual void UndoWork();
 
+  bool thread_running_ = false;
+
+
  protected:
   virtual void Activate();
   virtual void Deactivate();

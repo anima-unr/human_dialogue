@@ -63,6 +63,7 @@ class PickPlace(object):
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
         self._limb = moveit_commander.MoveGroupCommander(limb)
+        self._limb.set_max_velocity_scaling_factor(0.4);
 
         circle_io = baxter_interface.DigitalIO(side + '_lower_button')
         dash_io = baxter_interface.DigitalIO(side + '_upper_button')
@@ -144,8 +145,8 @@ class PickPlace(object):
         self._limb.set_pose_target(pose_target)
         self._limb.set_num_planning_attempts(3);
         self._limb.set_planning_time(5.0);
-        # self._limb.set_goal_position_tolerance(0.005)
-        # self._limb.set_goal_orientation_tolerance(0.005)
+        self._limb.set_goal_position_tolerance(0.0075)
+        self._limb.set_goal_orientation_tolerance(0.0075)
 
         return pose_target
 
@@ -169,15 +170,15 @@ class PickPlace(object):
         self._limb.set_pose_target(pose_target)
         self._limb.set_num_planning_attempts(5);
         self._limb.set_planning_time(10.0);
-        # self._limb.set_goal_position_tolerance(0.005)
-        # self._limb.set_goal_orientation_tolerance(0.005)
+        self._limb.set_goal_position_tolerance(0.0075)
+        self._limb.set_goal_orientation_tolerance(0.0075)
 
         print("\tPlanning...")
         plan1 = self._limb.plan()
-        rospy.sleep(5)
+        # rospy.sleep(5)
         print("\tExecuting...")
         self._limb.go(wait=True)
-        rospy.sleep(5)
+        # rospy.sleep(5)
 
 
     def PickAndPlaceImpl(self, req):
@@ -197,6 +198,7 @@ class PickPlace(object):
         pick_pose_offset.position.z = pick_pose_offset.position.z + 0.2; 
         # pick_pose_offset.position.x = pick_pose_offset.position.x - 0.1; 
         # pick_pose_offset.position.y = pick_pose_offset.position.y - 0.1; 
+        rospy.sleep(3.0)
         self.moveToPose(pick_pose_offset)
         if self.stop:
             return
@@ -204,7 +206,7 @@ class PickPlace(object):
         self.state = STATE.APPROACHING
         if self.stop:
             return
-        rospy.sleep(0.4)
+        rospy.sleep(3.0)
         if self.stop:
             return
         self.state = STATE.PICKING
@@ -216,7 +218,7 @@ class PickPlace(object):
         self.state = STATE.PICKED
         if self.stop:
             return
-        rospy.sleep(0.4)
+        rospy.sleep(3.0)
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_pick_joint_angles['neutral'])
@@ -231,6 +233,7 @@ class PickPlace(object):
             return
         print "Placing Down Object:" + req.object
         self.state = STATE.PLACING
+        rospy.sleep(3.0)
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles['neutral'])
@@ -241,6 +244,7 @@ class PickPlace(object):
         # place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
         # place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
         self.moveToPose(place_pose_offset)
+        rospy.sleep(3.0)
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles[req.object])
@@ -251,7 +255,7 @@ class PickPlace(object):
         self.state = STATE.PLACED
         if self.stop:
             return
-        rospy.sleep(0.4)
+        rospy.sleep(3.0)
         if self.stop:
             return
         # self._limb.move_to_joint_positions(self.object_place_joint_angles['neutral'])
@@ -264,6 +268,7 @@ class PickPlace(object):
         self.moveToPose(place_pose_offset)
         if self.stop:
             return
+        rospy.sleep(3.0)
         self._gripper.command_position(0.0)
         if self.stop:
             return

@@ -121,11 +121,11 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
     // "cup",
     //"bowl",
     // "soda",
-    // "Lettuce",
-    // "Cup",
-    // "Tea",
-    // "Sugar", 
-    // "Meat",
+    "Lettuce",
+    "Cup",
+    "Tea",
+    "Sugar", 
+    "Meat",
     "Right_Bread", 
     "Left_Bread",
     "neutral"
@@ -401,7 +401,7 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   arm_group_.attachObject(collision_objects_[index].id);
   }
   /* Sleep to give Rviz time to show the object attached (different color). */
-  sleep(4.0);
+  // sleep(4.0);
   state_ = PICKED;
   ROS_INFO("     State is now PICKED");
   // Move to Neutral start
@@ -472,7 +472,7 @@ void PickPlace::PickAndPlaceImpl(std::string object) {
   arm_group_.detachObject(collision_objects_[index].id);
   }
   /* Sleep to give Rviz time to show the object detached. */
-  sleep(4.0);
+  // sleep(4.0);
   // The pickandplacecheck uses this to tell when done, so it should be moved to after reset to neutral pick
   // state_ = PLACED;
   // ROS_INFO("     State is now PLACED");
@@ -1134,7 +1134,7 @@ moveit_msgs::DisplayTrajectory display_trajectory;
 
     // success = arm_group_.move();
     ROS_INFO("  Visualizing plan! %s",success?"":"FAILED");
-    sleep(5.0);
+    // sleep(5.0);
 
     // if (!finished_within_time) {
     //   arm_group_.stop();
@@ -1147,7 +1147,7 @@ moveit_msgs::DisplayTrajectory display_trajectory;
         // now execute the plan
         ROS_INFO("  Action will now execute!");
         arm_group_.execute(motion_plan);
-        sleep(5.0);
+        // sleep(5.0);
         arm_group_.setStartStateToCurrentState();
 
         // ROS_INFO("Action finished: %s",state.toString().c_str());

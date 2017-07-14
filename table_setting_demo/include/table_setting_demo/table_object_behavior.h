@@ -62,13 +62,17 @@ class TableObject : public Behavior {
   // frame info
   std::string root_frame_;
   std::string manip_frame_;
-
+  
   ros::NodeHandle nh_;
   tf::TransformListener tf_listener_;
-
+  
   // debugging info
   bool ready_to_publish_ = false;
   ros::Publisher marker_pub_;
+
+  // kludge!!
+  bool first_time_;
+
 };
 }  // namespace task_net
 #endif  // INCLUDE_TABLE_SETTING_TABLE_OBJECT_H_
