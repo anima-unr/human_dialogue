@@ -580,9 +580,23 @@ std::string StateToString(State state) {
 }
 
 void Node::PublishStatus() {
-    // ROS_INFO("Node::PublishStatus was called!!!!\n");
-  boost::shared_ptr<State_t> msg(new State_t);
-  *msg = state_;
+  ROS_INFO("[%s]: Node::PublishStatus was called", name_->topic.c_str());
+  robotics_task_tree_eval::State msg;
+  msg.owner.type = state_.owner.type;
+  msg.owner.robot = state_.owner.robot;
+  msg.owner.node = state_.owner.node;
+  msg.active = state_.active;
+  msg.done = state_.done;
+  msg.activation_level = state_.activation_level;
+  msg.activation_potential = state_.activation_potential;
+  msg.peer_active = state_.peer_active;
+  msg.peer_done = state_.peer_done;
+  msg.highest.type = state_.highest.type;
+  msg.highest.robot = state_.highest.robot;
+  msg.highest.node = state_.highest.node;
+  msg.highest_potential = state_.highest_potential;
+
+  //*msg = state_; // for some reason this doesn't work anymore
   self_pub_.publish(msg);
 
   // Publish Activation Potential
@@ -591,7 +605,7 @@ void Node::PublishStatus() {
 }
 
 void Node::PublishStateToPeers() {
-    // ROS_INFO("Node::PublishStateToPeers was called!!!!\n");
+  ROS_INFO("[%s]: Node::PublishStateToPeers was called", name_->topic.c_str());
   boost::shared_ptr<ControlMessage_t> msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = state_.activation_level;
@@ -606,7 +620,7 @@ void Node::PublishStateToPeers() {
 }
 
 void Node::PublishActivationPotential() {
-    // ROS_INFO("Node::PublishActivationPotential was called!!!!\n");
+  ROS_INFO("[%s]: Node::PublishActivationPotential was called", name_->topic.c_str());
   // Update Activation Potential
   UpdateActivationPotential();
   ControlMessagePtr_t msg(new ControlMessage_t);

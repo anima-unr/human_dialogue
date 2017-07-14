@@ -70,6 +70,7 @@ struct State {
   float highest_potential;
 };
 typedef State State_t;
+
 struct NodeId {
   std::string topic;
   NodeBitmask mask;
