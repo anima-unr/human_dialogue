@@ -32,8 +32,40 @@ DummyBehavior::~DummyBehavior() {}
 void DummyBehavior::UpdateActivationPotential() {
     // ROS_INFO("AndBehavior::UpdateActivationPotential was called!!!!\n");
 
-  state_.activation_potential = 100;
+  geometry_msgs::Point rpos, opos;
+
+  // get location of robot
+  rpos = table_state_.robots[robot_des_].pose.position;
+
+  // get location of object
+
+    // find object
+  int obj_idx = -1;
+  for( int i = 0; i < table_state_.objects.size(); i++ )
+  {
+    //OS_INFO ("%s =?= %s",table_state_.objects[i].name.c_str(), object_.c_str() );
+    if( table_state_.objects[i].name.compare(object_) == 0 )
+    {
+      obj_idx = i;
+      break;
+    }
+  }
+
+  if( obj_idx < 0 )
+  {
+    ROS_WARN( "could not find object: [%s]", object_.c_str() );
+  }
+  opos = table_state_.objects[obj_idx].pose.position;
+
+  double dist = hypot(rpos.y - opos.y, rpos.x - opos.x);
+
+  if( fabs(dist) > 0.00001 )
+      state_.activation_potential = 1.0f / dist;
+  else state_.activation_potential = 0.00000001;
+
+  ROS_INFO ("%s: activation_potential: [%f]", object_.c_str(), state_.activation_potential );
 }
+  
 
 bool DummyBehavior::Precondition() {
     // ROS_INFO("AndBehavior::Precondition was called!!!!\n");

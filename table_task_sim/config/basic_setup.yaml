@@ -1,5 +1,5 @@
 objects:
-    - name      : Left Bread
+    - name      : Left_Bread
       location  : {x: 0.0, y: 0.0}
       scale     : {x: 0.05, y: 0.05, z: 0.05}
       color     : {r: 0.0, g: 0.0, b: 1.0, a: 0.9}
