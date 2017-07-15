@@ -28,7 +28,7 @@ along with remote_mutex.  If not, see <http://www.gnu.org/licenses/>.
 namespace mutex {
 class RemoteMutex {
  public:
-  RemoteMutex(task_net::NodeBitmask, std::string topic);
+  RemoteMutex(std::string name, std::string topic);
   RemoteMutex();
   bool Lock(float potential);
   bool Release();

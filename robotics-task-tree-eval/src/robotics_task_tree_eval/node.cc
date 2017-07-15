@@ -361,7 +361,7 @@ try{
   // NOTE: Due to the exact same timing in the THEN case, change the loop time to deal
   //       with latency for the different sets of nodes
   int buff = node->state_.owner.robot;
-  printf("\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, 500+(buff*1500));
+  ROS_DEBUG("\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, 500+(buff*1500));
   //boost::this_thread::sleep(boost::posix_time::millisec(500+(buff*1500)));  
   boost::this_thread::interruption_point(); 
 
@@ -373,14 +373,14 @@ try{
     boost::this_thread::interruption_point(); 
 
     // printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),(*it)->state.active,(*it)->state.done);
-    printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
-    printf("\n\nMe   DATA:\t%s\n\tactive: %d\tdone:%d\n\n", node->name_->topic.c_str(),node->state_.active,node->state_.done);
+    ROS_DEBUG("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
+    ROS_DEBUG("\n\nMe   DATA:\t%s\n\tactive: %d\tdone:%d\n\n", node->name_->topic.c_str(),node->state_.active,node->state_.done);
 
 
     // if peer done, then peer_okay = False (since already completed, I can't activate) 
     // if((*it)->state.done) {
     if(node->state_.peer_done) {
-       printf("\n\nPeerCheckThread: Case 1!!\n\n");
+       ROS_DEBUG("PeerCheckThread: Case 1!!");
       node->state_.peer_okay = false; 
     }
     // otherwise if peer active
@@ -398,19 +398,19 @@ try{
       // }
       // //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
       // else{ 
-       printf("\n\nPeerCheckThread: Case 3!!\n");
+       ROS_DEBUG("PeerCheckThread: Case 3!!");
       node->state_.peer_okay = false; 
       // lower my activation level for this node
-      printf("\tCurr level: %f\n", node->state_.activation_level);
+      ROS_DEBUG("\tCurr level: %f\n", node->state_.activation_level);
       node->state_.activation_level = ACTIVATION_FALLOFF*node->state_.activation_level;
       node->state_.activation_potential = ACTIVATION_FALLOFF*node->state_.activation_potential;
-      printf("\tNew level: %f\n\n", node->state_.activation_level);
+      ROS_DEBUG("\tNew level: %f\n\n", node->state_.activation_level);
       // }
 
     }
     // otherwise, peer is not active and peer is not done so I can activate, peer_okay = True
     else if (!node->state_.peer_done && !node->state_.peer_active) {
-       printf("\n\nPeerCheckThread: Case 4!!\n\n");
+       ROS_DEBUG("PeerCheckThread: Case 4!!");
       node->state_.peer_okay = true; 
     }
     else {

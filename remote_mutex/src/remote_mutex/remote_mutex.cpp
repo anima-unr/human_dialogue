@@ -21,10 +21,8 @@ along with remote_mutex.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdio.h"
 
 namespace mutex {
-RemoteMutex::RemoteMutex(task_net::NodeBitmask mask, std::string topic) {
-  msg.request.mask.type = mask.type;
-  msg.request.mask.robot = mask.robot;
-  msg.request.mask.node = mask.node;
+RemoteMutex::RemoteMutex(std::string name, std::string topic) {
+  msg.request.name = name;
   topic_ = topic;
 }
 RemoteMutex::RemoteMutex() {}
