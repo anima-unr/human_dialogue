@@ -18,12 +18,15 @@ def SubThread(sub, cb, event):
     while event.is_set():
         try:
             x = sub.recv_multipart()
-            print len(x)
-            address = x[0]
-            msg = x[1]
-            cb(msg, address)
-            timeout = False
-            count += 1
+            if len(x) >= 2:
+                address = x[0]
+                msg = x[1]
+                cb(msg, address)
+                timeout = False
+                count += 1
+                #print '\n'
+            else:
+                print len(x)
         except zmq.ZMQError as e:
             #print e
             if e.errno == zmq.ETERM:
@@ -43,6 +46,7 @@ class NodePeerConnectionInterface:
         self.ros_pubs = dict()
         self.ros_subs = dict()
         self.subs = dict()
+        self.buf = ''
 
     def InitializeSubscriber(self, name):
         if self.debug != 0 :
@@ -74,7 +78,13 @@ class NodePeerConnectionInterface:
             print 'send to peer topic: %s'%(topic)
         else:
             sys.stdout.write('+')
-        self.ros_pubs[topic].publish(pickle.loads(msg))
+
+        #print 'msg: [%s]'%msg
+        # detect improper message
+        if msg.startswith('PLACE') or msg.startswith('AND') or msg.startswith('OR') or msg.startswith('THEN'):
+            print 'warn: seems like an improperly formatted message'
+        else:
+            self.ros_pubs[topic].publish(pickle.loads(msg))
         
 
     def CreateZMQPub(self):
