@@ -341,7 +341,6 @@ try{
   // wait for checking to be asked!
   boost::unique_lock<boost::mutex> lockp(node->peer_mut);
    while (!node->state_.check_peer) {
-    boost::this_thread::interruption_point(); 
 
     ROS_INFO("PeerCheckThread is waiting!");
     node->cv.wait(lockp);
@@ -349,9 +348,7 @@ try{
   // LOG_INFO("check peer thread Initialized");
   // notify peers I want to start this node 
   // by sending status and activation potential to peers
-  boost::this_thread::interruption_point(); 
   node->PublishStateToPeers(); 
-  boost::this_thread::interruption_point(); 
 
   // TODO: In the futurre maybe make a recieve from peers call here to ensure
   // that this happens right since the timing of the return from the check 
@@ -360,17 +357,15 @@ try{
   // wait for full loop so can recieved data back from peers
   // NOTE: Due to the exact same timing in the THEN case, change the loop time to deal
   //       with latency for the different sets of nodes
-  int buff = node->state_.owner.robot;
-  ROS_DEBUG("\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, 500+(buff*1500));
-  //boost::this_thread::sleep(boost::posix_time::millisec(500+(buff*1500)));  
-  boost::this_thread::interruption_point(); 
+  int buff = 5+(node->state_.owner.robot * 15);
+  ROS_DEBUG("\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, buff);
+  boost::this_thread::sleep(boost::posix_time::millisec(buff));  
 
   // for each peer, check status
   // (might have to change logic to take highest of all peers?!?)
   // for now just assume only 1 peer!!!
   for (NodeListPtr::iterator it = node->peers_.begin();
       it != node->peers_.end(); ++it) {
-    boost::this_thread::interruption_point(); 
 
     // printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),(*it)->state.active,(*it)->state.done);
     ROS_DEBUG("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
@@ -398,7 +393,7 @@ try{
       // }
       // //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
       // else{ 
-       ROS_DEBUG("PeerCheckThread: Case 3!!");
+      ROS_DEBUG("PeerCheckThread: Case 3!!");
       node->state_.peer_okay = false; 
       // lower my activation level for this node
       ROS_DEBUG("\tCurr level: %f\n", node->state_.activation_level);
@@ -417,12 +412,9 @@ try{
       printf("\n\nERROR! PeerCheckThread: Undefined case! Please redo logic!\n\n");
     }
   }
-  boost::this_thread::interruption_point(); 
   //boost::this_thread::sleep(boost::posix_time::millisec(2000));
-  boost::this_thread::interruption_point(); 
   printf("\nPeercheckthread is at end!!!!\n");
   node->state_.check_peer = false;
-  boost::this_thread::interruption_point(); 
   node->thread_running_ = false;
 }
 catch(...) {

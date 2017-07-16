@@ -3,6 +3,7 @@
 import zmq
 import rospy
 import threading
+import Queue
 from robotics_task_tree_msgs.msg import *
 import pickle
 
@@ -36,17 +37,33 @@ def SubThread(sub, cb, event):
             else:
                 raise
 
+def PubThread(ros_pubs, queue):
+    print 'pub'
+    rate = rospy.Rate(50)
+    if not queue.empty():
+        if msg.startswith('PLACE') or msg.startswith('AND') or msg.startswith('OR') or msg.startswith('THEN'):
+            if self.debug != 0:
+                print 'warn: seems like an improperly formatted message'
+            else:
+                sys.stdout.write('=')
+        else:
+            ros_pubs[topic].publish(pickle.loads(msg))
+    else:
+        print 'pub queue empty, not publishing'
+
+
 class NodePeerConnectionInterface:
     def __init__(self, server_params, running_event):
         self.server_params = server_params
         self.context = zmq.Context()
         self.running_event = running_event
+        self.pub_queue = Queue.Queue()
 
-        self.pub = self.CreateZMQPub()
         self.ros_pubs = dict()
         self.ros_subs = dict()
         self.subs = dict()
         self.buf = ''
+        self.pub = self.CreateZMQPub()
 
     def InitializeSubscriber(self, name):
         if self.debug != 0 :
@@ -81,15 +98,15 @@ class NodePeerConnectionInterface:
 
         #print 'msg: [%s]'%msg
         # detect improper message
-        if msg.startswith('PLACE') or msg.startswith('AND') or msg.startswith('OR') or msg.startswith('THEN'):
-            print 'warn: seems like an improperly formatted message'
-        else:
-            self.ros_pubs[topic].publish(pickle.loads(msg))
-        
+        self.pub_queue.put(msg)
 
     def CreateZMQPub(self):
         publisher = self.context.socket(zmq.PUB)
         publisher.bind("tcp://*:%s"%(self.server_params.pub_port))
+
+        pub_thread = threading.Thread(target=PubThread, args=[self.ros_pubs, self.pub_queue])
+        pub_thread.start()
+
         return publisher
 
     def CreateZMQSub(self, topic, cb):
@@ -98,9 +115,9 @@ class NodePeerConnectionInterface:
         subscriber.setsockopt(zmq.SUBSCRIBE, topic)
         subscriber.setsockopt(zmq.RCVTIMEO, 1000)
 
-        # Create thread
-        thread = threading.Thread(target=SubThread, args=[subscriber, cb, self.running_event])
-        thread.start()
+        # create threads for subscribing/publishing
+        sub_thread = threading.Thread(target=SubThread, args=[subscriber, cb, self.running_event])
+        sub_thread.start()
 
         return subscriber
 
@@ -150,7 +167,7 @@ def main():
     n = 0
     while not rospy.is_shutdown():
         n+=1
-        if n > 100:
+        if n > 10:
             n = 0
             sys.stdout.write('\n')
         if n % 10 == 0:

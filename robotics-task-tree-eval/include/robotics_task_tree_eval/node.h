@@ -54,7 +54,7 @@ class Node {
   Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(10));
   virtual ~Node();
 
   // DFS: tf fix
