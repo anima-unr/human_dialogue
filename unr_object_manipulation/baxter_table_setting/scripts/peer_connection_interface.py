@@ -3,7 +3,7 @@
 import zmq
 import rospy
 import threading
-from robotics_task_tree_eval.msg import *
+from robotics_task_tree_msgs.msg import *
 import pickle
 
 def enum(*sequential, **named):
@@ -17,11 +17,15 @@ def SubThread(sub, cb, event):
     timeout = False
     while event.is_set():
         try:
-            [address, msg] = sub.recv_multipart()
+            x = sub.recv_multipart()
+            print len(x)
+            address = x[0]
+            msg = x[1]
             cb(msg, address)
             timeout = False
             count += 1
         except zmq.ZMQError as e:
+            #print e
             if e.errno == zmq.ETERM:
                 break
             elif e.errno == zmq.EAGAIN:
@@ -41,11 +45,15 @@ class NodePeerConnectionInterface:
         self.subs = dict()
 
     def InitializeSubscriber(self, name):
+        if self.debug != 0 :
+            print 'setting up subscriber: %s'%(name)
         # Setup peer listener
         topic = '%s%s'%(name, '_peer')
         self.ros_subs[topic] = rospy.Subscriber(topic, ControlMessage, self.ReceiveFromPeer, queue_size=5, callback_args=topic)
 
     def InitializePublisher(self, name):
+        if self.debug != 0 :
+            print 'setting up publisher: %s'%(name)
         # setup peer publisher
         topic = '%s%s'%(name, '_peer')
         self.ros_pubs[topic] = rospy.Publisher(topic, ControlMessage, queue_size=5)
@@ -55,11 +63,17 @@ class NodePeerConnectionInterface:
 
     def ReceiveFromPeer(self, msg, topic):
         # Publish to server
-        print 'Received from peer topic: %s'%(topic)
+        if self.debug != 0: 
+            print 'Received from peer topic: %s'%(topic)
+        else:
+            sys.stdout.write('.')
         self.pub.send_multipart([topic, pickle.dumps(msg)])
 
     def SendToPeer(self, msg, topic):
-        print 'send to peer topic: %s'%(topic)
+        if self.debug != 0:
+            print 'send to peer topic: %s'%(topic)
+        else:
+            sys.stdout.write('+')
         self.ros_pubs[topic].publish(pickle.loads(msg))
         
 
@@ -112,6 +126,8 @@ def main():
     robot = ROBOT_DICT[robot]
 
     interface = NodePeerConnectionInterface(server, running_event)
+    interface.debug = rospy.get_param('~debug',0)
+
     for node in node_list:
         if task_file[node]['mask']['robot'] != robot:
             interface.AddOutputNode(node)
@@ -119,7 +135,18 @@ def main():
             interface.AddInputNode(node)
 
     print 'Spinning'
-    rospy.spin()
+    #rospy.spin()
+    rate = rospy.Rate(100)
+    n = 0
+    while not rospy.is_shutdown():
+        n+=1
+        if n > 100:
+            n = 0
+            sys.stdout.write('\n')
+        if n % 10 == 0:
+            sys.stdout.flush()
+        rate.sleep()
+
     print 'shutting Down node'
     if rospy.is_shutdown():
         print 'Clearing event'
