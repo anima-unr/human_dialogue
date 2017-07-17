@@ -548,7 +548,7 @@ void Node::Work() {
 bool Node::CheckWork() {
     // ROS_INFO("Node::CheckWork was called!!!!\n");
   // LOG_INFO("Checking Work");
-  boost::this_thread::sleep(boost::posix_time::millisec(10));
+  boost::this_thread::sleep(boost::posix_time::millisec(50));
   return true;
 }
 

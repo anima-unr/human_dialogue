@@ -19,13 +19,13 @@ def SubThread(sub, cb, event):
     while event.is_set():
         try:
             x = sub.recv_multipart()
-            if len(x) >= 2:
+            if len(x) == 2:
+                #print 'properly formatted msg: [%s]'%(x[0])
                 address = x[0]
                 msg = x[1]
                 cb(msg, address)
                 timeout = False
                 count += 1
-                #print '\n'
             else:
                 print len(x)
         except zmq.ZMQError as e:
@@ -35,30 +35,35 @@ def SubThread(sub, cb, event):
             elif e.errno == zmq.EAGAIN:
                 timeout = True
             else:
+                print 'weird error'
                 raise
 
-def PubThread(ros_pubs, queue):
+def PubThread(pub, queue, event, debug):
     print 'pub'
-    rate = rospy.Rate(50)
-    if not queue.empty():
-        if msg.startswith('PLACE') or msg.startswith('AND') or msg.startswith('OR') or msg.startswith('THEN'):
-            if self.debug != 0:
-                print 'warn: seems like an improperly formatted message'
-            else:
-                sys.stdout.write('=')
+    rate = rospy.Rate(1000)
+    while event.is_set():
+        if not queue.empty():
+            #if msg.startswith('PLACE') or msg.startswith('AND') or msg.startswith('OR') or msg.startswith('THEN'):
+            #    if debug != 0:
+            #        print 'warn: seems like an improperly formatted message'
+            #    else:
+            #        sys.stdout.write('=')
+            #else:
+            #    ros_pubs[topic].publish(pickle.loads(msg))
+            pub.send_multipart(queue.get())
         else:
-            ros_pubs[topic].publish(pickle.loads(msg))
-    else:
-        print 'pub queue empty, not publishing'
+            if debug != 0:
+                print 'pub queue empty, not publishing'
+        rate.sleep()
 
 
 class NodePeerConnectionInterface:
-    def __init__(self, server_params, running_event):
+    def __init__(self, server_params, running_event, debug):
         self.server_params = server_params
+        self.debug = debug
         self.context = zmq.Context()
         self.running_event = running_event
         self.pub_queue = Queue.Queue()
-
         self.ros_pubs = dict()
         self.ros_subs = dict()
         self.subs = dict()
@@ -88,23 +93,22 @@ class NodePeerConnectionInterface:
             print 'Received from peer topic: %s'%(topic)
         else:
             sys.stdout.write('.')
-        self.pub.send_multipart([topic, pickle.dumps(msg)])
+        #self.pub.send_multipart([topic, pickle.dumps(msg)])
+        self.pub_queue.put([topic, pickle.dumps(msg)])
+
 
     def SendToPeer(self, msg, topic):
         if self.debug != 0:
             print 'send to peer topic: %s'%(topic)
         else:
             sys.stdout.write('+')
-
-        #print 'msg: [%s]'%msg
-        # detect improper message
-        self.pub_queue.put(msg)
+        self.ros_pubs[topic].publish(pickle.loads(msg))
 
     def CreateZMQPub(self):
         publisher = self.context.socket(zmq.PUB)
         publisher.bind("tcp://*:%s"%(self.server_params.pub_port))
 
-        pub_thread = threading.Thread(target=PubThread, args=[self.ros_pubs, self.pub_queue])
+        pub_thread = threading.Thread(target=PubThread, args=[publisher, self.pub_queue, self.running_event, self.debug])
         pub_thread.start()
 
         return publisher
@@ -151,9 +155,9 @@ def main():
     task_file = rospy.get_param('~Nodes', None)
     robot = rospy.get_param('~robot', None)
     robot = ROBOT_DICT[robot]
+    debug = rospy.get_param('~debug',0)
 
-    interface = NodePeerConnectionInterface(server, running_event)
-    interface.debug = rospy.get_param('~debug',0)
+    interface = NodePeerConnectionInterface(server, running_event, debug)
 
     for node in node_list:
         if task_file[node]['mask']['robot'] != robot:
@@ -163,15 +167,11 @@ def main():
 
     print 'Spinning'
     #rospy.spin()
-    rate = rospy.Rate(100)
+    rate = rospy.Rate(10)
     n = 0
     while not rospy.is_shutdown():
-        n+=1
-        if n > 10:
-            n = 0
-            sys.stdout.write('\n')
-        if n % 10 == 0:
-            sys.stdout.flush()
+        sys.stdout.write('\n')
+        sys.stdout.flush()
         rate.sleep()
 
     print 'shutting Down node'
