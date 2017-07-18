@@ -29,7 +29,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
     robotics_task_tree_eval
     remote_mutex
     message_generation
-    tabletop_segmenter
+    #tabletop_segmenter
     moveit_ros_planning_interface
     robotics_task_tree_eval
     tf

@@ -39,7 +39,6 @@ Nodes:
     parent: 'AND_2_0_006'
     # children: ['NONE']
     peers: ['PLACE_5_1_003']
-    object: 'Left_Bread'
 
   PLACE_5_0_002:
     mask:
@@ -49,7 +48,6 @@ Nodes:
     parent: 'AND_2_0_006'
     # children: ['NONE']
     peers: ['PLACE_5_1_004']
-    object: 'Lettuce'
 
   AND_2_0_006:
     mask:
@@ -79,7 +77,6 @@ Nodes:
     parent: 'AND_2_1_007'
     # children: ['NONE']
     peers: ['PLACE_5_0_001']
-    object: 'Left_Bread'
 
   PLACE_5_1_004:
     mask:
@@ -89,7 +86,6 @@ Nodes:
     parent: 'AND_2_1_007'
     # children: ['NONE']
     peers: ['PLACE_5_0_002']
-    object: 'Lettuce'
 
   AND_2_1_007:
     mask:

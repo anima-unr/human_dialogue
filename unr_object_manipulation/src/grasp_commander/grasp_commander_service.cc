@@ -17,10 +17,10 @@ along with UNR_Object_Manipulation.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdio.h>
 #include "ros/ros.h"
-#include "unr_manipulation/object_request.h"
+#include "unr_object_manipulation/object_request.h"
 // #include "grasp_commander/grasp_commander.h"
 
-namespace uom = unr_manipulation;
+namespace uom = unr_object_manipulation;
 
 class GraspCommanderService {
  public:

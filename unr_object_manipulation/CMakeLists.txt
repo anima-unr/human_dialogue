@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(unr_manipulation)
+project(unr_object_manipulation)
 
 include(cmake/CPlusPlusCompiler.cmake)
 
@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   moveit_msgs
 )
-find_package(GTest REQUIRED)
+#find_package(GTest REQUIRED)
 find_package(Eigen)
 find_package(Boost REQUIRED COMPONENTS
   thread

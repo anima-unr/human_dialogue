@@ -1,5 +1,5 @@
 <launch>
-    <node name="baxter_interface" pkg="unr_manipulation" type="peer_connection_interface.py" output="screen">
+    <node name="baxter_interface" pkg="unr_object_manipulation" type="peer_connection_interface.py" output="screen">
    		<rosparam file="$(find robotics_task_tree_eval)/test_network.yaml"/>
         <param name="robot" value="BAXTER"/>
         <param name="pub_port" value="5565"/>
