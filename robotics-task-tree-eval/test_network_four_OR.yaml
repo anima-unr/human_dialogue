@@ -17,9 +17,9 @@ NodeList: ['ROOT_4_0_000',
         'PLACE_5_0_002',
         'PLACE_5_0_003',
         'PLACE_5_0_004',
-        'AND_2_0_006',
+        'OR_1_0_006',
         'ROOT_4_1_005',
-        'AND_2_1_007',
+        'OR_1_1_007',
         'PLACE_5_1_008',
         'PLACE_5_1_009',
         'PLACE_5_1_010',
@@ -32,7 +32,7 @@ Nodes:
       robot: 0
       node: 0
     parent: 'NONE'
-    children: ['AND_2_0_006']
+    children: ['OR_1_0_006']
     peers: ['NONE']
 
   PLACE_5_0_001:
@@ -40,7 +40,7 @@ Nodes:
       type: 5
       robot: 0
       node: 1
-    parent: 'AND_2_0_006'
+    parent: 'OR_1_0_006'
     # children: ['NONE']
     peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Lettuce'
@@ -50,7 +50,7 @@ Nodes:
       type: 5
       robot: 0
       node: 2
-    parent: 'AND_2_0_006'
+    parent: 'OR_1_0_006'
     # children: ['NONE']
     peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Left_Bread'
@@ -60,7 +60,7 @@ Nodes:
       type: 5
       robot: 0
       node: 3
-    parent: 'AND_2_0_006'
+    parent: 'OR_1_0_006'
     # children: ['NONE']
     peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Meat'
@@ -70,20 +70,20 @@ Nodes:
       type: 5
       robot: 0
       node: 4
-    parent: 'AND_2_0_006'
+    parent: 'OR_1_0_006'
     # children: ['NONE']
     peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Right_Bread'
 
 
-  AND_2_0_006:
+  OR_1_0_006:
     mask:
-      type: 2
+      type: 1
       robot: 0
       node: 6
     parent: 'ROOT_4_0_000'
     children: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
-    peers: ['AND_2_1_007']
+    peers: ['OR_1_1_007']
 
 #-----------------------------------
 
@@ -93,7 +93,7 @@ Nodes:
       robot: 1
       node: 5
     parent: 'NONE'
-    children: ['AND_2_1_007']
+    children: ['OR_1_1_007']
     peers: ['NONE']
 
   PLACE_5_1_008:
@@ -101,7 +101,7 @@ Nodes:
       type: 5
       robot: 1
       node: 8
-    parent: 'AND_2_1_007'
+    parent: 'OR_1_1_007'
     # children: ['NONE']
     peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Lettuce'
@@ -112,7 +112,7 @@ Nodes:
       type: 5
       robot: 1
       node: 9
-    parent: 'AND_2_1_007'
+    parent: 'OR_1_1_007'
     # children: ['NONE']
     peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Left_Bread'
@@ -122,7 +122,7 @@ Nodes:
       type: 5
       robot: 1
       node: 10
-    parent: 'AND_2_1_007'
+    parent: 'OR_1_1_007'
     # children: ['NONE']
     peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Meat'
@@ -132,17 +132,17 @@ Nodes:
       type: 5
       robot: 1
       node: 11
-    parent: 'AND_2_1_007'
+    parent: 'OR_1_1_007'
     # children: ['NONE']
     peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Right_Bread'
 
 
-  AND_2_1_007:
+  OR_1_1_007:
     mask:
-      type: 2
+      type: 1
       robot: 1
       node: 7
     parent: 'ROOT_4_1_005'
     children: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
-    peers: ['AND_2_0_006']
+    peers: ['OR_1_0_006']
