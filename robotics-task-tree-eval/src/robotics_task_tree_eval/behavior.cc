@@ -77,7 +77,7 @@ void AndBehavior::UpdateActivationPotential() {
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
     sum += (*it)->state.activation_potential;
-    if( (*it)->state.activation_potential > highest )
+    if( (*it)->state.activation_potential > highest && !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active && !(*it)->state.active )
     {
       // save as the highest potential
       highest = (*it)->state.activation_potential;
@@ -118,7 +118,7 @@ bool AndBehavior::IsDone() {
   ROS_DEBUG("[%s]: AndBehavior::IsDone was called", name_->topic.c_str() );
   for( int i = 0; i < children_.size(); i++ )
   {
-    if( !children_[i]->state.done ) 
+    if( !(children_[i]->state.done || children_[i]->state.peer_done) ) 
     {
       ROS_DEBUG( "[%s]: state not done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
       state_.done = 0;
@@ -242,7 +242,7 @@ void OrBehavior::UpdateActivationPotential() {
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
     float value = (*it)->state.activation_potential;
-    if (value > max) {
+    if (value > max && !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active && !(*it)->state.active) {
       max = value;
       max_child_index = index;
       nbm = (*it)->mask;
@@ -289,7 +289,7 @@ bool OrBehavior::IsDone() {
   ROS_DEBUG("[%s]: OrBehavior::IsDone was called", name_->topic.c_str() );
   for( int i = 0; i < children_.size(); i++ )
   {
-    if( children_[i]->state.done ) 
+    if( children_[i]->state.done || children_[i]->state.peer_done ) 
     {
       ROS_DEBUG( "[%s]: state done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
       state_.done = 1;

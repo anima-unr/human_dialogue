@@ -32,9 +32,9 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
 DummyBehavior::~DummyBehavior() {}
 
 void DummyBehavior::UpdateActivationPotential() {
-  if( state_.done || parent_done_ )
+  if( state_.done || parent_done_ || state_.peer_active || state_.peer_done )
   {
-    ROS_DEBUG_THROTTLE_NAMED( 1, "DummyBehaviorTrace", "[%s]: State/Parent is done, so don't update activationpotential [%d|%d]", object_.c_str(), state_.done, parent_done_ );
+    ROS_DEBUG_THROTTLE_NAMED( 1, "DummyBehaviorTrace", "[%s]: State/Parent is done, so don't update activationpotential [%d|%d|%d|%d]", object_.c_str(), state_.done, parent_done_, state_.peer_active, state_.peer_done );
     state_.activation_potential = 0;
     return;
   }
