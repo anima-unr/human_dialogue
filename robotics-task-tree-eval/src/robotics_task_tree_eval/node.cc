@@ -31,7 +31,7 @@ namespace task_net {
 #define PUB_SUB_QUEUE_SIZE 100
 #define STATE_MSG_LEN (sizeof(State))
 #define ACTIVATION_THESH 0.1
-#define ACTIVATION_FALLOFF 0.97f
+#define ACTIVATION_FALLOFF 0.98f
 
 void PeerCheckThread(Node *node);
 
@@ -48,7 +48,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     bool use_local_callback_queue, boost::posix_time::millisec mtime):
     local_("~") {
   if (use_local_callback_queue) {
-    LOG_INFO("Local Callback Queues");
+    ROS_DEBUG("Local Callback Queues");
     pub_nh_.setCallbackQueue(pub_callback_queue_);
     sub_nh_.setCallbackQueue(sub_callback_queue_);
   }
@@ -332,7 +332,7 @@ void WorkThread(Node *node) {
   while (!node->state_.active) {
     node->cv.wait(lock);
   }
-  LOG_INFO("work thread Initialized");
+  ROS_DEBUG("work thread Initialized");
   // Process Data
   node->working = true;
   node->Work();
@@ -443,15 +443,15 @@ void CheckThread(Node *node) {
   boost::mutex mut;
   boost::unique_lock<boost::mutex> lock(mut);
   while (!node->state_.active) {
-    LOG_INFO("Check Thread waiting");
+    ROS_DEBUG("Check Thread waiting");
     // ROS_INFO("Check Thread waiting");
     node->cv.wait(lock);
   }
-  LOG_INFO("Check Work Thread Initialized");
+  ROS_DEBUG("Check Work Thread Initialized");
   // ROS_INFO("Check Work Thread Initialized");
   while (node->state_.active) {
     if (!node->CheckWork()) {
-      LOG_INFO("Deleting Thread! and Restarting");
+      ROS_DEBUG("Deleting Thread! and Restarting");
       // ROS_INFO("Deleting Thread! and Restarting");
       {
         boost::unique_lock<boost::mutex> lock(node->mut);
@@ -577,7 +577,7 @@ bool Node::CheckWork() {
 void Node::UndoWork() {
       // ROS_INFO("Node::UndoWork was called!!!!\n");
 
-  LOG_INFO("Undoing Work");
+  ROS_DEBUG("Undoing Work");
 }
 // Deprecated function. use ros message data type with struct generality.
 std::string StateToString(State state) {

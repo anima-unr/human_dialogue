@@ -187,7 +187,7 @@ endif()
 if (${BUILD_TABLE_SETTING_DEMO})
 
 
-  find_package(OpenCV REQUIRED)
+  #find_package(OpenCV REQUIRED)
 
 
   find_package(catkin REQUIRED COMPONENTS
