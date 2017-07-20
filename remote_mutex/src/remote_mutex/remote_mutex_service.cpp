@@ -73,7 +73,7 @@ class RemoteMutexService {
       &RemoteMutexService::MutexRequest,
       this);
 
-    root_topic_ = "OR_1_0_006_state";
+    root_topic_ = "AND_2_0_006_state";
     state_subscriber_ = ns.subscribe(root_topic_, 1000, &RemoteMutexService::RootStateCallback, this );
 
     record_thread = new boost::thread(&Record, this);

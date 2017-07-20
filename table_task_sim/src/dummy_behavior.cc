@@ -30,7 +30,14 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
 DummyBehavior::~DummyBehavior() {}
 
 void DummyBehavior::UpdateActivationPotential() {
-  ROS_DEBUG( "DummyBehavior::UpdateActivationPotential was called: [%s]", object_.c_str() );
+  if( state_.done || parent_done_ )
+  {
+    ROS_DEBUG_THROTTLE_NAMED( 1, "DummyBehaviorTrace", "[%s]: State/Parent is done, so don't update activationpotential", object_.c_str() );
+    state_.activation_potential = 0;
+    return;
+  }
+
+  ROS_DEBUG_NAMED("DummyBehaviorTrace", "DummyBehavior::UpdateActivationPotential was called: [%s]", object_.c_str() );
 
   geometry_msgs::Point rpos, opos;
 
@@ -40,11 +47,6 @@ void DummyBehavior::UpdateActivationPotential() {
     return;
   }
 
-  if( parent_done_ )
-  {
-    state_.activation_potential = 0;
-    return;
-  }
 
   // get location of robot
   rpos = table_state_.robots[robot_des_].pose.position;
@@ -75,7 +77,7 @@ void DummyBehavior::UpdateActivationPotential() {
       state_.activation_potential = 1.0f / dist;
   else state_.activation_potential = 0.00000001;
 
-  ROS_INFO ("%s: activation_potential: [%f]", object_.c_str(), state_.activation_potential );
+  ROS_DEBUG_NAMED("DummyBehavior", "%s: activation_potential: [%f]", object_.c_str(), state_.activation_potential );
 }
   
 
@@ -101,8 +103,8 @@ void DummyBehavior::Work() {
         // ROS_INFO("TableObject::Work: waiting for pick and place to be done!");
     // }
   mut_arm.Release();
-  ROS_INFO("DummyBehavior::Work: Done!");
-  ROS_INFO("\tDmmyBehavior::MUTEX IS RELEASED!");
+  ROS_INFO("[%s]: DummyBehavior::Work: Done!", name_->topic.c_str());
+  ROS_INFO("\t[%s]: DummyBehavior::MUTEX IS RELEASED!", name_->topic.c_str());
 }
 
 void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
@@ -131,16 +133,16 @@ void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
   // call the pick service
   if(ros::service::call("pick_service", req_pick)) {
 
-    ROS_INFO("\n\n\n\t\t THE PICK SERVICE WAS CALLED!!");
+    ROS_INFO("\n\t\t[%s]: THE PICK SERVICE WAS CALLED!!", name_->topic.c_str());
 
     // call the place service
     if(ros::service::call("place_service", req_place)) {
-      ROS_INFO("\n\n\t\t THE PLACE SERVICE WAS CALLED!!\n\n\n");
+      ROS_INFO("\n\t\t[%s]: THE PLACE SERVICE WAS CALLED!!", name_->topic.c_str());
     }
   }
 
   state_.done = true;
-  ROS_INFO( "everything is done");
+  ROS_INFO( "[%s]: PickAndPlace: everything is done", name_->topic.c_str() );
 
 }
 
@@ -152,7 +154,7 @@ bool DummyBehavior::PickAndPlaceDone() {
 }
 
 bool DummyBehavior::ActivationPrecondition() {
-  ROS_INFO("\tDmmyBehavior::MUTEX IS LOCKING!");
+  ROS_INFO("\t[%s]: DummyBehavior::MUTEX IS LOCKING!", name_->topic.c_str());
 
   return mut_arm.Lock(state_.activation_potential);
   // return true;

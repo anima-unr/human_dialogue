@@ -268,7 +268,7 @@ bool OrBehavior::IsDone() {
   {
     if( children_[i]->state.done ) 
     {
-      ROS_INFO( "[%s]: state done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
+      ROS_DEBUG( "[%s]: state done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
       state_.done = 1;
       return true;
     }

@@ -150,14 +150,14 @@ void Node::Activate() {
   if(!peer_check_thread) {
     state_.check_peer = true;
     peer_check_thread  = new boost::thread(&PeerCheckThread, this); 
-    printf("\n\tThread was not active, so has been created!\n");
+    ROS_DEBUG("\n\tThread was not active, so has been created!\n");
     peer_check_thread->detach(); 
   }
   // if peer check thread reached the end, then kill it?
   else if(!state_.check_peer){
-    printf("\n\nThread has finished, killing it! [%d] \n\n", thread_running_ );
+    ROS_DEBUG("\n\nThread has finished, killing it! [%d] \n\n", thread_running_ );
       if( thread_running_ ) {
-        ROS_INFO( "killing thread");
+        ROS_DEBUG( "killing thread");
         peer_check_thread->interrupt();
         peer_check_thread->join();
       }
@@ -165,12 +165,12 @@ void Node::Activate() {
   }
   // still running so leave alone
   else {
-        printf("\n\tThread was already active\n");
+        ROS_DEBUG("\n\tThread was already active\n");
       }
  // if thread is okay, run this??
  if(state_.peer_okay) {
   
-      ROS_INFO("NODE::Activate: peer has made it into the if statement!!!");
+      ROS_DEBUG("NODE::Activate: peer has made it into the if statement!!!");
     // if (!state_.active && !state_.done) {
 
     if (!state_.done) {
@@ -180,7 +180,7 @@ void Node::Activate() {
         {
           boost::lock_guard<boost::mutex> lock(work_mut);
           state_.active = true;
-          ROS_INFO("State was set to true!");
+          ROS_DEBUG("State was set to true!");
           // Send activation to peers to avoid race condition
           // this will publish the updated state to say I am now active
           PublishStateToPeers(); 
@@ -193,7 +193,7 @@ void Node::Activate() {
       
     }
     state_.peer_okay = false;
-    ROS_INFO("NODE::ACTIVATE: check peer set back to false!!!");    
+    ROS_DEBUG("NODE::ACTIVATE: check peer set back to false!!!");    
   }
 }
 
@@ -208,6 +208,8 @@ void Node::Deactivate() {
   //   state_.active = false;
   //   printf("Deactivating Node; %s\n", name_.c_str());
   // }
+
+  // TODO kill all subscribers
 }
 
 void Node::ActivateNode(NodeId_t node) {    
@@ -280,10 +282,12 @@ void Node::ReceiveFromParent(ConstControlMessagePtr_t msg) {
   if( msg->done != 0 )
   {
     parent_done_ = true;
-    ROS_INFO( "[%s]: parent state is done", name_->topic.c_str() );
+    ROS_INFO_THROTTLE( 1, "[%s]: parent state is done", name_->topic.c_str() );
+    state_.active = false;
   }
-  state_.done = msg->done;
+  //state_.done = msg->done;
 }
+
 void Node::ReceiveFromChildren(ConstControlMessagePtr_t msg) {
   ROS_DEBUG("Node::ReceiveFromChildren was called!!!!");
   // Determine the child
@@ -322,7 +326,7 @@ void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
 // IDEA: This thread may be able to start the thread then become the work watcher
 // IDEA: The work watcher may need to funtion earlier than the work thread is started.
 void WorkThread(Node *node) {
-      ROS_DEBUG("Node::WorkThread was called!!!!\n");
+      ROS_DEBUG("[%s]: Node::WorkThread was called!!!!", node->name_->topic.c_str() );
 
   boost::unique_lock<boost::mutex> lock(node->work_mut);
   while (!node->state_.active) {
@@ -338,18 +342,20 @@ void WorkThread(Node *node) {
   node->working = false;
   node->PublishDoneParent();
   node->PublishStateToPeers();
+
+  ROS_INFO("[%s]: Work Thread has ended", node->name_->topic.c_str() );
 }
 
 // TODO JB: implementation for peer thread!
 void PeerCheckThread(Node *node) {
-  ROS_INFO("Node::PeerCheckThread was called!!!!\n");
+  ROS_DEBUG_NAMED("PeerCheck", "Node::PeerCheckThread was called!!!!\n");
   node->thread_running_ = true;
 try{
   // wait for checking to be asked!
   boost::unique_lock<boost::mutex> lockp(node->peer_mut);
    while (!node->state_.check_peer) {
 
-    ROS_INFO("PeerCheckThread is waiting!");
+    ROS_DEBUG_NAMED("PeerCheck", "PeerCheckThread is waiting!");
     node->cv.wait(lockp);
   }
   // LOG_INFO("check peer thread Initialized");
@@ -365,7 +371,7 @@ try{
   // NOTE: Due to the exact same timing in the THEN case, change the loop time to deal
   //       with latency for the different sets of nodes
   int buff = 5+(node->state_.owner.robot * 15);
-  ROS_DEBUG("\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, buff);
+  ROS_DEBUG_NAMED("PeerCheck", "\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, buff);
   boost::this_thread::sleep(boost::posix_time::millisec(buff));  
 
   // for each peer, check status
@@ -375,14 +381,14 @@ try{
       it != node->peers_.end(); ++it) {
 
     // printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),(*it)->state.active,(*it)->state.done);
-    ROS_DEBUG("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
-    ROS_DEBUG("\n\nMe   DATA:\t%s\n\tactive: %d\tdone:%d\n\n", node->name_->topic.c_str(),node->state_.active,node->state_.done);
+    ROS_DEBUG_NAMED("PeerCheck", "\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
+    ROS_DEBUG_NAMED("PeerCheck", "\n\nMe   DATA:\t%s\n\tactive: %d\tdone:%d\n\n", node->name_->topic.c_str(),node->state_.active,node->state_.done);
 
 
     // if peer done, then peer_okay = False (since already completed, I can't activate) 
     // if((*it)->state.done) {
     if(node->state_.peer_done) {
-       ROS_DEBUG("PeerCheckThread: Case 1!!");
+       ROS_DEBUG_NAMED("PeerCheck", "PeerCheckThread: Case 1!!");
       node->state_.peer_okay = false; 
     }
     // otherwise if peer active
@@ -400,32 +406,32 @@ try{
       // }
       // //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
       // else{ 
-      ROS_DEBUG("PeerCheckThread: Case 3!!");
+      ROS_DEBUG_NAMED("PeerCheck", "PeerCheckThread: Case 3!!");
       node->state_.peer_okay = false; 
       // lower my activation level for this node
-      ROS_DEBUG("\tCurr level: %f\n", node->state_.activation_level);
+      ROS_DEBUG_NAMED("PeerCheck", "\tCurr level: %f\n", node->state_.activation_level);
       node->state_.activation_level = ACTIVATION_FALLOFF*node->state_.activation_level;
       node->state_.activation_potential = ACTIVATION_FALLOFF*node->state_.activation_potential;
-      ROS_DEBUG("\tNew level: %f\n\n", node->state_.activation_level);
+      ROS_DEBUG_NAMED("PeerCheck", "\tNew level: %f\n\n", node->state_.activation_level);
       // }
 
     }
     // otherwise, peer is not active and peer is not done so I can activate, peer_okay = True
     else if (!node->state_.peer_done && !node->state_.peer_active) {
-       ROS_DEBUG("PeerCheckThread: Case 4!!");
+       ROS_DEBUG_NAMED("PeerCheck", "PeerCheckThread: Case 4!!");
       node->state_.peer_okay = true; 
     }
     else {
-      printf("\n\nERROR! PeerCheckThread: Undefined case! Please redo logic!\n\n");
+      ROS_WARN("\n\nERROR! PeerCheckThread: Undefined case! Please redo logic!\n\n");
     }
   }
   //boost::this_thread::sleep(boost::posix_time::millisec(2000));
-  printf("\nPeercheckthread is at end!!!!\n");
+  ROS_DEBUG_NAMED("PeerCheck", "\nPeercheckthread is at end!!!!\n");
   node->state_.check_peer = false;
   node->thread_running_ = false;
 }
 catch(...) {
-  ROS_WARN("THREAD INTERRUPTED\n\n\n\n");
+  ROS_WARN("Peer Check THREAD INTERRUPTED\n\n\n\n");
   node->thread_running_ = false;
 }
   node->thread_running_ = false;
@@ -547,7 +553,7 @@ void Node::Update() {
       ActivationFalloff();
     }
     else {
-      ROS_INFO("[%s]: Not Active: %f", name_->topic.c_str(),
+      ROS_DEBUG_THROTTLE(1, "[%s]: Not Active: %f", name_->topic.c_str(),
         state_.activation_level); }
   }
   // Publish Status
