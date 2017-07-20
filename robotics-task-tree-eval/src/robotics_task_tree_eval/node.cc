@@ -31,7 +31,7 @@ namespace task_net {
 #define PUB_SUB_QUEUE_SIZE 100
 #define STATE_MSG_LEN (sizeof(State))
 #define ACTIVATION_THESH 0.1
-#define ACTIVATION_FALLOFF 0.95f
+#define ACTIVATION_FALLOFF 0.97f
 
 void PeerCheckThread(Node *node);
 
