@@ -42,7 +42,7 @@ Nodes:
       node: 1
     parent: 'AND_2_0_006'
     # children: ['NONE']
-    peers: ['PLACE_5_1_008']
+    peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Lettuce'
 
   PLACE_5_0_002:
@@ -52,7 +52,7 @@ Nodes:
       node: 2
     parent: 'AND_2_0_006'
     # children: ['NONE']
-    peers: ['PLACE_5_1_009']
+    peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Left_Bread'
 
   PLACE_5_0_003:
@@ -62,7 +62,7 @@ Nodes:
       node: 3
     parent: 'AND_2_0_006'
     # children: ['NONE']
-    peers: ['PLACE_5_1_010']
+    peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Meat'
 
   PLACE_5_0_004:
@@ -72,7 +72,7 @@ Nodes:
       node: 4
     parent: 'AND_2_0_006'
     # children: ['NONE']
-    peers: ['PLACE_5_1_011']
+    peers: ['PLACE_5_1_008', 'PLACE_5_1_009', 'PLACE_5_1_010', 'PLACE_5_1_011']
     object: 'Right_Bread'
 
 
@@ -103,7 +103,7 @@ Nodes:
       node: 8
     parent: 'AND_2_1_007'
     # children: ['NONE']
-    peers: ['PLACE_5_0_001']
+    peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Lettuce'
 
 
@@ -114,7 +114,7 @@ Nodes:
       node: 9
     parent: 'AND_2_1_007'
     # children: ['NONE']
-    peers: ['PLACE_5_0_002']
+    peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Left_Bread'
 
   PLACE_5_1_010:
@@ -124,7 +124,7 @@ Nodes:
       node: 10
     parent: 'AND_2_1_007'
     # children: ['NONE']
-    peers: ['PLACE_5_0_003']
+    peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Meat'
 
   PLACE_5_1_011:
@@ -134,7 +134,7 @@ Nodes:
       node: 11
     parent: 'AND_2_1_007'
     # children: ['NONE']
-    peers: ['PLACE_5_0_004']
+    peers: ['PLACE_5_0_001', 'PLACE_5_0_002', 'PLACE_5_0_003', 'PLACE_5_0_004']
     object: 'Right_Bread'
 
 

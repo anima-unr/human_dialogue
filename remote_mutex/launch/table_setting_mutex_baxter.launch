@@ -1,0 +1,6 @@
+<launch>
+  <param type="str" value="AND_2_1_007_state" name="topic"/>
+
+  <node name="remote_mutex" pkg="remote_mutex" type="remote_mutex_service" output="screen" args="right_arm_mutex">
+  </node>
+</launch>
