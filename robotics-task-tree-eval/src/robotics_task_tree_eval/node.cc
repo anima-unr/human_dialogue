@@ -85,6 +85,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.peer_done = false;
   state_.check_peer = false;
   state_.peer_okay = false;
+  state_.highest = name_->mask;
   state_.highest_potential = 0.0;
   thread_running_ = false;
 
@@ -142,7 +143,7 @@ void Node::GenerateNodeBitmaskMap() {
 }
 
 void Node::Activate() {
-    ROS_INFO("[%s]: Node::Activate was called!!!!", name_->topic.c_str());
+    ROS_DEBUG("[%s]: Node::Activate was called!!!!", name_->topic.c_str());
 
   // TODO JB: have this only spin a new thread if the thread doesn't already exist 
   // create peer_check thread if it isn't already running 
@@ -171,9 +172,9 @@ void Node::Activate() {
  if(state_.peer_okay) {
   
       ROS_DEBUG("NODE::Activate: peer has made it into the if statement!!!");
-    // if (!state_.active && !state_.done) {
+    if (!state_.active && !state_.done) {
 
-    if (!state_.done) {
+    //if (!state_.done) {
       if (ActivationPrecondition()) {
         ROS_INFO("Activating Node: %s", name_->topic.c_str());
         // printf("\t\tNode::Activate Activating Node: %s\n\n", name_->topic.c_str());
@@ -282,7 +283,7 @@ void Node::ReceiveFromParent(ConstControlMessagePtr_t msg) {
   if( msg->done != 0 )
   {
     parent_done_ = true;
-    ROS_INFO_THROTTLE( 1, "[%s]: parent state is done", name_->topic.c_str() );
+    ROS_DEBUG( "[%s]: parent state is done", name_->topic.c_str() );
     state_.active = false;
   }
   //state_.done = msg->done;
@@ -348,7 +349,7 @@ void WorkThread(Node *node) {
 
 // TODO JB: implementation for peer thread!
 void PeerCheckThread(Node *node) {
-  ROS_DEBUG_NAMED("PeerCheck", "Node::PeerCheckThread was called!!!!\n");
+  ROS_DEBUG_NAMED("PeerCheck", "Node::PeerCheckThread was called!!!!");
   node->thread_running_ = true;
 try{
   // wait for checking to be asked!
@@ -363,15 +364,15 @@ try{
   // by sending status and activation potential to peers
   node->PublishStateToPeers(); 
 
-  // TODO: In the futurre maybe make a recieve from peers call here to ensure
+  // TODO: In the future maybe make a recieve from peers call here to ensure
   // that this happens right since the timing of the return from the check 
   // causing issues for THEN without some hard-coded offset as below?!?!
 
   // wait for full loop so can recieved data back from peers
   // NOTE: Due to the exact same timing in the THEN case, change the loop time to deal
   //       with latency for the different sets of nodes
-  int buff = 5+(node->state_.owner.robot * 15);
-  ROS_DEBUG_NAMED("PeerCheck", "\n\n\n\t\t\tBUFF: %d \tTOTAL TIME: %d\n\n\n", buff, buff);
+  int buff = 200+(node->state_.owner.robot * 200);
+  ROS_DEBUG_NAMED("PeerCheck", "\n\t\t\tBUFF: %d \tTOTAL TIME: %d", buff, buff);
   boost::this_thread::sleep(boost::posix_time::millisec(buff));  
 
   // for each peer, check status

@@ -61,9 +61,17 @@ AndBehavior::~AndBehavior() {}
 void AndBehavior::UpdateActivationPotential() {
     // ROS_INFO("AndBehavior::UpdateActivationPotential was called!!!!\n");
 
+  // if node is done, activation potential for all children is 0
+  if( IsDone() )
+  {
+    state_.highest_potential = 0;
+    state_.highest = mask_;
+    return;
+  }
+
   // this should choose bubble up child with highest potential
-  float highest = 0;
-  NodeBitmask nbm;
+  float highest = -1;
+  NodeBitmask nbm = mask_;
 
   float sum = 0;
   for (NodeListPtrIterator it = children_.begin();
@@ -105,6 +113,24 @@ uint32_t AndBehavior::SpreadActivation() {
     SendToChild((*it)->mask, msg);
   }
 }
+
+bool AndBehavior::IsDone() {
+  ROS_DEBUG("[%s]: AndBehavior::IsDone was called", name_->topic.c_str() );
+  for( int i = 0; i < children_.size(); i++ )
+  {
+    if( !children_[i]->state.done ) 
+    {
+      ROS_DEBUG( "[%s]: state not done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
+      state_.done = 0;
+      return false;
+    }
+  }
+
+  state_.done = 1;
+  return true;
+  //return state_.done;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,10 +228,8 @@ void OrBehavior::UpdateActivationPotential() {
   float max = 0;
   int max_child_index = 0, index = 0;
 
-
   // this should choose bubble up child with highest potential
-  NodeBitmask nbm;
-  
+  NodeBitmask nbm = mask_;
 
   // if node is done, activation potential for all children is 0
   if( IsDone() )
@@ -214,7 +238,6 @@ void OrBehavior::UpdateActivationPotential() {
     state_.highest = mask_;
     return;
   }
-
 
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
@@ -273,6 +296,8 @@ bool OrBehavior::IsDone() {
       return true;
     }
   }
+
+  state_.done = false;
   return false;
   //return state_.done;
 }

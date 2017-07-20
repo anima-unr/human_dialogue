@@ -72,6 +72,7 @@ class AndBehavior: public Behavior {
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
+  virtual bool IsDone();
 };
 class OrBehavior: public Behavior {
  public:

@@ -22,6 +22,8 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
       state), mut_arm(name.topic.c_str(), "/right_arm_mutex") {
 
     object_ = object;
+    state_.done = false;
+    ROS_INFO( "DummyBehavior: [%s] Object: [%s]", name_->topic.c_str(), object_.c_str() );
     robot_des_ = robot_des;
 
     // subscribe to simulator state messages
@@ -32,7 +34,7 @@ DummyBehavior::~DummyBehavior() {}
 void DummyBehavior::UpdateActivationPotential() {
   if( state_.done || parent_done_ )
   {
-    ROS_DEBUG_THROTTLE_NAMED( 1, "DummyBehaviorTrace", "[%s]: State/Parent is done, so don't update activationpotential", object_.c_str() );
+    ROS_DEBUG_THROTTLE_NAMED( 1, "DummyBehaviorTrace", "[%s]: State/Parent is done, so don't update activationpotential [%d|%d]", object_.c_str(), state_.done, parent_done_ );
     state_.activation_potential = 0;
     return;
   }
@@ -104,7 +106,7 @@ void DummyBehavior::Work() {
     // }
   mut_arm.Release();
   ROS_INFO("[%s]: DummyBehavior::Work: Done!", name_->topic.c_str());
-  ROS_INFO("\t[%s]: DummyBehavior::MUTEX IS RELEASED!", name_->topic.c_str());
+  //ROS_INFO("\t[%s]: DummyBehavior::MUTEX IS RELEASED!", name_->topic.c_str());
 }
 
 void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
@@ -133,11 +135,11 @@ void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
   // call the pick service
   if(ros::service::call("pick_service", req_pick)) {
 
-    ROS_INFO("\n\t\t[%s]: THE PICK SERVICE WAS CALLED!!", name_->topic.c_str());
+    ROS_INFO("\t\t[%s]: THE PICK SERVICE WAS CALLED!!", name_->topic.c_str());
 
     // call the place service
     if(ros::service::call("place_service", req_place)) {
-      ROS_INFO("\n\t\t[%s]: THE PLACE SERVICE WAS CALLED!!", name_->topic.c_str());
+      ROS_INFO("\t\t[%s]: THE PLACE SERVICE WAS CALLED!!", name_->topic.c_str());
     }
   }
 
@@ -154,7 +156,7 @@ bool DummyBehavior::PickAndPlaceDone() {
 }
 
 bool DummyBehavior::ActivationPrecondition() {
-  ROS_INFO("\t[%s]: DummyBehavior::MUTEX IS LOCKING!", name_->topic.c_str());
+  ROS_DEBUG_NAMED("DummyBehaviorTrace", "\t[%s]: DummyBehavior::MUTEX IS LOCKING!", name_->topic.c_str());
 
   return mut_arm.Lock(state_.activation_potential);
   // return true;
