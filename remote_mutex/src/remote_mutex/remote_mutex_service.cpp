@@ -102,6 +102,8 @@ class RemoteMutexService {
 
   bool MutexRequest(remote_mutex::remote_mutex_msg::Request &req,
       remote_mutex::remote_mutex_msg::Response &res) {
+
+    boost::this_thread::sleep(boost::posix_time::millisec(200));
     if (req.request) {
       ROS_INFO("asking for mutex lock [%f / %f] %s", activation_potential, req.activation_potential, req.name.c_str());
 

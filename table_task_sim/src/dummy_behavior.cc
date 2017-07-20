@@ -40,6 +40,12 @@ void DummyBehavior::UpdateActivationPotential() {
     return;
   }
 
+  if( parent_done_ )
+  {
+    state_.activation_potential = 0;
+    return;
+  }
+
   // get location of robot
   rpos = table_state_.robots[robot_des_].pose.position;
 
@@ -89,8 +95,7 @@ uint32_t DummyBehavior::SpreadActivation() {
 void DummyBehavior::Work() {
   ROS_INFO("DummyBehavior::Work: waiting for pause to be done!");
   // boost::this_thread::sleep(boost::posix_time::millisec(10000));
-  if( !parent_done_ )
-    PickAndPlace(object_, robot_des_);
+  PickAndPlace(object_, robot_des_);
     // while (!PickAndPlaceDone()) {
       //boost::this_thread::sleep(boost::posix_time::millisec(500));
         // ROS_INFO("TableObject::Work: waiting for pick and place to be done!");
