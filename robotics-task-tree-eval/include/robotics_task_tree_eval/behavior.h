@@ -27,7 +27,7 @@ enum ROBOT {
   BAXTER=1
 } ;
 
-#define BEHAVIOR_SLEEP_TIME 100
+#define BEHAVIOR_SLEEP_TIME 500
 
 namespace task_net {
 class Behavior: public Node {
@@ -86,6 +86,7 @@ class OrBehavior: public Behavior {
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
+  virtual bool IsDone();
  private:
   uint32_t seed;
   uint32_t random_child_selection;

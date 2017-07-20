@@ -73,7 +73,7 @@ class RemoteMutexService {
       &RemoteMutexService::MutexRequest,
       this);
 
-    root_topic_ = "AND_2_0_006_state";
+    root_topic_ = "OR_1_0_006_state";
     state_subscriber_ = ns.subscribe(root_topic_, 1000, &RemoteMutexService::RootStateCallback, this );
 
     record_thread = new boost::thread(&Record, this);
@@ -116,15 +116,23 @@ class RemoteMutexService {
           mut.lock();
           activation_potential = req.activation_potential;
           mut.unlock();
-          mut.lock();
-          locked = true;
-          owner = req.name;
-          mut.unlock();
-          res.success = true;
-          ROS_INFO("Mutex Locked - Granted Access: %s", req.name.c_str());
+          if( activation_potential > 0 )
+          {
+            ROS_INFO("Mutex Locked - Granted Access: %s", req.name.c_str());
+            mut.lock();
+            locked = true;
+            owner = req.name;
+            mut.unlock();
+            res.success = true;        
+          }
+          else
+          {
+            ROS_INFO( "Activation Potential <= 0, no lock granted");
+            res.success = false;
+          }
         }
         else {
-          ROS_INFO("Not Highest Activation Potential - Denied Access: [%f / %f]", activation_potential, req.activation_potential);
+          ROS_INFO("Not Highest Activation Potential - Denied Access: [%d %d %d/ %s]", top_level_state_.highest.type, top_level_state_.highest.robot, top_level_state_.highest.node, req.name.c_str());
           res.success = false;
         }
       }

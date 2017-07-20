@@ -33,7 +33,7 @@ namespace task_net {
 	    std::string object,
 	    ROBOT robot_des,
 	    bool use_local_callback_queue = false,
-	    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
+	    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME*1.5));
 	  virtual ~DummyBehavior();
 	  void UpdateActivationPotential();
 	  bool ActivationPrecondition();

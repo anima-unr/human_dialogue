@@ -129,11 +129,13 @@ class Node {
   virtual bool ActivationPrecondition();
   virtual void ActivationFalloff();
   virtual void PublishStateToPeers();
+  virtual void PublishStateToChildren();
 
  protected:
   std::ofstream record_file;
   NodeId_t *name_;
   State state_;
+  bool parent_done_;
   std::map<NodeBitmask, NodeId_t*, BitmaskLessThan> node_dict_;
   std::string name_id_;
   NodeBitmask mask_;

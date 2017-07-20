@@ -192,7 +192,7 @@ OrBehavior::OrBehavior(NodeId_t name, NodeList peers, NodeList children,
       parent,
       state) {
   seed = static_cast<uint32_t>(time(NULL));
-  random_child_selection = rand_r(&seed) % children_.size();
+  //random_child_selection = rand_r(&seed) % children_.size();
   // printf("OrBehavior::OrBehavior WAS CALLED\n");
 }
 OrBehavior::~OrBehavior() {}
@@ -202,8 +202,19 @@ void OrBehavior::UpdateActivationPotential() {
   float max = 0;
   int max_child_index = 0, index = 0;
 
+
   // this should choose bubble up child with highest potential
   NodeBitmask nbm;
+  
+
+  // if node is done, activation potential for all children is 0
+  if( IsDone() )
+  {
+    state_.highest_potential = 0;
+    state_.highest = mask_;
+    return;
+  }
+
 
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
@@ -218,24 +229,54 @@ void OrBehavior::UpdateActivationPotential() {
   state_.activation_potential = max;
   state_.highest_potential = max;
   state_.highest = nbm;
-  random_child_selection = max_child_index;
+  //random_child_selection = max_child_index;
 }
 
 bool OrBehavior::Precondition() {
-    // ROS_INFO("OrBehavior::Precondition was called!!!!\n");
-  if (children_[random_child_selection]->state.done)
-    return true;
+  ROS_DEBUG("OrBehavior::Precondition was called!!!!\n");
+  
+  for( int i = 0; i < children_.size(); i++ )
+  {
+    if( children_[i]->state.done ) 
+    {
+      ROS_INFO( "[%s]: state done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
+      state_.done = 1;
+      return true;
+    }
+  }
+
   return false;
 }
 
 uint32_t OrBehavior::SpreadActivation() {
-    // ROS_INFO("OrBehavior::SpreadActivation was called!!!!");
+  ROS_DEBUG("OrBehavior::SpreadActivation was called!!!!");
   ControlMessagePtr_t msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = 1.0f;
   msg->done = false;
 
-  SendToChild(children_[random_child_selection]->mask, msg);
+  for( int i = 0; i < children_.size(); i++ )
+  {
+    SendToChild(children_[i]->mask, msg);  
+  }
+  
 }
+
+bool OrBehavior::IsDone() {
+  ROS_DEBUG("[%s]: OrBehavior::IsDone was called", name_->topic.c_str() );
+  for( int i = 0; i < children_.size(); i++ )
+  {
+    if( children_[i]->state.done ) 
+    {
+      ROS_INFO( "[%s]: state done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
+      state_.done = 1;
+      return true;
+    }
+  }
+  return false;
+  //return state_.done;
+}
+
+
 }
 

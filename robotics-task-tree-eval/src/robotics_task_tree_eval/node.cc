@@ -40,6 +40,7 @@ Node::Node() {
   state_.active = false;
   state_.done = false;
   thread_running_ = false;
+  parent_done_ = false;
 }
 
 Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
@@ -141,7 +142,7 @@ void Node::GenerateNodeBitmaskMap() {
 }
 
 void Node::Activate() {
-    ROS_INFO("Node::Activate was called!!!!\n");
+    ROS_INFO("[%s]: Node::Activate was called!!!!", name_->topic.c_str());
 
   // TODO JB: have this only spin a new thread if the thread doesn't already exist 
   // create peer_check thread if it isn't already running 
@@ -276,9 +277,15 @@ void Node::ReceiveFromParent(ConstControlMessagePtr_t msg) {
   // TODO(Luke Fraser) Use mutex to avoid race condition setup in publisher
   boost::unique_lock<boost::mutex> lck(mut);
   state_.activation_level = msg->activation_level;
+  if( msg->done != 0 )
+  {
+    parent_done_ = true;
+    ROS_INFO( "[%s]: parent state is done", name_->topic.c_str() );
+  }
+  state_.done = msg->done;
 }
 void Node::ReceiveFromChildren(ConstControlMessagePtr_t msg) {
-    // ROS_INFO("Node::ReceiveFromChildren was called!!!!\n");
+  ROS_DEBUG("Node::ReceiveFromChildren was called!!!!");
   // Determine the child
   NodeId_t *child = node_dict_[msg->sender];
   boost::unique_lock<boost::mutex> lck(mut);
@@ -302,7 +309,7 @@ void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
 
 // Main Loop of Update Thread. spins once every mtime milliseconds
 void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
-    ROS_INFO("Node::UpdateThread was called!!!!\n");
+    ROS_DEBUG("Node::UpdateThread was called!!!!");
   while (true) {
     node->Update();
     boost::this_thread::sleep(mtime);
@@ -315,7 +322,7 @@ void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
 // IDEA: This thread may be able to start the thread then become the work watcher
 // IDEA: The work watcher may need to funtion earlier than the work thread is started.
 void WorkThread(Node *node) {
-      ROS_INFO("Node::WorkThread was called!!!!\n");
+      ROS_DEBUG("Node::WorkThread was called!!!!\n");
 
   boost::unique_lock<boost::mutex> lock(node->work_mut);
   while (!node->state_.active) {
@@ -512,26 +519,35 @@ void Node::ActivationFalloff() {
 // Main Loop of the Node type Each Node Will have this fucnction called at each
 // time step to process node properties. Each node should run in its own thread
 void Node::Update() {
-      // ROS_INFO("Node::Update was called!!!!\n");
+  ROS_DEBUG("[%s]: Node::Update was called!!!!", name_->topic.c_str());
 
-  // Check if Done
-  if (!IsDone()) {
+  // Check if Done // check parent done status
+  if (!IsDone()  ) {
+    
+    if( parent_done_ )
+    {
+      // deactivate
+
+      // set done to true
+      //state_.done = true;
+    }
+
     // Check Activation Level
     if (IsActive()) {
       // Check Preconditions
       if (Precondition()) {
-        ROS_INFO("Node: %s - Preconditions Satisfied Safe To Do Work!",
+        ROS_DEBUG("[%s]: Preconditions Satisfied Safe To Do Work!",
           name_->topic.c_str());
         Activate();
       } else {
-          ROS_INFO("Node: %s|Preconditions Not Satisfied, Spreading Activation!",
+          ROS_DEBUG("[%s]: Preconditions Not Satisfied, Spreading Activation!",
             name_->topic.c_str());
         SpreadActivation();
       }
       ActivationFalloff();
     }
     else {
-      ROS_INFO("Node: %s - Not Active: %f", name_->topic.c_str(),
+      ROS_INFO("[%s]: Not Active: %f", name_->topic.c_str(),
         state_.activation_level); }
   }
   // Publish Status
@@ -548,7 +564,7 @@ void Node::Work() {
 bool Node::CheckWork() {
     // ROS_INFO("Node::CheckWork was called!!!!\n");
   // LOG_INFO("Checking Work");
-  boost::this_thread::sleep(boost::posix_time::millisec(50));
+  boost::this_thread::sleep(boost::posix_time::millisec(100));
   return true;
 }
 
@@ -572,7 +588,7 @@ std::string StateToString(State state) {
 }
 
 void Node::PublishStatus() {
-  ROS_INFO("[%s]: Node::PublishStatus was called", name_->topic.c_str());
+  ROS_DEBUG("[%s]: Node::PublishStatus was called", name_->topic.c_str());
   robotics_task_tree_msgs::State msg;
   msg.owner.type = state_.owner.type;
   msg.owner.robot = state_.owner.robot;
@@ -594,10 +610,11 @@ void Node::PublishStatus() {
   // Publish Activation Potential
   PublishActivationPotential();
   PublishStateToPeers();
+  PublishStateToChildren();
 }
 
 void Node::PublishStateToPeers() {
-  ROS_INFO("[%s]: Node::PublishStateToPeers was called", name_->topic.c_str());
+  ROS_DEBUG("[%s]: Node::PublishStateToPeers was called", name_->topic.c_str());
   boost::shared_ptr<ControlMessage_t> msg(new ControlMessage_t);
   msg->sender = mask_;
   msg->activation_level = state_.activation_level;
@@ -611,8 +628,23 @@ void Node::PublishStateToPeers() {
   }
 }
 
+void Node::PublishStateToChildren() {
+  boost::shared_ptr<ControlMessage_t> msg(new ControlMessage_t);
+  msg->sender = mask_;
+  msg->activation_level = state_.activation_level;
+  msg->activation_potential = state_.activation_potential;
+  msg->done = state_.done;
+  msg->active = state_.active;
+
+  for (PubList::iterator it = children_pub_list_.begin();
+      it != children_pub_list_.end(); ++it) {
+    it->publish(msg);
+  }
+
+}
+
 void Node::PublishActivationPotential() {
-  ROS_INFO("[%s]: Node::PublishActivationPotential was called", name_->topic.c_str());
+  ROS_DEBUG("[%s]: Node::PublishActivationPotential was called", name_->topic.c_str());
   // Update Activation Potential
   UpdateActivationPotential();
   ControlMessagePtr_t msg(new ControlMessage_t);
@@ -632,7 +664,7 @@ void Node::UpdateActivationPotential() {
 }
 
 void Node::PublishDoneParent() {
-      // ROS_INFO("Node::PublishDoneParent was called!!!!\n");
+  ROS_DEBUG("Node::PublishDoneParent was called!!!!\n");
 
   ControlMessagePtr_t msg(new ControlMessage_t);
   msg->sender = mask_;
@@ -681,25 +713,19 @@ uint32_t Node::SpreadActivation() {
 void Node::InitializeSubscriber(NodeId_t *node) {
     // ROS_INFO("Node::InitializeSubscriber was called!!!!\n");
   std::string peer_topic = node->topic + "_peer";
-#ifdef DEBUG
-  printf("[SUBSCRIBER] - Creating Peer Topic: %s\n", peer_topic.c_str());
-#endif
+  ROS_INFO("[SUBSCRIBER] - Creating Peer Topic: %s", peer_topic.c_str());
   peer_sub_     = sub_nh_.subscribe(peer_topic,
     PUB_SUB_QUEUE_SIZE,
     &Node::ReceiveFromPeers,
     this);
 
-#ifdef DEBUG
-  printf("[SUBSCRIBER] - Creating Child Topic: %s\n", node->topic.c_str());
-#endif
+  ROS_INFO("[SUBSCRIBER] - Creating Child Topic: %s", node->topic.c_str());
   children_sub_ = sub_nh_.subscribe(node->topic,
     PUB_SUB_QUEUE_SIZE,
     &Node::ReceiveFromChildren,
     this);
   std::string parent_topic = node->topic + "_parent";
-#ifdef DEBUG
-  printf("[SUBSCRIBER] - Creating Parent Topic: %s\n", parent_topic.c_str());
-#endif
+  ROS_INFO("[SUBSCRIBER] - Creating Parent Topic: %s", parent_topic.c_str());
   parent_sub_ = sub_nh_.subscribe(parent_topic,
     PUB_SUB_QUEUE_SIZE,
     &Node::ReceiveFromParent,
@@ -718,9 +744,7 @@ void Node::InitializePublishers(NodeListPtr nodes, PubList *pub,
     pub->push_back(*topic);
     node_dict_[(*it)->mask]->pub = topic;
     node_dict_[(*it)->mask]->topic += topic_addition;
-#if DEBUG
-    printf("[PUBLISHER] - Creating Topic: %s\n", (*it)->topic.c_str());
-#endif
+    ROS_INFO("[PUBLISHER] - Creating Topic: %s", (*it)->topic.c_str());
   }
 }
 
@@ -729,9 +753,7 @@ void Node::InitializePublisher(NodeId_t *node, ros::Publisher *pub,
       // ROS_INFO("Node::InitializePublisher was called!!!!\n");
 
   node->topic += topic_addition;
-#ifdef DEBUG
-  printf("[PUBLISHER] - Creating Topic: %s\n", node->topic.c_str());
-#endif
+  ROS_INFO("[PUBLISHER] - Creating Topic: %s", node->topic.c_str());
   (*pub) =
     pub_nh_.advertise<robotics_task_tree_msgs::ControlMessage>(node->topic,
       PUB_SUB_QUEUE_SIZE);
@@ -744,9 +766,7 @@ void Node::InitializeStatePublisher(NodeId_t *node, ros::Publisher *pub,
       // ROS_INFO("Node::InitializeStatePublisher was called!!!!\n");
 
   node->topic += topic_addition;
-#ifdef DEBUG
-  printf("[PUBLISHER] - Creating Topic: %s\n", node->topic.c_str());
-#endif
+  ROS_INFO("[PUBLISHER] - Creating Topic: %s", node->topic.c_str());
   (*pub) = pub_nh_.advertise<robotics_task_tree_msgs::State>(node->topic,
     PUB_SUB_QUEUE_SIZE);
   node_dict_[node->mask]->pub = pub;

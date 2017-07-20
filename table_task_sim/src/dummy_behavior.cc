@@ -30,7 +30,7 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
 DummyBehavior::~DummyBehavior() {}
 
 void DummyBehavior::UpdateActivationPotential() {
-  ROS_INFO( "DummyBehavior::UpdateActivationPotential was called: [%s]\n", object_.c_str() );
+  ROS_DEBUG( "DummyBehavior::UpdateActivationPotential was called: [%s]", object_.c_str() );
 
   geometry_msgs::Point rpos, opos;
 
@@ -89,8 +89,8 @@ uint32_t DummyBehavior::SpreadActivation() {
 void DummyBehavior::Work() {
   ROS_INFO("DummyBehavior::Work: waiting for pause to be done!");
   // boost::this_thread::sleep(boost::posix_time::millisec(10000));
-
-  PickAndPlace(object_, robot_des_);
+  if( !parent_done_ )
+    PickAndPlace(object_, robot_des_);
     // while (!PickAndPlaceDone()) {
       //boost::this_thread::sleep(boost::posix_time::millisec(500));
         // ROS_INFO("TableObject::Work: waiting for pick and place to be done!");
@@ -133,6 +133,8 @@ void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
       ROS_INFO("\n\n\t\t THE PLACE SERVICE WAS CALLED!!\n\n\n");
     }
   }
+
+  state_.done = true;
   ROS_INFO( "everything is done");
 
 }
