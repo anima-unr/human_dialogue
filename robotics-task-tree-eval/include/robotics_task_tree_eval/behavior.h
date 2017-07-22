@@ -56,6 +56,7 @@ class ThenBehavior: public Behavior {
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
+  virtual bool IsDone();
  private:
   std::queue<NodeId_t*> activation_queue_;
 };

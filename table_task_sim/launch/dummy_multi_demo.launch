@@ -1,6 +1,6 @@
 <launch>
   <node name="NodeTest" pkg="table_task_sim" type="dummy_multi_demo" output="screen">
-    <rosparam file="$(find robotics_task_tree_eval)/test_network_four_OR.yaml"/>
+    <rosparam file="$(find robotics_task_tree_eval)/test_network_four_THEN.yaml"/>
     <param name="robot" value="PR2"/>
   </node>
 </launch>

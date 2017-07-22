@@ -157,7 +157,7 @@ ThenBehavior::ThenBehavior(NodeId_t name, NodeList peers, NodeList children,
 ThenBehavior::~ThenBehavior() {}
 
 void ThenBehavior::UpdateActivationPotential() {
-    // ROS_INFO("ThenBehavior::UpdateActivationPotential was called!!!!\n");
+  //ROS_INFO("ThenBehavior::UpdateActivationPotential was called!!!!\n");
 
   // if node is done, activation potential for all children is 0
   if( IsDone() )
@@ -174,8 +174,9 @@ void ThenBehavior::UpdateActivationPotential() {
 
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
+    //ROS_INFO( "\t[%s]: checking [%d]: [%d|%d|%d|%d]", name_->topic.c_str(), (*it)->state.owner.node, (*it)->state.done, (*it)->state.peer_done, (*it)->state.active, (*it)->state.peer_active );
     // find the first not done/active node
-    if( !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active && !(*it)->state.active )
+    if( !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active )
     {
       // save as the highest potential
       highest = (*it)->state.activation_potential;
@@ -184,22 +185,9 @@ void ThenBehavior::UpdateActivationPotential() {
     }
   }
 
-  state_.activation_potential = sum / children_.size();
+  state_.activation_potential = highest; //sum / children_.size();
   state_.highest_potential = highest;
   state_.highest = nbm;
-
-
-  //float sum = 0;
-  //for (NodeListPtrIterator it = children_.begin();
-  //    it != children_.end(); ++it) {
-  //  sum += (*it)->state.activation_potential;
-  //}
-  //state_.activation_potential = sum / children_.size();
-
-  // this should choose bubble up first child
-  NodeListPtrIterator it = children_.begin();
-  state_.highest_potential = (*it)->state.activation_potential;
-  state_.highest = (*it)->mask;
 
 }
 
@@ -223,8 +211,10 @@ uint32_t ThenBehavior::SpreadActivation() {
     msg->activation_level = 1.0f;
     msg->done = false;
 
-    if (activation_queue_.front()->state.done) {
+    if (activation_queue_.front()->state.done || activation_queue_.front()->state.peer_done) {
+      int old_id = activation_queue_.front()->state.owner.node;
       activation_queue_.pop();
+      ROS_INFO( "\t[%s]: node [%d] is done, moving to next node [%d]", name_->topic.c_str(), old_id, activation_queue_.front()->state.owner.node);
     }
 
     SendToChild(activation_queue_.front()->mask, msg);

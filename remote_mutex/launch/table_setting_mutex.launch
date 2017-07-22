@@ -1,5 +1,5 @@
 <launch>
-  <param type="str" value="OR_1_0_006_state" name="topic"/>
+  <param type="str" value="THEN_0_0_006_state" name="topic"/>
 
   <node name="remote_mutex" pkg="remote_mutex" type="remote_mutex_service" output="screen" args="right_arm_mutex"/>
 </launch>
