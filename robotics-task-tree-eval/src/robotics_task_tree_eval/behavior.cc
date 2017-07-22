@@ -159,14 +159,42 @@ ThenBehavior::~ThenBehavior() {}
 void ThenBehavior::UpdateActivationPotential() {
     // ROS_INFO("ThenBehavior::UpdateActivationPotential was called!!!!\n");
 
-  
+  // if node is done, activation potential for all children is 0
+  if( IsDone() )
+  {
+    state_.highest_potential = 0;
+    state_.highest = mask_;
+    return;
+  }
 
-  float sum = 0;
+  // this should bubble up first not done child
+  float highest = 0;
+  NodeBitmask nbm = mask_;
+
+
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
-    sum += (*it)->state.activation_potential;
+    // find the first not done/active node
+    if( !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active && !(*it)->state.active )
+    {
+      // save as the highest potential
+      highest = (*it)->state.activation_potential;
+      nbm = (*it)->mask;
+      break;
+    }
   }
+
   state_.activation_potential = sum / children_.size();
+  state_.highest_potential = highest;
+  state_.highest = nbm;
+
+
+  //float sum = 0;
+  //for (NodeListPtrIterator it = children_.begin();
+  //    it != children_.end(); ++it) {
+  //  sum += (*it)->state.activation_potential;
+  //}
+  //state_.activation_potential = sum / children_.size();
 
   // this should choose bubble up first child
   NodeListPtrIterator it = children_.begin();
@@ -202,6 +230,24 @@ uint32_t ThenBehavior::SpreadActivation() {
     SendToChild(activation_queue_.front()->mask, msg);
   }
 }
+
+bool ThenBehavior::IsDone() {
+  ROS_DEBUG("[%s]: ThenBehavior::IsDone was called", name_->topic.c_str() );
+  for( int i = 0; i < children_.size(); i++ )
+  {
+    if( !(children_[i]->state.done || children_[i]->state.peer_done) ) 
+    {
+      ROS_DEBUG( "[%s]: state not done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
+      state_.done = 0;
+      return false;
+    }
+  }
+
+  state_.done = 1;
+  return true;
+  //return state_.done;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // OR BEHAVIOR
