@@ -104,6 +104,7 @@ bool AndBehavior::Precondition() {
 uint32_t AndBehavior::SpreadActivation() {
     // ROS_INFO("AndBehavior::SpreadActivation was called!!!!");
   ControlMessagePtr_t msg(new ControlMessage_t);
+  msg->type = 0;
   msg->sender = mask_;
   msg->activation_level = 1.0f / children_.size();
   msg->done = false;
@@ -204,9 +205,10 @@ bool ThenBehavior::Precondition() {
 }
 
 uint32_t ThenBehavior::SpreadActivation() {
-    // ROS_INFO("ThenBehavior::SpreadActivation was called!!!!");
+  ROS_DEBUG("ThenBehavior::SpreadActivation was called!!!!");
   if (!activation_queue_.empty()) {
     ControlMessagePtr_t msg(new ControlMessage_t);
+    msg->type = 0;
     msg->sender = mask_;
     msg->activation_level = 1.0f;
     msg->done = false;
@@ -217,6 +219,7 @@ uint32_t ThenBehavior::SpreadActivation() {
       ROS_INFO( "\t[%s]: node [%d] is done, moving to next node [%d]", name_->topic.c_str(), old_id, activation_queue_.front()->state.owner.node);
     }
 
+    ROS_DEBUG( "[%s]: spreading activation to [%d]", name_->topic.c_str(), activation_queue_.front()->state.owner.node );
     SendToChild(activation_queue_.front()->mask, msg);
   }
 }
@@ -310,6 +313,7 @@ bool OrBehavior::Precondition() {
 uint32_t OrBehavior::SpreadActivation() {
   ROS_DEBUG("OrBehavior::SpreadActivation was called!!!!");
   ControlMessagePtr_t msg(new ControlMessage_t);
+  msg->type = 0;
   msg->sender = mask_;
   msg->activation_level = 1.0f;
   msg->done = false;

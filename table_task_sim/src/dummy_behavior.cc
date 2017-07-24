@@ -23,6 +23,7 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
 
     object_ = object;
     state_.done = false;
+    parent_done_ = false;
     ROS_INFO( "DummyBehavior: [%s] Object: [%s]", name_->topic.c_str(), object_.c_str() );
     robot_des_ = robot_des;
 
@@ -35,6 +36,13 @@ void DummyBehavior::UpdateActivationPotential() {
   if( state_.done || parent_done_ || state_.peer_active || state_.peer_done )
   {
     ROS_DEBUG_THROTTLE_NAMED( 1, "DummyBehaviorTrace", "[%s]: State/Parent is done, so don't update activationpotential [%d|%d|%d|%d]", object_.c_str(), state_.done, parent_done_, state_.peer_active, state_.peer_done );
+    state_.activation_potential = 0;
+    return;
+  }
+
+  if( !IsActive() )
+  {
+    ROS_INFO_THROTTLE_NAMED( 1, "DummyBehaviorTrace", "[%s]: Not active, so don't update activationpotential", object_.c_str() );
     state_.activation_potential = 0;
     return;
   }

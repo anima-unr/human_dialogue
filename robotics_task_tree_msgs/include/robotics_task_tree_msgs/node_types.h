@@ -82,12 +82,11 @@ typedef NodeId NodeId_t;
 
 struct ControlMessage {
   NodeBitmask sender;
+  int type;
   float activation_level;
   float activation_potential;
   bool done;
   bool active;
-  NodeBitmask highest;
-  float highest_potential;
 };
 
 typedef std::vector<NodeId_t> NodeList;
@@ -264,6 +263,7 @@ struct Serializer<task_net::ControlMessage_t> {
   template<typename Stream, typename T>
   inline static void allInOne(Stream& stream, T t) {
     stream.next(t.sender);
+    stream.next(t.type);
     stream.next(t.activation_level);
     stream.next(t.activation_potential);
     stream.next(t.done);

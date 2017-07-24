@@ -235,18 +235,18 @@ State Node::GetState() {
 }
 
 void Node::SendToParent(const robotics_task_tree_msgs::ControlMessage msg) {
-    // ROS_INFO("Node::SendToParent was called!!!!\n");
+  ROS_INFO("[%s]: Node::SendToParent was called", name_->topic.c_str() );
   ControlMessagePtr msg_temp(new robotics_task_tree_msgs::ControlMessage);
   *msg_temp = msg;
   parent_pub_.publish(msg_temp);
 }
 void Node::SendToParent(const ControlMessagePtr_t msg) {
-    // ROS_INFO("Node::SendToParent was called!!!!\n");
+  ROS_INFO("[%s]: Node::SendToParent was called", name_->topic.c_str() );
   parent_pub_.publish(msg);
 }
 void Node::SendToChild(NodeBitmask node,
   const robotics_task_tree_msgs::ControlMessage msg) {
-    // ROS_INFO("Node::SendToChild was called!!!!\n");
+  //ROS_INFO("[%s]: Node::SendToChild was called", name_->topic.c_str() );
   // get publisher for specific node
   ros::Publisher* pub = node_dict_[node]->pub;
   // publish message to the specific child
@@ -256,10 +256,14 @@ void Node::SendToChild(NodeBitmask node,
 }
 void Node::SendToChild(NodeBitmask node, const ControlMessagePtr_t msg) {
     // ROS_INFO("Node::SendToChild was called!!!!\n");
+  //ROS_INFO("[%s]: Node::SendToChild was called", name_->topic.c_str() );
+
   node_dict_[node]->pub->publish(msg);
 }
 void Node::SendToPeer(NodeBitmask node,
   const robotics_task_tree_msgs::ControlMessage msg) {
+  ROS_INFO("[%s]: Node::SendToPeer was called", name_->topic.c_str() );
+
     // ROS_INFO("Node::SendToPeer was called!!!!\n");
   // get publisher for specific node
   ros::Publisher* pub = node_dict_[node]->pub;
@@ -270,16 +274,17 @@ void Node::SendToPeer(NodeBitmask node,
 
 }
 void Node::SendToPeer(NodeBitmask node, const ControlMessagePtr_t msg) {
-    // ROS_INFO("Node::SendToPeer was called!!!!\n");
+  ROS_INFO("[%s]: Node::SendToPeer was called", name_->topic.c_str() );
   node_dict_[node]->pub->publish(msg);
 }
 
 void Node::ReceiveFromParent(ConstControlMessagePtr_t msg) {
-    // ROS_INFO("Node::ReceiveFromParent was called!!!!\n");
+  //ROS_INFO("[%s]: Node::ReceiveFromParent was called", name_->topic.c_str() );
   // Set activation level from parent
   // TODO(Luke Fraser) Use mutex to avoid race condition setup in publisher
   boost::unique_lock<boost::mutex> lck(mut);
-  state_.activation_level = msg->activation_level;
+  if( msg->type == 0 )
+    state_.activation_level = msg->activation_level;
   if( msg->done != 0 )
   {
     parent_done_ = true;
@@ -612,6 +617,7 @@ void Node::PublishStatus() {
   msg.highest_potential = state_.highest_potential;
 
   //*msg = state_; // for some reason this doesn't work anymore
+  //ROS_INFO("[%s]: PublishStatus", name_->topic.c_str() );
   self_pub_.publish(msg);
 
   // Publish Activation Potential
@@ -638,6 +644,7 @@ void Node::PublishStateToPeers() {
 void Node::PublishStateToChildren() {
   boost::shared_ptr<ControlMessage_t> msg(new ControlMessage_t);
   msg->sender = mask_;
+  msg->type = 1; // sets to state only control message
   msg->activation_level = state_.activation_level;
   msg->activation_potential = state_.activation_potential;
   msg->done = state_.done;
