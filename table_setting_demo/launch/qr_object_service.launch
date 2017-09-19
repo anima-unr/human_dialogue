@@ -3,7 +3,7 @@
   <arg name="playback" default="false"/>
   <arg name="bagfile" default="test.bag"/>
 
-  <arg if="$(arg use-pr2)" name="camera_topic" default="/head_mount_kinect/rgb/image_raw"/>
+  <arg if="$(arg use-pr2)" name="camera_topic" default="/camera/rgb/image_raw"/>
   <arg unless="$(arg use-pr2)" name="camera_topic" default="/usb_cam/image_raw"/>
 
   <group unless="$(arg playback)">

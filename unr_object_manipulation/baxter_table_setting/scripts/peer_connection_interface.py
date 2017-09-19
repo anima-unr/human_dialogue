@@ -3,7 +3,8 @@
 import zmq
 import rospy
 import threading
-from robotics_task_tree_eval.msg import *
+import Queue
+from robotics_task_tree_msgs.msg import *
 import pickle
 
 def enum(*sequential, **named):
@@ -17,35 +18,68 @@ def SubThread(sub, cb, event):
     timeout = False
     while event.is_set():
         try:
-            [address, msg] = sub.recv_multipart()
-            cb(msg, address)
-            timeout = False
-            count += 1
+            x = sub.recv_multipart()
+            if len(x) == 2:
+                #print 'properly formatted msg: [%s]'%(x[0])
+                address = x[0]
+                msg = x[1]
+                cb(msg, address)
+                timeout = False
+                count += 1
+            else:
+                print len(x)
         except zmq.ZMQError as e:
+            #print e
             if e.errno == zmq.ETERM:
                 break
             elif e.errno == zmq.EAGAIN:
                 timeout = True
             else:
+                print 'weird error'
                 raise
 
+def PubThread(pub, queue, event, debug):
+    print 'pub'
+    rate = rospy.Rate(1000)
+    while event.is_set():
+        if not queue.empty():
+            #if msg.startswith('PLACE') or msg.startswith('AND') or msg.startswith('OR') or msg.startswith('THEN'):
+            #    if debug != 0:
+            #        print 'warn: seems like an improperly formatted message'
+            #    else:
+            #        sys.stdout.write('=')
+            #else:
+            #    ros_pubs[topic].publish(pickle.loads(msg))
+            pub.send_multipart(queue.get())
+        else:
+            if debug != 0:
+                print 'pub queue empty, not publishing'
+        rate.sleep()
+
+
 class NodePeerConnectionInterface:
-    def __init__(self, server_params, running_event):
+    def __init__(self, server_params, running_event, debug):
         self.server_params = server_params
+        self.debug = debug
         self.context = zmq.Context()
         self.running_event = running_event
-
-        self.pub = self.CreateZMQPub()
+        self.pub_queue = Queue.Queue()
         self.ros_pubs = dict()
         self.ros_subs = dict()
         self.subs = dict()
+        self.buf = ''
+        self.pub = self.CreateZMQPub()
 
     def InitializeSubscriber(self, name):
+        if self.debug != 0 :
+            print 'setting up subscriber: %s'%(name)
         # Setup peer listener
         topic = '%s%s'%(name, '_peer')
         self.ros_subs[topic] = rospy.Subscriber(topic, ControlMessage, self.ReceiveFromPeer, queue_size=5, callback_args=topic)
 
     def InitializePublisher(self, name):
+        if self.debug != 0 :
+            print 'setting up publisher: %s'%(name)
         # setup peer publisher
         topic = '%s%s'%(name, '_peer')
         self.ros_pubs[topic] = rospy.Publisher(topic, ControlMessage, queue_size=5)
@@ -55,17 +89,28 @@ class NodePeerConnectionInterface:
 
     def ReceiveFromPeer(self, msg, topic):
         # Publish to server
-        print 'Received from peer topic: %s'%(topic)
-        self.pub.send_multipart([topic, pickle.dumps(msg)])
+        if self.debug != 0: 
+            print 'Received from peer topic: %s'%(topic)
+        else:
+            sys.stdout.write('.')
+        #self.pub.send_multipart([topic, pickle.dumps(msg)])
+        self.pub_queue.put([topic, pickle.dumps(msg)])
+
 
     def SendToPeer(self, msg, topic):
-        print 'send to peer topic: %s'%(topic)
+        if self.debug != 0:
+            print 'send to peer topic: %s'%(topic)
+        else:
+            sys.stdout.write('+')
         self.ros_pubs[topic].publish(pickle.loads(msg))
-        
 
     def CreateZMQPub(self):
         publisher = self.context.socket(zmq.PUB)
         publisher.bind("tcp://*:%s"%(self.server_params.pub_port))
+
+        pub_thread = threading.Thread(target=PubThread, args=[publisher, self.pub_queue, self.running_event, self.debug])
+        pub_thread.start()
+
         return publisher
 
     def CreateZMQSub(self, topic, cb):
@@ -74,9 +119,9 @@ class NodePeerConnectionInterface:
         subscriber.setsockopt(zmq.SUBSCRIBE, topic)
         subscriber.setsockopt(zmq.RCVTIMEO, 1000)
 
-        # Create thread
-        thread = threading.Thread(target=SubThread, args=[subscriber, cb, self.running_event])
-        thread.start()
+        # create threads for subscribing/publishing
+        sub_thread = threading.Thread(target=SubThread, args=[subscriber, cb, self.running_event])
+        sub_thread.start()
 
         return subscriber
 
@@ -110,8 +155,10 @@ def main():
     task_file = rospy.get_param('~Nodes', None)
     robot = rospy.get_param('~robot', None)
     robot = ROBOT_DICT[robot]
+    debug = rospy.get_param('~debug',0)
 
-    interface = NodePeerConnectionInterface(server, running_event)
+    interface = NodePeerConnectionInterface(server, running_event, debug)
+
     for node in node_list:
         if task_file[node]['mask']['robot'] != robot:
             interface.AddOutputNode(node)
@@ -119,7 +166,14 @@ def main():
             interface.AddInputNode(node)
 
     print 'Spinning'
-    rospy.spin()
+    #rospy.spin()
+    rate = rospy.Rate(10)
+    n = 0
+    while not rospy.is_shutdown():
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+        rate.sleep()
+
     print 'shutting Down node'
     if rospy.is_shutdown():
         print 'Clearing event'

@@ -20,6 +20,7 @@ along with remote_mutex.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include "ros/ros.h"
 #include "remote_mutex/remote_mutex_msg.h"
+#include <robotics_task_tree_msgs/node_types.h>
 
 #define LOCK true
 #define RELEASE false
@@ -31,6 +32,7 @@ class RemoteMutex {
   RemoteMutex();
   bool Lock(float potential);
   bool Release();
+
  private:
   remote_mutex::remote_mutex_msg msg;
   std::string topic_;

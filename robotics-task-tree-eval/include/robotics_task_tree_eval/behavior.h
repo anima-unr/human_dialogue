@@ -20,6 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <queue>
 #include "robotics_task_tree_eval/node.h"
+#include "remote_mutex/remote_mutex.h"
+
+enum ROBOT {
+  PR2=0, 
+  BAXTER=1
+} ;
+
+#define BEHAVIOR_SLEEP_TIME 500
+
 namespace task_net {
 class Behavior: public Node {
  public:
@@ -28,7 +37,7 @@ class Behavior: public Node {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~Behavior();
 
  private:
@@ -41,12 +50,13 @@ class ThenBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~ThenBehavior();
   void UpdateActivationPotential();
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
+  virtual bool IsDone();
  private:
   std::queue<NodeId_t*> activation_queue_;
 };
@@ -57,12 +67,13 @@ class AndBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~AndBehavior();
   void UpdateActivationPotential();
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
+  virtual bool IsDone();
 };
 class OrBehavior: public Behavior {
  public:
@@ -71,16 +82,18 @@ class OrBehavior: public Behavior {
     NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(BEHAVIOR_SLEEP_TIME));
   virtual ~OrBehavior();
   void UpdateActivationPotential();
  protected:
   virtual bool Precondition();
   virtual uint32_t SpreadActivation();
+  virtual bool IsDone();
  private:
   uint32_t seed;
   uint32_t random_child_selection;
 };
+
 class WhileBehavior: public Behavior {};
 }  // namespace task_net
 #endif  // INCLUDE_BEHAVIOR_H_

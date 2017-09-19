@@ -25,14 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <map>
 #include <fstream>
-#include "robotics_task_tree_eval/node_types.h"
-#include "robotics_task_tree_eval/ControlMessage.h"
+#include "robotics_task_tree_msgs/node_types.h"
+#include "robotics_task_tree_msgs/ControlMessage.h"
 
 namespace task_net {
 
-typedef boost::shared_ptr<robotics_task_tree_eval::ControlMessage const>
+typedef boost::shared_ptr<robotics_task_tree_msgs::ControlMessage const>
   ConstControlMessagePtr;
-typedef boost::shared_ptr<robotics_task_tree_eval::ControlMessage>
+typedef boost::shared_ptr<robotics_task_tree_msgs::ControlMessage>
   ControlMessagePtr;
 typedef boost::shared_ptr<ControlMessage_t const>
   ConstControlMessagePtr_t;
@@ -54,8 +54,11 @@ class Node {
   Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     State_t state,
     bool use_local_callback_queue = false,
-    boost::posix_time::millisec mtime = boost::posix_time::millisec(1000));
+    boost::posix_time::millisec mtime = boost::posix_time::millisec(50));
   virtual ~Node();
+
+  // DFS: tf fix
+  virtual void init();
 
   virtual void Update();
   virtual void Work();
@@ -72,13 +75,13 @@ class Node {
 
   // Messaging
   virtual void SendToParent(
-    const robotics_task_tree_eval::ControlMessage msg);
+    const robotics_task_tree_msgs::ControlMessage msg);
   virtual void SendToParent(const ControlMessagePtr_t msg);
   virtual void SendToChild(NodeBitmask node,
-    const robotics_task_tree_eval::ControlMessage msg);
+    const robotics_task_tree_msgs::ControlMessage msg);
   virtual void SendToChild(NodeBitmask node, const ControlMessagePtr_t msg);
   virtual void SendToPeer(NodeBitmask node,
-    const robotics_task_tree_eval::ControlMessage msg);
+    const robotics_task_tree_msgs::ControlMessage msg);
   virtual void SendToPeer(NodeBitmask node, const ControlMessagePtr_t msg);
 
   // Receiving Threads
@@ -102,6 +105,7 @@ class Node {
   friend void WorkThread(Node* node);
   friend void RecordThread(Node* node);
   friend void CheckThread(Node* node);
+  friend void PeerCheckThread(Node *node); 
 
   virtual void RecordToFile();
  private:
@@ -125,11 +129,13 @@ class Node {
   virtual bool ActivationPrecondition();
   virtual void ActivationFalloff();
   virtual void PublishStateToPeers();
+  virtual void PublishStateToChildren();
 
  protected:
   std::ofstream record_file;
   NodeId_t *name_;
   State state_;
+  bool parent_done_;
   std::map<NodeBitmask, NodeId_t*, BitmaskLessThan> node_dict_;
   std::string name_id_;
   NodeBitmask mask_;
@@ -157,10 +163,12 @@ class Node {
   boost::thread *update_thread;
   boost::thread *work_thread;
   boost::thread *check_thread;
+  boost::thread *peer_check_thread;
 
   // Mutex
   boost::mutex mut;
   boost::mutex work_mut;
+  boost::mutex peer_mut;
 
   // Recording Mutex
   boost::thread *record_thread;
@@ -170,6 +178,8 @@ class Node {
 
   // Working state
   bool working;
+  bool thread_running_;
+
 };
 }  // namespace task_net
 #endif  // INCLUDE_NODE_H_

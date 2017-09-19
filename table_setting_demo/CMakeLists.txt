@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(table_setting_demo)
 
+set(CMAKE_CXX_FLAGS "--std=c++0x -g3")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -9,6 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   geometry_msgs
+  active_vision_msgs
+  moveit_ros_planning_interface
+  robotics_task_tree_eval
+  tf
 )
 if ($ENV{ROBOT} MATCHES "pr2")
   option(BUILD_TABLE_SETTING_DEMO "build table setting demo" OFF)
@@ -22,7 +28,11 @@ if (${BUILD_TABLE_SETTING_DEMO})
   find_package(catkin REQUIRED COMPONENTS
     robotics_task_tree_eval
     remote_mutex
-    tabletop_segmenter
+    message_generation
+    #tabletop_segmenter
+    moveit_ros_planning_interface
+    robotics_task_tree_eval
+    tf
   )
   find_package(PCL REQUIRED COMPONENTS
     common
@@ -135,17 +145,25 @@ else()
 endif()
 
 
-if (${ROS_VERSION} MATCHES "groovy")
+#JB: This used to be only groovy to build on the pr2, but since we are running it in 
+#    simulation now, we need to build it on our host machine!
+# if (${ROS_VERSION} MATCHES "groovy")
   find_package(catkin REQUIRED COMPONENTS
     # arm_navigation
     # pr2_controllers
     tf
     actionlib
+    moveit_ros_planning_interface
   )
 
   set(message_INCLUDE_DIRS
-    /opt/ros/groovy/stacks/arm_navigation/arm_navigation_msgs/msg_gen/cpp/include/
-    /opt/ros/groovy/stacks/pr2_controllers/pr2_controllers_msgs/msg_gen/cpp/include/
+# JB: TODO: The arm_navigation does not exist in indigo, it is replaced by MoveIt!
+#           So will need to more than a simple change here!!!!
+#    /opt/ros/groovy/stacks/arm_navigation/arm_navigation_msgs/msg_gen/cpp/include/
+
+    # /opt/ros/groovy/stacks/pr2_controllers/pr2_controllers_msgs/msg_gen/cpp/include/
+    /opt/ros/indigo/stacks/pr2_controllers/pr2_controllers_msgs/msg_gen/cpp/include/
+
   )
   option(BUILD_PR2_PICKPLACE "Build PR2 pick and place service" 1)
   if (${BUILD_PR2_PICKPLACE})
@@ -163,11 +181,15 @@ if (${ROS_VERSION} MATCHES "groovy")
     table_setting_demo_generate_messages_cpp
   )
   endif (${BUILD_PR2_PICKPLACE})
-endif (${ROS_VERSION} MATCHES "groovy")
+# endif (${ROS_VERSION} MATCHES "groovy")
 ################################################################################
 ################################################################################
 if (${BUILD_TABLE_SETTING_DEMO})
-  find_package(OpenCV 3 REQUIRED)
+
+
+  #find_package(OpenCV REQUIRED)
+
+
   find_package(catkin REQUIRED COMPONENTS
     std_msgs
     sensor_msgs
@@ -177,53 +199,83 @@ if (${BUILD_TABLE_SETTING_DEMO})
     remote_mutex
     pcl_ros
     tf
+    moveit_ros_planning_interface
+
   )
+
+  option(BUILD_TEST "Build Testing Modules" 1)
+
+  if (${BUILD_TEST})
+
+    add_library(table_object_behavior
+      src/table_object_behavior.cpp
+    )
+    # DFS: took out because the testing directory is not compiling with tf correctly
+    #add_subdirectory(testing)
+  endif ()
 
   add_executable(table_setting_demo
     src/table_setting_demo.cpp
     src/table_object_behavior.cpp
   )
+  add_dependencies(table_setting_demo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
   target_link_libraries(table_setting_demo
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
   )
 
-  # BUILD OBJECT TRANSFORMATION service
-  add_executable(object_trans_service
-    src/3d_object_transformation_service/3d_object_trans_service.cc
-    src/3d_object_transformation_service/3d_object_transformation_service.cc
+# multi 
+  add_executable(multi_robot_demo
+    src/multi_robot_network.cc
+    src/table_object_behavior.cpp
   )
-  target_link_libraries(object_trans_service
-    ${Boost_LIBRARIES}
+  target_link_libraries(multi_robot_demo
     ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-    ${PCL_COMMON_LIBRARIES}
-    ${PCL_IO_LIBRARIES}
+    ${Boost_LIBRARIES}
   )
-
-  add_dependencies(object_trans_service
+  add_dependencies(multi_robot_demo
     table_setting_demo_generate_messages_cpp
   )
 
-  if (NOT ${QR_FOUND})
-    message( FATAL_ERROR "QR Library not found cannot build table demo")
-  endif()
 
-  include_directories(${QR_INCLUDE_DIRS})
-  add_executable(qr_object_track_service
-    src/qr/qr_object_service.cc
-    src/qr/qr_object_detect.cc
-  )
 
-  target_link_libraries(qr_object_track_service
-    ${QR_LIBRARIES}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-  )
-  add_dependencies(qr_object_track_service
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-  )
+  # BUILD OBJECT TRANSFORMATION service
+  #add_executable(object_trans_service
+   # src/3d_object_transformation_service/3d_object_trans_service.cc
+   # src/3d_object_transformation_service/3d_object_transformation_service.cc
+  #)
+  #target_link_libraries(object_trans_service
+  #  ${Boost_LIBRARIES}
+  #  ${catkin_LIBRARIES}
+  # ${OpenCV_LIBS}
+  # ${PCL_COMMON_LIBRARIES}
+  # ${PCL_IO_LIBRARIES}
+  #)
+
+  #add_dependencies(object_trans_service
+  #  table_setting_demo_generate_messages_cpp
+  #)
+
+  #if (NOT ${QR_FOUND})
+   # message( FATAL_ERROR "QR Library not found cannot build table demo")
+  #endif()
+
+  #include_directories(${QR_INCLUDE_DIRS})
+  #add_executable(qr_object_track_service
+  #  src/qr/qr_object_service.cc
+  #  src/qr/qr_object_detect.cc
+  #)
+
+  #target_link_libraries(qr_object_track_service
+  #  ${QR_LIBRARIES}
+  #  ${catkin_LIBRARIES}
+  #  ${OpenCV_LIBS}
+  #)
+  #add_dependencies(qr_object_track_service
+  #  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  #  ${catkin_EXPORTED_TARGETS}
+  #)
   add_dependencies(table_setting_demo
     table_setting_demo_generate_messages_cpp
   )

@@ -4,9 +4,10 @@ project(remote_mutex)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
  	rospy
-	message_generation
   std_msgs
+  robotics_task_tree_msgs
   timeseries_recording_toolkit
+  message_generation
 )
 
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -17,14 +18,13 @@ add_service_files(
 )
 
 generate_messages(
-  DEPENDENCIES
-  std_msgs
+  DEPENDENCIES  std_msgs robotics_task_tree_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES remote_mutex
-  DEPENDS timeseries_recording_toolkit
+  DEPENDS timeseries_recording_toolkit robotics_task_tree_msgs message_runtime
 )
 
 include_directories(

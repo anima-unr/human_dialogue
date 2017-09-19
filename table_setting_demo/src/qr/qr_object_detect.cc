@@ -183,10 +183,10 @@ void Tracker::ProcessFrame(const cv::Mat &image) {
 
     filter.GetStateEstimate(&estimate);
     cv::Mat img2 = image.clone();
-    cv::rectangle(img2, 
+    cv::rectangle(img2,
       cv::Point(estimate.x, estimate.y),
       cv::Point(estimate.x + estimate.width, estimate.y + estimate.height),
-      cv::Scalar(0,255,80),
+      cv::Scalar(0, 255, 80),
       3);
     cv::imshow("Tracked", img2);
   }
@@ -328,7 +328,8 @@ uint32_t QrObjectsTrack::Init(
   // params.resize = true;
   object_list_ = object_list;
   const char *window = "TestSelection";
-  tracker = new cv::MultiTracker("TLD");
+  // tracker = new cv::MultiTracker("TLD");
+  tracker = new cv::MultiTrackerTLD();
   cv::namedWindow(window);
 
   std::vector<cv::Rect2d> rois(object_list.size());
@@ -337,7 +338,7 @@ uint32_t QrObjectsTrack::Init(
     cv::putText(
       text_image,
       object_list[i],
-      cv::Point(10,50),
+      cv::Point(10, 50),
       cv::FONT_HERSHEY_PLAIN,
       3,
       cv::Scalar(10, 200, 50),
@@ -347,15 +348,17 @@ uint32_t QrObjectsTrack::Init(
   cv::destroyWindow(window);
 
   // Initialize the trackers to the ROIs
-  tracker->add(image, rois);
-
+  // tracker->add(image, rois);
+  for (int i = 0; i < rois.size(); ++i) {
+    tracker->addTarget(image, rois[i], "TLD");
+  }
 }
 bool QrObjectsTrack::UpdateFrame(const cv::Mat &image) {
-  tracker->update(image);
+  tracker->update_opt(image);
 }
 
 std::vector<cv::Rect2d> QrObjectsTrack::GetTrackedROIs() {
-  return tracker->objects;
+  return tracker->boundingBoxes;
 }
 void QrObjectsTrack::InitializeTrack(cv::Rect2d roi) {}
 bool QrObjectsTrack::GetObject(std::string object, std::string &object_id) {

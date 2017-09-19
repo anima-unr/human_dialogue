@@ -1,4 +1,4 @@
-string node
+string name
 float32 activation_potential
 bool request
 ---

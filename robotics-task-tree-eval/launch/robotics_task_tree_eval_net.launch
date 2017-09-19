@@ -1,6 +1,6 @@
 <launch>
   <node name="NodeTest" pkg="robotics_task_tree_eval" type="robotics_task_tree_eval_net" output="screen">
-    <rosparam file="$(find robotics_task_tree_eval)/test_behavior_network_params.yaml"/>
-    <rosparam file="$(find robotics_task_tree_eval)/test_nodes.yaml"/>
+    <rosparam file="$(find robotics_task_tree_eval)/test_network.yaml"/>
+    <param name="robot" value="PR2"/>
   </node>
 </launch>
