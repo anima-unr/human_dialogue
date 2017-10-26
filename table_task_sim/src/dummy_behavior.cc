@@ -166,8 +166,34 @@ bool DummyBehavior::PickAndPlaceDone() {
 bool DummyBehavior::ActivationPrecondition() {
   ROS_DEBUG_NAMED("DummyBehaviorTrace", "\t[%s]: DummyBehavior::MUTEX IS LOCKING!", name_->topic.c_str());
 
-  return mut_arm.Lock(state_.activation_potential);
-  // return true;
+  // orig
+  // return mut_arm.Lock(state_.activation_potential);
+
+
+  bool lock_okay;
+
+ // first attempt which did not work.....
+  // check peer states...?
+  if(!state_.peer_active) {
+    // return mut_arm.Lock(state_.activation_potential);
+    ROS_INFO("\t[%s]: Trying to gain access to mutex!", name_->topic.c_str());
+    lock_okay = mut_arm.Lock(state_.activation_potential);
+    // return true;
+  }
+  else{
+    ROS_INFO("\t[%s]: Peer gained access first, don't activate!", name_->topic.c_str());
+    return false;
+  }
+
+// second attempt
+  // check peer states...?
+  if(state_.peer_active) {
+    ROS_INFO("\t[%s]: Peer gained access first so release mutex and don't activate!", name_->topic.c_str());
+    mut_arm.Release();
+    return false;
+  }
+
+  return lock_okay;
 }
 
   void DummyBehavior::StateCallback( table_task_sim::SimState msg)

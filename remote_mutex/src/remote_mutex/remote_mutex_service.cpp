@@ -26,6 +26,7 @@ along with remote_mutex.  If not, see <http://www.gnu.org/licenses/>.
 #include "remote_mutex/remote_mutex.h"
 #include "timeseries_recording_toolkit/record_timeseries_data_to_file.h"
 
+
 class RemoteMutexService;
 
 void Record(RemoteMutexService* mut);
@@ -58,6 +59,7 @@ class RemoteMutexService {
   boost::thread* record_thread;
   std::ofstream file;
   recording_toolkit::FilePrintRecorder record_object;
+  int enum_robot_; 
 
   // ros info
   robotics_task_tree_msgs::State top_level_state_;
@@ -74,6 +76,7 @@ class RemoteMutexService {
       this);
 
     ns.param<std::string>( "/topic", root_topic_, "AND_2_0_006_state");
+    ns.param<int>( "/enum_robot", enum_robot_, 0);
     state_subscriber_ = ns.subscribe(root_topic_, 1000, &RemoteMutexService::RootStateCallback, this );
 
     record_thread = new boost::thread(&Record, this);
@@ -105,6 +108,13 @@ class RemoteMutexService {
 
     boost::this_thread::sleep(boost::posix_time::millisec(200));
     if (req.request) {
+
+      // sleep diff rates between pr2 and baxter to offset them activating nodes at the same time...
+      int offset = 75*enum_robot_;
+      boost::this_thread::sleep(boost::posix_time::millisec(200+offset));
+      ROS_INFO("\tWAITED %d", 200+offset);
+
+
       ROS_INFO("asking for mutex lock [%f / %f] %s", activation_potential, req.activation_potential, req.name.c_str());
 
       if (locked) {
@@ -118,7 +128,7 @@ class RemoteMutexService {
           mut.lock();
           activation_potential = req.activation_potential;
           mut.unlock();
-          if( activation_potential > 0 )
+          if( activation_potential > 0.001 )
           {
             ROS_INFO("Mutex Locked - Granted Access: %s", req.name.c_str());
             mut.lock();
@@ -166,8 +176,10 @@ class RemoteMutexService {
         ROS_INFO("Mutex Already Unlocked: %s", req.name.c_str());
       }
     }
+
     return true;
   }
+
 };
 
 void Record(RemoteMutexService* mut) {
