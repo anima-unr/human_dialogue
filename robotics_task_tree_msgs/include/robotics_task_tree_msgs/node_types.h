@@ -87,6 +87,7 @@ struct ControlMessage {
   float activation_potential;
   bool done;
   bool active;
+  NodeBitmask highest;
 };
 
 typedef std::vector<NodeId_t> NodeList;
@@ -268,6 +269,7 @@ struct Serializer<task_net::ControlMessage_t> {
     stream.next(t.activation_potential);
     stream.next(t.done);
     stream.next(t.active);
+    stream.next(t.highest);
   }
 
   ROS_DECLARE_ALLINONE_SERIALIZER;

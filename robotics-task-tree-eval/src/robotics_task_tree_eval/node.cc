@@ -302,6 +302,9 @@ void Node::ReceiveFromChildren(ConstControlMessagePtr_t msg) {
   child->state.activation_level = msg->activation_level;
   child->state.activation_potential = msg->activation_potential;
   child->state.done = msg->done;
+  child->state.highest.node = msg->highest.node;
+  child->state.highest.type = msg->highest.type;
+  child->state.highest.robot = msg->highest.robot;
   // ROS_INFO("child->state.activation_level %f", child->state.activation_level);
   // ROS_INFO("child->state.activation_potential %f", child->state.activation_potential);
   child->state.active = msg->active;
@@ -685,6 +688,9 @@ void Node::PublishActivationPotential() {
   msg->activation_level = state_.activation_level;
   msg->activation_potential = state_.activation_potential;
   msg->done = state_.done;
+  msg->highest.node = state_.highest.node;
+  msg->highest.type = state_.highest.type;
+  msg->highest.robot = state_.highest.robot;
   // ROS_INFO("msg->activation_level %f", msg->activation_level);
   // ROS_INFO("msg->activation_potential %f", msg->activation_potential);
   msg->active = state_.active;

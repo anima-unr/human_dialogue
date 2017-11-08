@@ -72,7 +72,7 @@ void AndBehavior::UpdateActivationPotential() {
   // this should choose bubble up child with highest potential
   float highest = -1;
   NodeBitmask nbm = mask_;
-
+  //ROS_INFO( "default mask (%02d_%1d_%03d)", mask_.type, mask_.robot, mask_.node );
   float sum = 0;
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
@@ -81,12 +81,20 @@ void AndBehavior::UpdateActivationPotential() {
     {
       // save as the highest potential
       highest = (*it)->state.activation_potential;
-      nbm = (*it)->state.highest;
+      nbm.type = (*it)->state.highest.type;
+      nbm.robot = (*it)->state.highest.robot;
+      nbm.node = (*it)->state.highest.node;
+      //ROS_INFO( "nbm mask (%02d_%1d_%03d)", nbm.type, nbm.robot, nbm.node );
+      //nbm = (*it)->state.highest;
+      
     }
   }
   state_.activation_potential = sum / children_.size();
   state_.highest_potential = highest;
-  state_.highest = nbm;
+  state_.highest.type = nbm.type;
+  state_.highest.robot = nbm.robot;
+  state_.highest.node = nbm.node;
+  //ROS_INFO( "highest mask (%02d_%1d_%03d)", state_.highest.type, state_.highest.robot, state_.highest.node );
 }
 
 bool AndBehavior::Precondition() {
