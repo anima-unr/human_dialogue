@@ -174,7 +174,7 @@ bool DummyBehavior::ActivationPrecondition() {
 
  // first attempt which did not work.....
   // check peer states...?
-  if(!state_.peer_active) {
+  if(!state_.peer_active && !state_.peer_done) {
     // return mut_arm.Lock(state_.activation_potential);
     ROS_INFO("\t[%s]: Trying to gain access to mutex!", name_->topic.c_str());
     lock_okay = mut_arm.Lock(state_.activation_potential);
@@ -187,7 +187,7 @@ bool DummyBehavior::ActivationPrecondition() {
 
 // second attempt
   // check peer states...?
-  if(state_.peer_active) {
+  if(state_.peer_active || state_.peer_done) {
     ROS_INFO("\t[%s]: Peer gained access first so release mutex and don't activate!", name_->topic.c_str());
     mut_arm.Release();
     return false;

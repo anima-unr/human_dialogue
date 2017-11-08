@@ -112,7 +112,7 @@ class RemoteMutexService {
       // sleep diff rates between pr2 and baxter to offset them activating nodes at the same time...
       int offset = 75*enum_robot_;
       boost::this_thread::sleep(boost::posix_time::millisec(200+offset));
-      ROS_INFO("\tWAITED %d", 200+offset);
+      ROS_DEBUG("\tWAITED %d", 200+offset);
 
 
       ROS_INFO("asking for mutex lock [%f / %f] %s", activation_potential, req.activation_potential, req.name.c_str());
@@ -122,6 +122,10 @@ class RemoteMutexService {
         ROS_DEBUG("Mutex Already Locked - Denied Access: %s", req.name.c_str());
       } 
       else {
+
+        // TODO: Remove this line!
+        ROS_INFO("top_level_state_.highest.node: %d", top_level_state_.highest.node);
+
         // is this node the node that has the higest activation potential
         if( is_eq(GetBitmask(req.name), top_level_state_.highest) )
         {

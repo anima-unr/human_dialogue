@@ -81,7 +81,7 @@ void AndBehavior::UpdateActivationPotential() {
     {
       // save as the highest potential
       highest = (*it)->state.activation_potential;
-      nbm = (*it)->mask;
+      nbm = (*it)->state.highest;
     }
   }
   state_.activation_potential = sum / children_.size();
@@ -181,7 +181,7 @@ void ThenBehavior::UpdateActivationPotential() {
     {
       // save as the highest potential
       highest = (*it)->state.activation_potential;
-      nbm = (*it)->mask;
+      nbm = (*it)->state.highest;
       break;
     }
   }
@@ -278,13 +278,61 @@ void OrBehavior::UpdateActivationPotential() {
     return;
   }
 
+  // first check if any children's peers are active or done....
+  bool descendant_active = false;
+  for (NodeListPtrIterator it = children_.begin();
+      it != children_.end(); ++it) {
+
+    if((*it)->state.peer_done || (*it)->state.peer_active )
+    {
+      descendant_active = true;
+      // ROS_INFO("XXXXXXXXXXXX    CASE 1: peer active or done %d XXXXXXXXXXXX", (*it)->mask.node);
+    }
+  }
+
+  // if any children's peers were active or done, propagate peer_active to other children,
+  // set activation to 0, and return from function
+  // TODO: this logic for setting peer to active might not belong here since this runs asynch to other logic!!!
+  if ( descendant_active ) {
+   for (NodeListPtrIterator it = children_.begin();
+        it != children_.end(); ++it) {
+
+        (*it)->state.peer_active = true;
+        state_.highest_potential = 0;
+        state_.highest = mask_;
+        // ROS_INFO("XXXXXXXXXXXX    CASE 1: peer active or done %d XXXXXXXXXXXX", (*it)->mask.node);
+    }
+    return;
+  }
+
+
+  // go thorugh children and get highest activation
   for (NodeListPtrIterator it = children_.begin();
       it != children_.end(); ++it) {
     float value = (*it)->state.activation_potential;
-    if (value > max && !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active && !(*it)->state.active) {
+
+    if((*it)->state.peer_done || (*it)->state.peer_active )
+    {
+      state_.highest_potential = 0;
+      state_.highest = mask_;
+      ROS_INFO("XXXXXXXXXXXX    CASE 1: peer active or done %d XXXXXXXXXXXX", (*it)->mask.node);
+      return;
+    }
+    else if((*it)->state.done || (*it)->state.active )
+    {
+      state_.highest_potential = 0;
+      state_.highest = mask_;
+      ROS_INFO("XXXXXXXXXXXX    CASE 2: me active or done %d XXXXXXXXXXXX", (*it)->mask.node);
+      return;
+    }
+    else if (value > max && !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active && !(*it)->state.active) {
       max = value;
       max_child_index = index;
-      nbm = (*it)->mask;
+      nbm = (*it)->state.highest;
+      // ROS_INFO("XXXXXXXXXXXX    CASE 3: value>max  %d XXXXXXXXXXXX", (*it)->mask.node);
+    }
+    else {
+      // ROS_INFO("XXXXXXXXXXXX    CASE 4: value < max  %d XXXXXXXXXXXX", (*it)->mask.node);
     }
     index++;
   }
@@ -299,7 +347,7 @@ bool OrBehavior::Precondition() {
   
   for( int i = 0; i < children_.size(); i++ )
   {
-    if( children_[i]->state.done ) 
+    if( children_[i]->state.done || children_[i]->state.peer_done) 
     {
       ROS_INFO( "[%s]: state done: %d", name_->topic.c_str(), children_[i]->state.owner.node);
       state_.done = 1;

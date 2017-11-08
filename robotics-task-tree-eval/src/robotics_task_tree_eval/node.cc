@@ -306,15 +306,31 @@ void Node::ReceiveFromChildren(ConstControlMessagePtr_t msg) {
   // ROS_INFO("child->state.activation_potential %f", child->state.activation_potential);
   child->state.active = msg->active;
 }
+
 void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
     // ROS_INFO("Node::ReceiveFromPeers was called!!!!\n");
   // boost::unique_lock<boost::mutex> lck(mut);
   // state_.activation_level = msg->activation_level;
   // state_.done = msg->done;
   boost::unique_lock<boost::mutex> lck(mut);
-  state_.peer_active = msg->active;
-  state_.peer_done = msg->done;
+  // TODO: Modify this to keep track of peer states from a list of peers if the node's parent is an OR node
+  //       This will require doing some sort of "or" on the state so that if it was ever 1 it will stay one 
+  //       across multiple msgs being recived to know that one of the peers was active.....
+  // NOTE: This logic isn't quite happening....... like the OR node never gets hit, we see from 
+  //       printing below that only the place nodes send messages here......?@?@?@?
+  // ROS_INFO("\n\n%d\n\n",msg->sender.type);
+  if( msg->sender.type == 1 ) {    
+    state_.peer_active = msg->active || state_.peer_active; 
+    state_.peer_done = msg->done || state_.peer_done; 
+    // ROS_INFO("OR NODE, set msg based on peer lists!!! %d\n\n", state_.peer_active);
+  }
+  // otherwise not OR so set peer active and done as normal!
+  else {
+    state_.peer_active = msg->active;
+    state_.peer_done = msg->done;
+  }
   state_.done = state_.done || state_.peer_done;
+  // ROS_INFO("OTHER, set msg based on peer lists!!! %d\n\n", state_.peer_active);
 }
 
 // Main Loop of Update Thread. spins once every mtime milliseconds
@@ -334,6 +350,7 @@ void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
 void WorkThread(Node *node) {
       ROS_DEBUG("[%s]: Node::WorkThread was called!!!!", node->name_->topic.c_str() );
 
+
   boost::unique_lock<boost::mutex> lock(node->work_mut);
   while (!node->state_.active) {
     node->cv.wait(lock);
@@ -349,6 +366,9 @@ void WorkThread(Node *node) {
   node->PublishDoneParent();
   node->PublishStateToPeers();
 
+  int sleepTime = 200 + (75*node->mask_.robot);
+  boost::this_thread::sleep(boost::posix_time::millisec(sleepTime));
+  ROS_INFO("Sleeping for %d", sleepTime);
   ROS_INFO("[%s]: Work Thread has ended", node->name_->topic.c_str() );
 }
 
@@ -389,7 +409,6 @@ try{
     // printf("\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),(*it)->state.active,(*it)->state.done);
     ROS_DEBUG_NAMED("PeerCheck", "\n\nPeer DATA:\t%s\n\tactive: %d\tdone:%d\n\n", (*it)->topic.c_str(),node->state_.peer_active,node->state_.peer_done);
     ROS_DEBUG_NAMED("PeerCheck", "\n\nMe   DATA:\t%s\n\tactive: %d\tdone:%d\n\n", node->name_->topic.c_str(),node->state_.active,node->state_.done);
-
 
     // if peer done, then peer_okay = False (since already completed, I can't activate) 
     // if((*it)->state.done) {
