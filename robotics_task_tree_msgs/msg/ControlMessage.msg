@@ -9,3 +9,4 @@ float32 activation_potential
 bool done
 bool active
 NodeBitmask highest
+int32 parent_type

@@ -191,9 +191,9 @@ void publish_markers(ros::Publisher *mp)
     marker.scale.z = 0.01;
 
     // Set the color -- be sure to set alpha to something non-zero!
-    marker.color.r = 0.0f;
-    marker.color.g = 1.0f;
-    marker.color.b = 0.0f;
+    marker.color.r = 0.1f;
+    marker.color.g = 0.1f;
+    marker.color.b = 0.1f;
     marker.color.a = 1.0;
 
 	mp->publish(marker);

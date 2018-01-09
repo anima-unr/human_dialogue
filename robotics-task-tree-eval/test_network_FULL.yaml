@@ -92,7 +92,7 @@ Nodes:
       node: 10
     parent: OR_1_0_009
     # children: ['NONE']
-    peers: ['PLACE_3_1_023']
+    peers: ['PLACE_3_1_023','PLACE_3_1_024']
     object: Meat
   PLACE_3_0_011:
     mask:
@@ -101,7 +101,7 @@ Nodes:
       node: 11
     parent: OR_1_0_009
     # children: ['NONE']
-    peers: ['PLACE_3_1_024']
+    peers: ['PLACE_3_1_023','PLACE_3_1_024']
     object: Lettuce
   PLACE_3_0_012:
     mask:
@@ -206,7 +206,7 @@ Nodes:
       node: 23
     parent: OR_1_1_022
     # children: ['NONE']
-    peers: ['PLACE_3_0_010']
+    peers: ['PLACE_3_0_010','PLACE_3_0_011']
     object: Meat
   PLACE_3_1_024:
     mask:
@@ -215,7 +215,7 @@ Nodes:
       node: 24
     parent: OR_1_1_022
     # children: ['NONE']
-    peers: ['PLACE_3_0_011']
+    peers: ['PLACE_3_0_010','PLACE_3_0_011']
     object: Lettuce
   PLACE_3_1_025:
     mask:

@@ -323,14 +323,14 @@ void OrBehavior::UpdateActivationPotential() {
     {
       state_.highest_potential = 0;
       state_.highest = mask_;
-      ROS_INFO("XXXXXXXXXXXX    CASE 1: peer active or done %d XXXXXXXXXXXX", (*it)->mask.node);
+      // ROS_INFO("XXXXXXXXXXXX    CASE 1: peer active or done %d XXXXXXXXXXXX", (*it)->mask.node);
       return;
     }
     else if((*it)->state.done || (*it)->state.active )
     {
       state_.highest_potential = 0;
       state_.highest = mask_;
-      ROS_INFO("XXXXXXXXXXXX    CASE 2: me active or done %d XXXXXXXXXXXX", (*it)->mask.node);
+      // ROS_INFO("XXXXXXXXXXXX    CASE 2: me active or done %d XXXXXXXXXXXX", (*it)->mask.node);
       return;
     }
     else if (value > max && !(*it)->state.done && !(*it)->state.peer_done && !(*it)->state.peer_active && !(*it)->state.active) {

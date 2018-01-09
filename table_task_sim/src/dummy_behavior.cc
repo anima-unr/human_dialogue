@@ -127,8 +127,8 @@ void DummyBehavior::PickAndPlace(std::string object, ROBOT robot_des) {
 
   // place
   geometry_msgs::Pose pose;
-  pose.position.x = -0.25;
-  pose.position.y = -.025;
+  pose.position.x = -0.45;
+  pose.position.y = 0.0;
   pose.position.z = 0;
   pose.orientation.x = 0;
   pose.orientation.y = 0;

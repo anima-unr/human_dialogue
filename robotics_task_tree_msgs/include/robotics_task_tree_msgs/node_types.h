@@ -68,6 +68,7 @@ struct State {
   bool peer_done;
   NodeBitmask highest;
   float highest_potential;
+  int parent_type;
 };
 typedef State State_t;
 
@@ -88,6 +89,7 @@ struct ControlMessage {
   bool done;
   bool active;
   NodeBitmask highest;
+  int parent_type;
 };
 
 typedef std::vector<NodeId_t> NodeList;
@@ -239,6 +241,7 @@ struct Serializer<task_net::State_t> {
     stream.next(t.activation_potential);
     stream.next(t.peer_active);
     stream.next(t.peer_done);
+    stream.next(t.parent_type);
   }
 
   ROS_DECLARE_ALLINONE_SERIALIZER;
@@ -270,6 +273,7 @@ struct Serializer<task_net::ControlMessage_t> {
     stream.next(t.done);
     stream.next(t.active);
     stream.next(t.highest);
+    stream.next(t.parent_type);
   }
 
   ROS_DECLARE_ALLINONE_SERIALIZER;

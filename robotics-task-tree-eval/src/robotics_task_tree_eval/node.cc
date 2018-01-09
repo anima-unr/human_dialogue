@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include "robotics_task_tree_msgs/State.h"
 #include "log.h"
+// #include <regex>
 
 namespace task_net {
 
@@ -88,6 +89,26 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.highest = name_->mask;
   state_.highest_potential = 0.0;
   thread_running_ = false;
+
+  // state_.parent_type = parent.mask.type;
+  // std::smatch m;
+  // std::regex e ("_\\d_");
+  // std:: string s = parent.topic;
+  // while (std::regex_search (s,m,e)) {
+  //   for (auto x:m) std::cout << x << " ";
+  //   std::cout << std::endl;
+  //   s = m.suffix().str();
+  // }
+  // state_.parent_type = s[1];
+  int i = 0;
+  std::string type;
+  while(parent.topic[i] != '_'){
+    i++;
+  }
+  i++;
+  type = parent.topic[i];
+  state_.parent_type = std::stoi(type, nullptr,10);
+  ROS_INFO("PARENT TYPE %d", state_.parent_type);
 
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());
@@ -322,10 +343,17 @@ void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
   // NOTE: This logic isn't quite happening....... like the OR node never gets hit, we see from 
   //       printing below that only the place nodes send messages here......?@?@?@?
   // ROS_INFO("\n\n%d\n\n",msg->sender.type);
-  if( msg->sender.type == 1 ) {    
+  // if( msg->sender.type == 5 && msg->sender.parent_type == 1 ) {    
+  if( msg->parent_type == 1 ) {    
     state_.peer_active = msg->active || state_.peer_active; 
     state_.peer_done = msg->done || state_.peer_done; 
-    // ROS_INFO("OR NODE, set msg based on peer lists!!! %d\n\n", state_.peer_active);
+    // ROS_INFO("OR NODE ACTIVE, node: %d set to be %d\n\n", msg->sender.node, state_.peer_active);
+    // ROS_INFO("OR NODE DONE, node: %d set to be %d\n\n", msg->sender.node, state_.peer_done);
+
+    // if(msg->active == 1){
+    //   ROS_INFO("OR NODE, node %d msg said node was active!!! %d\n\n", msg->sender.node, state_.peer_active);
+    // }
+
   }
   // otherwise not OR so set peer active and done as normal!
   else {
@@ -369,9 +397,9 @@ void WorkThread(Node *node) {
   node->PublishDoneParent();
   node->PublishStateToPeers();
 
-  int sleepTime = 200 + (75*node->mask_.robot);
-  boost::this_thread::sleep(boost::posix_time::millisec(sleepTime));
-  ROS_INFO("Sleeping for %d", sleepTime);
+  // int sleepTime = 200 + (75*node->mask_.robot);
+  // boost::this_thread::sleep(boost::posix_time::millisec(sleepTime));
+  // ROS_INFO("Sleeping for %d", sleepTime);
   ROS_INFO("[%s]: Work Thread has ended", node->name_->topic.c_str() );
 }
 
@@ -399,13 +427,14 @@ try{
   // wait for full loop so can recieved data back from peers
   // NOTE: Due to the exact same timing in the THEN case, change the loop time to deal
   //       with latency for the different sets of nodes
-  int buff = 200+(node->state_.owner.robot * 200);
-  ROS_DEBUG_NAMED("PeerCheck", "\n\t\t\tBUFF: %d \tTOTAL TIME: %d", buff, buff);
-  boost::this_thread::sleep(boost::posix_time::millisec(buff));  
+  // int buff = 200+(node->state_.owner.robot * 200);
+  // ROS_DEBUG_NAMED("PeerCheck", "\n\t\t\tBUFF: %d \tTOTAL TIME: %d", buff, buff);
+  // boost::this_thread::sleep(boost::posix_time::millisec(buff));  
 
   // for each peer, check status
   // (might have to change logic to take highest of all peers?!?)
   // for now just assume only 1 peer!!!
+  bool oneOkay = true;
   for (NodeListPtr::iterator it = node->peers_.begin();
       it != node->peers_.end(); ++it) {
 
@@ -417,7 +446,8 @@ try{
     // if((*it)->state.done) {
     if(node->state_.peer_done) {
        ROS_DEBUG_NAMED("PeerCheck", "PeerCheckThread: Case 1!!");
-      node->state_.peer_okay = false; 
+      // node->state_.peer_okay = false; 
+      oneOkay = oneOkay && false;
     }
     // otherwise if peer active
     // else if ((*it)->state.active) {
@@ -435,7 +465,8 @@ try{
       // //   // otherwise mine < peer, so let peer be set to active, implies peer_okay = False 
       // else{ 
       ROS_DEBUG_NAMED("PeerCheck", "PeerCheckThread: Case 3!!");
-      node->state_.peer_okay = false; 
+      // node->state_.peer_okay = false; 
+      oneOkay = oneOkay && false;
       // lower my activation level for this node
       ROS_DEBUG_NAMED("PeerCheck", "\tCurr level: %f\n", node->state_.activation_level);
       node->state_.activation_level = ACTIVATION_FALLOFF*node->state_.activation_level;
@@ -447,12 +478,16 @@ try{
     // otherwise, peer is not active and peer is not done so I can activate, peer_okay = True
     else if (!node->state_.peer_done && !node->state_.peer_active) {
        ROS_DEBUG_NAMED("PeerCheck", "PeerCheckThread: Case 4!!");
-      node->state_.peer_okay = true; 
+      // node->state_.peer_okay = true; 
+      oneOkay = oneOkay && true;
     }
     else {
       ROS_WARN("\n\nERROR! PeerCheckThread: Undefined case! Please redo logic!\n\n");
+      oneOkay = false;
     }
   }
+  node->state_.peer_okay = oneOkay; 
+
   //boost::this_thread::sleep(boost::posix_time::millisec(2000));
   ROS_DEBUG_NAMED("PeerCheck", "\nPeercheckthread is at end!!!!\n");
   node->state_.check_peer = false;
@@ -538,7 +573,7 @@ void Node::NodeInit(boost::posix_time::millisec mtime) {
   // peer_check_thread  = new boost::thread(&PeerCheckThread, this);
 
   // Initialize recording Thread
-  std::string filename = "/home/janelle/pr2_baxter_ws/src/Distributed_Collaborative_Task_Tree/Data/" + name_->topic + "_Data_.csv";
+  std::string filename = "/home/janelle/onr_ws/src/Distributed_Collaborative_Task_Tree/Data/" + name_->topic + "_Data_.csv";
   ROS_INFO("Creating Data File: %s", filename.c_str());
   record_file.open(filename.c_str());
   record_file.precision(15);
@@ -637,6 +672,7 @@ void Node::PublishStatus() {
   msg.highest.robot = state_.highest.robot;
   msg.highest.node = state_.highest.node;
   msg.highest_potential = state_.highest_potential;
+  msg.parent_type = state_.parent_type;
 
   //*msg = state_; // for some reason this doesn't work anymore
   //ROS_INFO("[%s]: PublishStatus", name_->topic.c_str() );
@@ -656,6 +692,7 @@ void Node::PublishStateToPeers() {
   msg->activation_potential = state_.activation_potential;
   msg->done = state_.done;
   msg->active = state_.active;
+  msg->parent_type = state_.parent_type;
 
   for (PubList::iterator it = peer_pub_list_.begin();
       it != peer_pub_list_.end(); ++it) {
@@ -671,6 +708,7 @@ void Node::PublishStateToChildren() {
   msg->activation_potential = state_.activation_potential;
   msg->done = state_.done;
   msg->active = state_.active;
+  msg->parent_type = state_.parent_type;
 
   for (PubList::iterator it = children_pub_list_.begin();
       it != children_pub_list_.end(); ++it) {

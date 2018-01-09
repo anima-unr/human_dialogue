@@ -7,3 +7,4 @@ uint8 peer_active
 uint8 peer_done
 NodeBitmask highest
 float32 highest_potential
+int32 parent_type
