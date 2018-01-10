@@ -69,6 +69,7 @@ struct State {
   NodeBitmask highest;
   float highest_potential;
   int parent_type;
+  float suitability;
 };
 typedef State State_t;
 
@@ -242,6 +243,7 @@ struct Serializer<task_net::State_t> {
     stream.next(t.peer_active);
     stream.next(t.peer_done);
     stream.next(t.parent_type);
+    stream.next(t.suitability);
   }
 
   ROS_DECLARE_ALLINONE_SERIALIZER;

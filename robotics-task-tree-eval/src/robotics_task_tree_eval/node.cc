@@ -37,6 +37,82 @@ namespace task_net {
 void PeerCheckThread(Node *node);
 
 
+//---------------
+
+float getSuitability(uint16_t node, uint8_t robot) {
+
+  // for now just strictly hard code objects for each robot.....
+  // this param is only used in dummy behavior, so it does not affect THEN AND OR nodes!
+
+  // define for pr2
+  if(robot == 0) {
+    // Cup
+    if( node == 3 ){
+      return 1.0;
+    }
+    // Sugar
+    if( node == 5 ){
+      return 1.0;
+    }
+    // Tea
+    if( node == 6 ){
+      return 1.0;
+    }
+    // Left_Bread
+    if( node == 8 ){
+      return 0.0;
+    }
+    // Meat
+    if( node == 10 ){
+      return 0.0;
+    }
+    // Lettuce
+    if( node == 11 ){
+      return 0.0;
+    }
+    // Right_Bread
+    if( node == 12 ){
+      return 0.0;
+    }
+  }
+
+  //define for baxter
+  else if(robot == 1) {
+    // Cup
+    if( node == 16 ){
+      return 0.0;
+    }
+    // Sugar
+    if( node == 18 ){
+      return 0.0;
+    }
+    // Tea
+    if( node == 19 ){
+      return 0.0;
+    }
+    // Left_Bread
+    if( node == 21 ){
+      return 1.0;
+    }
+    // Meat
+    if( node == 23 ){
+      return 1.0;
+    }
+    // Lettuce
+    if( node == 24 ){
+      return 1.0;
+    }
+    // Right_Bread
+    if( node == 25 ){
+      return 1.0;
+    }
+  }
+  
+}
+
+//---------------
+
+
 Node::Node() {
   state_.active = false;
   state_.done = false;
@@ -90,16 +166,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.highest_potential = 0.0;
   thread_running_ = false;
 
-  // state_.parent_type = parent.mask.type;
-  // std::smatch m;
-  // std::regex e ("_\\d_");
-  // std:: string s = parent.topic;
-  // while (std::regex_search (s,m,e)) {
-  //   for (auto x:m) std::cout << x << " ";
-  //   std::cout << std::endl;
-  //   s = m.suffix().str();
-  // }
-  // state_.parent_type = s[1];
+  // parse out parent type
   int i = 0;
   std::string type;
   while(parent.topic[i] != '_'){
@@ -109,6 +176,11 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   type = parent.topic[i];
   state_.parent_type = std::stoi(type, nullptr,10);
   ROS_INFO("PARENT TYPE %d", state_.parent_type);
+
+  // get suitability of node based on robot
+  // NOTE: this param is only used in dummy/place behavior, so it does not affect THEN AND OR nodes!
+  state_.suitability = getSuitability(state_.owner.node, state_.owner.robot);   
+
 
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());
