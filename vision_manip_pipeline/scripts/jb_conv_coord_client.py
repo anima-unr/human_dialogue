@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+import sys
 from vision_manip_pipeline.srv import Conv2DTo3D
 
 def conv_coord_client(x,y):
