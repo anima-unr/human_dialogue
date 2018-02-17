@@ -115,28 +115,16 @@ def getCornersFromParam(wkspace):
     # back left bottom
     corners.append([back,left,bottom])
 
-
     # back left top
     corners.append([back,left,top])
 
 
-    # old
-    # corners.append([0.515591, 0.257321, 0.997])
-    
+    # corners.append([0.307183505379,-0.465995425392,1.291])
+    # corners.append([0.264822205584,-0.175206312169,1.254])
+    # corners.append([-0.309651188697,0.465995425392,1.291])
+    corners.append([0.401386942974,-0.190628319693,1.373]) #bowl
+    corners.append([-0.244667076683,0.0554010366368,1.249])
 
-    # corners.append([0.0982614480521, -0.23979449481, 0.85]) # cup
-    
-    # corners.append([-0.0588728670044,-0.0258402209072,1.301]) # bowl
-
-    # corners.append([0.080164032337,0.31669333881,1.068]) # spoon
-
-    # corners.append([-1.41706411813,-0.339267883203,3.952]) # chair
-
-    # corners.append([0.05820190337112, 0.2975956111193, 0.838290326165]) # grasp surface    
-
-    # corners.append([0.0170768872153,-0.169192481415,0.887]) # bottle
-
-    corners.append([-0.00122859672312,0.716963384772,1.512]) # bottle
 
     print corners
     return corners
@@ -144,17 +132,25 @@ def getCornersFromParam(wkspace):
 
 def pub_cube(pub, pos, idx):
     cube = Marker()
-    cube.header.frame_id = "/camera_depth_optical_frame"
+    # TODO_PR2_TOPIC_CHANGE
+    # cube.header.frame_id = "/camera_depth_optical_frame"
+    cube.header.frame_id = "/head_mount_kinect_rgb_optical_frame"
     cube.header.stamp = rospy.Time.now()
     cube.type = cube.CUBE
     cube.action = cube.ADD
     cube.pose.position.x = pos[0]
     cube.pose.position.y = pos[1]
     cube.pose.position.z = pos[2]
+    # cube.pose.orientation.w = 0.23976107507766312
+    # cube.pose.orientation.x = 0.664972413229808
+    # cube.pose.orientation.y = 0.2133168498225983
+    # cube.pose.orientation.z = -0.1420993551558034
     cube.pose.orientation.w = 1
     cube.pose.orientation.x = 0
     cube.pose.orientation.y = 0
     cube.pose.orientation.z = 0
+
+
     cube.ns = 'cube'
     cube.scale.x = 0.1
     cube.scale.y = 0.1
