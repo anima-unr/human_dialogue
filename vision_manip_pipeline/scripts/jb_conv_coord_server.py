@@ -170,8 +170,8 @@ def depth(x,y):
     global img
 
     # TODO_PR2_TOPIC_CHANGE
-    # rospy.Subscriber("/camera/depth_registered/image_raw", Image, callback)
-    rospy.Subscriber("/kinect_head/depth_registered/image_raw", Image, callback)
+    rospy.Subscriber("/camera/depth_registered/image_raw", Image, callback)
+    # rospy.Subscriber("/kinect_head/depth_registered/image_raw", Image, callback)
 
     while img == []:
         pass
@@ -226,16 +226,16 @@ def convert2Dto3D(y_d,x_d):
     
     # from camera_info topic P matrix
     # FROM THE OFFSIDE KINECT
-    # fx_d = 513.3190307617188
-    # fy_d = 515.5796508789062
-    # cx_d = 315.2550600044451
-    # cy_d = 245.1962086034237
+    fx_d = 513.3190307617188
+    fy_d = 515.5796508789062
+    cx_d = 315.2550600044451
+    cy_d = 245.1962086034237
 
-    #TODO_PR2_TOPIC_CHANGE
-    fx_d = 523.1627536752652
-    fy_d = 524.3198532120056
-    cx_d = 323.4825472948233
-    cy_d = 257.7431037652384
+    # #TODO_PR2_TOPIC_CHANGE
+    # fx_d = 523.1627536752652
+    # fy_d = 524.3198532120056
+    # cx_d = 323.4825472948233
+    # cy_d = 257.7431037652384
 
     # from: http://nicolas.burrus.name/index.php/Research/KinectCalibration
     x = (x_d - cx_d) * depth(x_d,y_d) / fx_d

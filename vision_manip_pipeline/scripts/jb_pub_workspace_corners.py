@@ -118,14 +118,6 @@ def getCornersFromParam(wkspace):
     # back left top
     corners.append([back,left,top])
 
-
-    # corners.append([0.307183505379,-0.465995425392,1.291])
-    # corners.append([0.264822205584,-0.175206312169,1.254])
-    # corners.append([-0.309651188697,0.465995425392,1.291])
-    corners.append([0.401386942974,-0.190628319693,1.373]) #bowl
-    corners.append([-0.244667076683,0.0554010366368,1.249])
-
-
     print corners
     return corners
 
@@ -133,8 +125,8 @@ def getCornersFromParam(wkspace):
 def pub_cube(pub, pos, idx):
     cube = Marker()
     # TODO_PR2_TOPIC_CHANGE
-    # cube.header.frame_id = "/camera_depth_optical_frame"
-    cube.header.frame_id = "/head_mount_kinect_rgb_optical_frame"
+    cube.header.frame_id = "/camera_depth_optical_frame"
+    # cube.header.frame_id = "/head_mount_kinect_rgb_optical_frame"
     cube.header.stamp = rospy.Time.now()
     cube.type = cube.CUBE
     cube.action = cube.ADD

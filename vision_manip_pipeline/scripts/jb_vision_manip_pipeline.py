@@ -7,10 +7,11 @@ import tf
 from jb_yolo_obj_det_client import *
 from jb_get_grasp_client import *
 from jb_conv_coord_client import *
+from jb_pub_workspace_corners_client import *
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from gpd.msg import GraspConfig
-
+import roslaunch
 
 import moveit_commander
 import moveit_msgs.msg
@@ -132,7 +133,10 @@ def main(obj_name):
 
     # Create a ROS node.
     rospy.init_node('vision_manip')
-
+    # rospy.on_shutdown(self.shutdown)
+    uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+    roslaunch.configure_logging(uuid)
+    launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/janelle/onr_ws/src/gpd/launch/jb_tutorial1.launch"])
 
     # rosservice call with object to find location of in YOLO
         # So get the bounding box of the image and 
@@ -148,24 +152,52 @@ def main(obj_name):
     resp3 = conv_coord_client(x,y)    
     print resp3
 
+    #  first set the param for the workspace based on the response?!?
+    eps = 0.1
+    cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
+    # cube = [1,1.1,1,1.1,1,1.1]
+    print "cube to search for graps:"
+    print cube
+    rospy.set_param('/detect_grasps/workspace', cube)
+    rospy.set_param('/detect_grasps/workspace_grasps', cube)
+    # v = rospy.get_param('/detect_grasps/workspace')
+    # print v
+    # print "\n\n"
+
+    # visualize the box.......
+    pub_workspace_corners_client()
+
+    # relaunch the grasp stuffsssss
+    launch.start()
+
     # # rosservice call to gpd with the calculated grasping window in the 
     # # point cloud to get the top grasp 
     resp2 = get_grasp_client(resp3.newX, resp3.newY, resp3.newZ)
     print resp2
+
+    launch.shutdown()
+
+    # IF GRASP NOT FOUND, return 0?
+    if resp2 == None:
+    # if resp2.grasp.score == 0:
+        print "Error: No grasp found, will now return"
+        return
 
     # # convert the top grasp format to a move-it useable format
     # # then use moveit to move the arm of the Baxter/PR2? in rviz/eal world?
     ori = rotationQuat(resp2.grasp.axis, resp2.grasp.binormal, resp2.grasp.approach);
     print ori
 
-    # Transform point into correct PR2 frame for motion planning etc...
-    newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori)
+    # # Transform point into correct PR2 frame for motion planning etc...
+    # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori)
 
-    # also, need to make sure overall pipline is returning the grasp?
-        # false, only need to rerutn the callced pos and ori!!!
+    # # also, need to make sure overall pipline is returning the grasp?
+    #     # false, only need to rerutn the callced pos and ori!!!
+    #       # ALSO NEED TO RETURN THE GOODNESS OF THE GRASP!?!? -> OR MAKE A SEPARATE PIPELINE 
+    #       # JUST FOR THAT PART TO UPDATE ACTIVATION POTENTIAL?!?!
 
-    # TODO: use moveit to get this ori!
-    moveArm(newPnt)
+    # # TODO: use moveit to get this ori!
+    # moveArm(newPnt)
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
