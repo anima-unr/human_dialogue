@@ -179,6 +179,14 @@ def depth(x,y):
     print x,y
     # print img[y][x]
     # depth = img[y][x]/1000
+    #  TODO: Fix this logic so it checks a square around the x,y instead? 
+    #       but might get overwritten if we use the C version of this server!!! 
+    #       This shouldn't matter becuase the math will change completely in the C version!
+    while img[x][y] == 0:
+        x = x+1;
+        y = y-1;
+        # print img[x][y]
+    print "modified x,y, since image point was 0: {},{}".format(x,y)
     depth = img[x][y]/1000
 
     # print img

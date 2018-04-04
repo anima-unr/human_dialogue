@@ -63,6 +63,7 @@ find_package(catkin REQUIRED COMPONENTS
    GetObjLoc.srv
    GetGrasp.srv
    Conv2DTo3D.srv
+   PubWorkspace.srv
  )
 
 ## Generate actions in the 'action' folder

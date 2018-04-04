@@ -4,12 +4,12 @@ import sys
 import rospy
 from vision_manip_pipeline.srv import PubWorkspace
 
-def pub_workspace_corners_client():
+def pub_workspace_corners_client(pos, ori):
     rospy.wait_for_service('pub_workspace_corners')
     try:
         pub_workspace_corners = rospy.ServiceProxy('pub_workspace_corners', PubWorkspace)
-        pub_workspace_corners()
-        return 
+        resp = pub_workspace_corners(pos, ori)
+        return resp
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 

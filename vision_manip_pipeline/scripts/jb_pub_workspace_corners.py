@@ -133,10 +133,10 @@ def pub_cube(pub, pos, idx):
     cube.pose.position.x = pos[0]
     cube.pose.position.y = pos[1]
     cube.pose.position.z = pos[2]
-    # cube.pose.orientation.w = 0.23976107507766312
-    # cube.pose.orientation.x = 0.664972413229808
-    # cube.pose.orientation.y = 0.2133168498225983
-    # cube.pose.orientation.z = -0.1420993551558034
+    # cube.pose.orientation.w = -0.24316289018035953
+    # cube.pose.orientation.x =  -0.07259004329567947
+    # cube.pose.orientation.y = 0.1530028298082824
+    # cube.pose.orientation.z =  0.6767718572399328
     cube.pose.orientation.w = 1
     cube.pose.orientation.x = 0
     cube.pose.orientation.y = 0

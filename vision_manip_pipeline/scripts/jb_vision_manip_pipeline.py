@@ -147,25 +147,29 @@ def main(obj_name):
     y = (resp.ymax - resp.ymin)/2 + resp.ymin
     print x,y
 
+    # if object not detected, then exit?
+    if x == 0 and y == 0:
+        print "Error: Object not detected, try again!"
+        return 
+
     # calculate the transform of the point in the raw image to
     # the grasping window in the depth point cloud!
     resp3 = conv_coord_client(x,y)    
     print resp3
 
     #  first set the param for the workspace based on the response?!?
-    eps = 0.1
+    eps = 0.5
     cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
     # cube = [1,1.1,1,1.1,1,1.1]
     print "cube to search for graps:"
     print cube
+    if rospy.has_param("/detect_grasps/"):
+        rospy.delete_param("/detect_grasps/")
     rospy.set_param('/detect_grasps/workspace', cube)
     rospy.set_param('/detect_grasps/workspace_grasps', cube)
-    # v = rospy.get_param('/detect_grasps/workspace')
+    # v = rospy.get_param('/detect_grasps/clustered_grasps')
     # print v
     # print "\n\n"
-
-    # visualize the box.......
-    pub_workspace_corners_client()
 
     # relaunch the grasp stuffsssss
     launch.start()
@@ -187,6 +191,13 @@ def main(obj_name):
     # # then use moveit to move the arm of the Baxter/PR2? in rviz/eal world?
     ori = rotationQuat(resp2.grasp.axis, resp2.grasp.binormal, resp2.grasp.approach);
     print ori
+
+    # visualize the workspace and grasp.......
+    pos = [resp2.grasp.surface.x, resp2.grasp.surface.y, resp2.grasp.surface.z]
+    tilt = [ori['w'], ori['x'], ori['y'], ori['z']]
+    print pos
+    print tilt
+    pub_workspace_corners_client(pos,tilt)
 
     # # Transform point into correct PR2 frame for motion planning etc...
     # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori)

@@ -15,19 +15,21 @@ def callback(msg):
 
 # Handle of service
 def handle_get_grasp(req):
-    # global grasps
+    # TODO VERIFY: Dave Suggestion! -- make this global, since subscriber now moved below, this should be getting the right stuff since sub should already have new data....?
+    global grasps
 
     # set a timer here to keep track of wait time....?
     start = rospy.get_time()
     lapse = 0
-    threshold = 10
+    threshold = 2
 
     # keep waiting until get grasp with close location......
     notFound = True
     while notFound:
 
-        # Subscribe to the ROS topic that contains the grasps.
-        sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
+        # TODO VERIFY: Dave Suggestion! -- moved subscriber to main!
+        # # Subscribe to the ROS topic that contains the grasps.
+        # sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
         print req
 
         cube = rospy.get_param('/detect_grasps/workspace')
@@ -36,7 +38,6 @@ def handle_get_grasp(req):
         top_grasp = GraspConfig()
         top_grasp.score.data = 0
         while grasps == []:
-            # print '.'
             current = rospy.get_time()
             lapse = current - start
             print lapse
@@ -44,14 +45,11 @@ def handle_get_grasp(req):
                 print "ERROR: Took too long to get grasp, will now force exit."
                 return top_grasp
 
-        print grasps
-
         # search for a grasp close to the object location    
         # rospy.loginfo('Top grasp was:')
         top_grasp = GraspConfig()
         top_grasp.score.data = 0
         print top_grasp
-        # eps = 0.2
         for grasp in grasps:
 
             # not tested yet, but if can't launch inside from roslaunch api becuase can't set parms in launch file, then test something like this to get the graps at the specified location!
@@ -67,11 +65,18 @@ def handle_get_grasp(req):
             print "ERRRORRRRR NO CLOSE GRASP FOUND!!!!!! Trying again! \n\n\n"
             # grasps = []
             top_grasp = None
-            rospy.sleep(0.1)
+            # rospy.sleep(0.1)
+            current = rospy.get_time()
+            lapse = current - start
+            print lapse
+            if lapse > threshold:
+                print "ERROR: Took too long to get CLOSE grasp, will now force exit."
+                return top_grasp
+
 
     # grasp was found, return it!
     print "Returning grasp with highest score [%s]"%(top_grasp)
-    # grasps = [] # need to clear this before exiting, but can't becuase used before assigned
+    grasps = [] # need to clear this before exiting, but can't becuase used before assigned
     return top_grasp
 
 
@@ -79,6 +84,10 @@ def handle_get_grasp(req):
 def get_grasp_server():
     # Create a ROS node.
     rospy.init_node('get_grasp_server')
+
+    # TODO VERIFY: Dave Suggestion!
+    # Subscribe to the ROS topic that contains the grasps.
+    sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
 
     # Create a service
     s = rospy.Service('get_grasp', GetGrasp, handle_get_grasp)
