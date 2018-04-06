@@ -19,7 +19,7 @@ def handle_pub_workspace_corners(req):
     print 'publishing cube: {}'.format(workspace)
         # rate.sleep()
 
-    pub_cube(pub, req.pos, req.ori)
+    pub_grasp(pub, req.pos, req.ori)
     print 'publishing grasp: {}'.format( req.pos)
 
     return []
@@ -31,7 +31,7 @@ def pub_workspace_corners_server():
     rospy.spin()
 
 
-def pub_cube(pub, pos, ori):
+def pub_grasp(pub, pos, ori):
 
     idx = 1000
 
@@ -52,11 +52,11 @@ def pub_cube(pub, pos, ori):
  
     cube.ns = 'cube'
     cube.scale.x = 0.1
-    cube.scale.y = 0.1
-    cube.scale.z = 0.1
+    cube.scale.y = 0.05
+    cube.scale.z = 0.02
     cube.color.b = 1.0
     cube.color.r = float(idx)/15
-    cube.color.a = 1.0
+    cube.color.a = 0.5
     cube.id = idx
     rospy.loginfo('\nCube Pos:\n\tx: {}\ty: {}\tz: {}'.format(cube.pose.position.x, cube.pose.position.y, cube.pose.position.z))
     rospy.loginfo('\nCube Ori:\n\tx: {}\ty: {}\tz: {}'.format(cube.pose.orientation.x, cube.pose.orientation.y, cube.pose.orientation.z))

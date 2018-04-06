@@ -4,6 +4,30 @@ project(vision_manip_pipeline)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
+# Find CUDA
+FIND_PACKAGE(CUDA)
+if (CUDA_FOUND)
+  find_package(CUDA REQUIRED)
+  message(STATUS "CUDA Version: ${CUDA_VERSION_STRINGS}")
+  message(STATUS "CUDA Libararies: ${CUDA_LIBRARIES}")
+  set(
+    CUDA_NVCC_FLAGS
+    ${CUDA_NVCC_FLAGS};-std=c++11;
+    -O3
+#    -gencode arch=compute_20,code=[sm_20,sm_21]
+#    -gencode arch=compute_30,code=sm_30
+#    -gencode arch=compute_35,code=sm_35
+#    -gencode arch=compute_50,code=[sm_50,compute_50]
+    -gencode arch=compute_52,code=[sm_52,compute_52]
+#    -gencode arch=compute_61,code=sm_61
+#    -gencode arch=compute_62,code=sm_62
+  )
+  add_definitions(-DGPU)
+else()
+  list(APPEND LIBRARIES "m")
+endif()
+
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -15,6 +39,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   sensor_msgs
+  actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -143,6 +168,8 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/vision_manip_pipeline_node.cpp)
 
+
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -153,10 +180,13 @@ include_directories(
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
 
 #############
 ## Install ##
@@ -193,6 +223,10 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+
+
+
+
 #############
 ## Testing ##
 #############
@@ -205,3 +239,36 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+#############
+## STUFF JANELLE ADDED ##
+#############
+
+
+if (CUDA_FOUND)
+  link_directories(
+    /usr/local/cuda/lib64
+  )
+endif()
+
+add_executable(jb_conv_coord_server src/jb_conv_coord_server.cpp)
+target_link_libraries(jb_conv_coord_server ${catkin_LIBRARIES}
+  cuda
+  cudart
+  cublas
+  curand
+  )
+add_dependencies(jb_conv_coord_server ${PROJECT_NAME}_generate_messages_cpp)
+
+add_executable(jb_conv_coord_client src/jb_conv_coord_client.cpp)
+target_link_libraries(jb_conv_coord_client ${catkin_LIBRARIES}
+  cuda
+  cudart
+  cublas
+  curand
+  )
+add_dependencies(jb_conv_coord_client ${PROJECT_NAME}_generate_messages_cpp)
+
+
+
