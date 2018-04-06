@@ -158,7 +158,7 @@ def main(obj_name):
     print resp3
 
     #  first set the param for the workspace based on the response?!?
-    eps = 0.5
+    eps = 0.1
     cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
     # cube = [1,1.1,1,1.1,1,1.1]
     print "cube to search for graps:"
@@ -202,12 +202,7 @@ def main(obj_name):
     # # Transform point into correct PR2 frame for motion planning etc...
     # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori)
 
-    # # also, need to make sure overall pipline is returning the grasp?
-    #     # false, only need to rerutn the callced pos and ori!!!
-    #       # ALSO NEED TO RETURN THE GOODNESS OF THE GRASP!?!? -> OR MAKE A SEPARATE PIPELINE 
-    #       # JUST FOR THAT PART TO UPDATE ACTIVATION POTENTIAL?!?!
-
-    # # TODO: use moveit to get this ori!
+    # # TODO: use moveit to plan to this position and orientation!
     # moveArm(newPnt)
 
 # ==================== MAIN ====================
