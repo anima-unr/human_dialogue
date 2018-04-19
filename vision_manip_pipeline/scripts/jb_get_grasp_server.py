@@ -11,25 +11,21 @@ grasps = []
 def callback(msg):
     global grasps
     grasps = msg.grasps
-    # print grasps
+    print grasps
 
 # Handle of service
 def handle_get_grasp(req):
-    # TODO VERIFY: Dave Suggestion! -- make this global, since subscriber now moved below, this should be getting the right stuff since sub should already have new data....?
     global grasps
 
     # set a timer here to keep track of wait time....?
     start = rospy.get_time()
     lapse = 0
-    threshold = 2
+    threshold = 60
 
     # keep waiting until get grasp with close location......
     notFound = True
     while notFound:
 
-        # TODO VERIFY: Dave Suggestion! -- moved subscriber to main!
-        # # Subscribe to the ROS topic that contains the grasps.
-        # sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
         print req
 
         cube = rospy.get_param('/detect_grasps/workspace')
@@ -40,7 +36,8 @@ def handle_get_grasp(req):
         while grasps == []:
             current = rospy.get_time()
             lapse = current - start
-            print lapse
+            if lapse % 1 == 0:
+                print lapse
             if lapse > threshold:
                 print "ERROR: Took too long to get grasp, will now force exit."
                 return top_grasp
@@ -85,16 +82,20 @@ def get_grasp_server():
     # Create a ROS node.
     rospy.init_node('get_grasp_server')
 
-    # TODO VERIFY: Dave Suggestion!
     # Subscribe to the ROS topic that contains the grasps.
     sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
 
     # Create a service
     s = rospy.Service('get_grasp', GetGrasp, handle_get_grasp)
 
-    # spin service   
-    print "Ready to get top grasp!"
-    rospy.spin()
+    # spin service 
+    rate = rospy.Rate(0.5)  
+    while not rospy.is_shutdown():
+        print "Ready to get top grasp!"
+        sub.unregister()
+        # pot hole with a roadsign - TODO
+        sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
+        rate.sleep()
 
 #------------------------------------------------
 if __name__ == "__main__":

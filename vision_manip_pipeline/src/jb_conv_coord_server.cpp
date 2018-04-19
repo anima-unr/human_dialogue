@@ -46,24 +46,31 @@ bool convert2Dto3D(const sensor_msgs::PointCloud2 pCloud,
   bool okay = false;
   int count = 0;
   int offset = 1;
+
+  ROS_INFO("TEST");  
+  
   while( !okay ) {
     
     //-------------
     // get new Z from new x and y:
     //-------------
-
+    ROS_INFO("\tTEST 1 ");  
+  
     // Convert from u (column / width), v (row/height) to position in array
     // where X,Y,Z data starts
     int arrayPosition = y*pCloud.row_step + x*pCloud.point_step;
+    ROS_INFO("\tTEST 2 pos:%d row:%d point:%d", arrayPosition,pCloud.row_step,pCloud.point_step);  
 
     // compute position in array where x,y,z data start
     int arrayPosX = arrayPosition + pCloud.fields[0].offset; // X has an offset of 0
     int arrayPosY = arrayPosition + pCloud.fields[1].offset; // Y has an offset of 4
     int arrayPosZ = arrayPosition + pCloud.fields[2].offset; // Z has an offset of 8
+    ROS_INFO("\tTEST 3 ");  
 
     memcpy(&X, &pCloud.data[arrayPosX], sizeof(float));
     memcpy(&Y, &pCloud.data[arrayPosY], sizeof(float));
     memcpy(&Z, &pCloud.data[arrayPosZ], sizeof(float));
+    ROS_INFO("\tTEST 4 ");  
 
     //-------------
     // test if new x,y,z in bounds:
@@ -73,8 +80,6 @@ bool convert2Dto3D(const sensor_msgs::PointCloud2 pCloud,
       okay = true;
     }
     else {
-      // TODO: Fix this math here!!! make it spiral instead!
-
       std::cout << "count: " << count << " count mod 8: " << count%8 << std::endl;
 
       if( count % 8 == 0 ){
@@ -138,7 +143,10 @@ int main(int argc, char** argv){
   ros::NodeHandle n;
 
   // subscribe to kinect point cloud
-  ros::Subscriber sub = n.subscribe("/camera/depth_registered/points", 1000, callback);
+  // TODO_PR2_TOPIC_CHANGE
+  // ros::Subscriber sub = n.subscribe("/camera/depth_registered/points", 1000, callback);
+  // ros::Subscriber sub = n.subscribe("/kinect_head/depth_registered/points", 1000, callback);
+  ros::Subscriber sub = n.subscribe("/local/depth_registered/points", 1000, callback);
   ros::ServiceServer service = n.advertiseService("conv_coord", handle_conv_coord);
 
   ROS_INFO("Ready to convert points.");
