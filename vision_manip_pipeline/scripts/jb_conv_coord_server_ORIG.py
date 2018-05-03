@@ -15,8 +15,8 @@ def depth(x,y):
 
     # TODO_PR2_TOPIC_CHANGE
     # rospy.init_node("depth_convert")
-    # rospy.Subscriber("/camera/depth_registered/image_raw", Image, callback)
-    rospy.Subscriber("/kinect_head/depth_registered/image_raw", Image, callback)
+    rospy.Subscriber("/camera/depth_registered/image_raw", Image, callback)
+    # rospy.Subscriber("/kinect_head/depth_registered/image_raw", Image, callback)
 
     while img == []:
         pass

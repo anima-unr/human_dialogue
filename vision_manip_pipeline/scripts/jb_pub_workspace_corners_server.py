@@ -6,9 +6,10 @@ from gpd.msg import GraspConfig
 from vision_manip_pipeline.srv import PubWorkspace
 from jb_pub_workspace_corners import *
 
-def handle_pub_workspace_corners(req):
+pub = []
 
-    pub = rospy.Publisher("visualization_marker", Marker, queue_size=10) 
+def handle_pub_workspace_corners(req):
+    global pub
 
     workspace = rospy.get_param("/detect_grasps/workspace")
     workspace_grasps = rospy.get_param("/detect_grasps/workspace_grasps")
@@ -25,7 +26,10 @@ def handle_pub_workspace_corners(req):
     return []
 
 def pub_workspace_corners_server():
+    global pub
+
     rospy.init_node('pub_workspace_corners_server')
+    pub = rospy.Publisher("visualization_marker", Marker, queue_size=10) 
     s = rospy.Service('pub_workspace_corners', PubWorkspace, handle_pub_workspace_corners)
     print "Ready to publish workspace corners."
     rospy.spin()
@@ -37,8 +41,9 @@ def pub_grasp(pub, pos, ori):
 
     cube = Marker()
     # TODO_PR2_TOPIC_CHANGE
-    cube.header.frame_id = "/camera_depth_optical_frame"
+    # cube.header.frame_id = "/camera_depth_optical_frame"
     # cube.header.frame_id = "/head_mount_kinect_rgb_optical_frame"
+    cube.header.frame_id = "/test"
     cube.header.stamp = rospy.Time.now()
     cube.type = cube.CUBE
     cube.action = cube.ADD

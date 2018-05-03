@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(vision_manip_pipeline)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 # Find CUDA
 FIND_PACKAGE(CUDA)
@@ -40,6 +40,12 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   sensor_msgs
   actionlib_msgs
+  tf
+  pcl_ros
+  moveit_core 
+  moveit_ros_planning 
+  moveit_ros_planning_interface 
+  #moveit_visual_tools
 )
 
 ## System dependencies are found with CMake's conventions
@@ -269,6 +275,22 @@ target_link_libraries(jb_conv_coord_client ${catkin_LIBRARIES}
   curand
   )
 add_dependencies(jb_conv_coord_client ${PROJECT_NAME}_generate_messages_cpp)
+
+add_executable(orthoProj src/orthographicProjectionOfPointCloud.cpp)
+target_link_libraries(orthoProj ${catkin_LIBRARIES}  )
+add_dependencies(orthoProj ${PROJECT_NAME}_generate_messages_cpp)
+
+
+
+# add_executable(project_node src/project.cc)
+# add_dependencies(project_node ${catkin_LIBRARIES}  )
+# target_link_libraries(project_node ${catkin_LIBRARIES} )
+
+
+add_executable(jb_vision_manip_pipeline src/jb_vision_manip_pipeline.cpp)
+add_dependencies(jb_vision_manip_pipeline ${catkin_LIBRARIES}  )
+target_link_libraries(jb_vision_manip_pipeline ${catkin_LIBRARIES} )
+
 
 
 

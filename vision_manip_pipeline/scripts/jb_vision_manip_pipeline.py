@@ -18,6 +18,7 @@ import moveit_msgs.msg
 import roslib
 
 from geometry_msgs.msg import (
+    PointStamped,
     PoseStamped,
     Pose,
     Point,
@@ -27,16 +28,16 @@ from geometry_msgs.msg import (
 
 
 # ==========================================================
-def getPoseTrans(x,y,z, ori):
+def getPoseTrans(x,y,z, ori, old_frame, new_frame):
 
     # get the tf between kinect frame and base?
     now = rospy.Time(0)
     t = tf.TransformListener(True, rospy.Duration(10.0))
-    t.waitForTransform("/torso_lift_link", "/head_mount_kinect_rgb_optical_frame", now, rospy.Duration(3.0));
+    t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
     # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
 
     pnt = PoseStamped()
-    pnt.header.frame_id = "head_mount_kinect_rgb_optical_frame"
+    pnt.header.frame_id = old_frame
     pnt.header.stamp = now
     pnt.pose.position.x = x
     pnt.pose.position.y = y
@@ -46,13 +47,48 @@ def getPoseTrans(x,y,z, ori):
     pnt.pose.orientation.z = ori['z']
     pnt.pose.orientation.w = ori['w']
 
-    newPnt = t.transformPose("/torso_lift_link", pnt)
+    newPnt = t.transformPose(new_frame, pnt)
 
     print "\nTRANSFORM:"
     print newPnt
     return newPnt
 
+# ==========================================================
+def transPoint(x, y, z, old_frame, new_frame):
 
+    # get the tf between kinect frame and base?
+    now = rospy.Time(0)
+    t = tf.TransformListener(True, rospy.Duration(10.0))
+    t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
+    # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
+
+    pnt = PointStamped()
+    pnt.header.frame_id = old_frame
+    pnt.header.stamp = now
+    pnt.point.x = x
+    pnt.point.y = y
+    pnt.point.z = z
+
+    newPnt = t.transformPoint(new_frame, pnt)
+
+    print "\nTRANSFORM:"
+    print newPnt
+    return newPnt
+
+# ==========================================================
+# def transPointCloud(cloud, old_frame, new_frame):
+
+#     # get the tf between kinect frame and base?
+#     now = rospy.Time(0)
+#     t = tf.TransformListener(True, rospy.Duration(10.0))
+#     t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
+#     # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
+
+#     newCloud = t.transformPoint(new_frame, cloud)
+
+#     print "\nTRANSFORM:"
+#     print newCloud
+#     return newCloud
 
 # ==========================================================
 def moveArm(newPnt):
@@ -81,9 +117,9 @@ def moveArm(newPnt):
     print("\tPlanning...")
     plan1 = limb.plan()
     rospy.sleep(10)
-    print("\tExecuting...")
-    limb.go(wait=True)
-    rospy.sleep(5)
+    # print("\tExecuting...")
+    # limb.go(wait=True)
+    # rospy.sleep(5)
 
 # ==========================================================
 
@@ -157,19 +193,40 @@ def main(obj_name):
     resp3 = conv_coord_client(x,y)    
     print resp3
 
+    # TODO: JB
+    # transform the point from kinect frame to the orthographic frame (static tf projection)
+    # TODO_PR2_TOPIC_CHANGE!
+    # newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/head_mount_kinect_rgb_optical_frame", "/test")
+    newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/camera_rgb_optical_frame", "/test")
+
+    # TODO: JB
+    # generate the cube from the transformed point instead
     #  first set the param for the workspace based on the response?!?
     eps = 0.1
-    cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
+    cube = [newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - eps, newPnt.point.z + eps]
+    cube = [np.asscalar(i) for i in cube]
     # cube = [1,1.1,1,1.1,1,1.1]
     print "cube to search for graps:"
     print cube
-    if rospy.has_param("/detect_grasps/"):
-        rospy.delete_param("/detect_grasps/")
+
+    temp_ori = [0,0,0,0]
+    temp_pos = [0,0,0]
+    pub_workspace_corners_client(temp_pos,temp_ori)
+
+
+    # if rospy.has_param("/detect_grasps/"):
+        # rospy.delete_param("/detect_grasps/")
     rospy.set_param('/detect_grasps/workspace', cube)
     rospy.set_param('/detect_grasps/workspace_grasps', cube)
     # v = rospy.get_param('/detect_grasps/clustered_grasps')
     # print v
     # print "\n\n"
+
+    # TODO: JB
+    # transform the point cloud to the orthographic frame (static tf projection) ->  will probs need to change frames in launch to get cloud in correct frame!!!   
+    # NOOOOOO! Instead just subscribe to the new point cloud topic which is under "/local/depth_registered/trans_points"
+    #          and is wrt a test frame that is set in .....WHERE THE HECK DID I SET THIS?!?
+    # Actually, don't subscribe at all, modify the point topic in jb)tutorial1.launch etc!
 
     # relaunch the grasp stuffsssss
     launch.start()
@@ -199,11 +256,15 @@ def main(obj_name):
     print tilt
     pub_workspace_corners_client(pos,tilt)
 
-    # # Transform point into correct PR2 frame for motion planning etc...
-    # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori)
+    # TODO: JB
+    #  WILL need to transform from other frame here nowwwwwww!!!!!
+    # Transform point into correct PR2 frame for motion planning etc...
+    # TODO_PR2_TOPIC_CHANGE!
+    # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/torso_lift_link")
+    newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/camera_link")
 
-    # # TODO: use moveit to plan to this position and orientation!
-    # moveArm(newPnt)
+    # TODO: use moveit to plan to this position and orientation!
+    moveArm(newPnt)
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
