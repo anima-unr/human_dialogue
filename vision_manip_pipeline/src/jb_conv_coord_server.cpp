@@ -146,8 +146,8 @@ int main(int argc, char** argv){
   // TODO_PR2_TOPIC_CHANGE
   // ros::Subscriber sub = n.subscribe("/camera/depth_registered/points", 1000, callback);
   // ros::Subscriber sub = n.subscribe("/kinect_head/depth_registered/points", 1000, callback);
-  // ros::Subscriber sub = n.subscribe("/local/depth_registered/points", 1000, callback);
-  ros::Subscriber sub = n.subscribe("/local/depth_registered/trans_points", 1000, callback);
+  ros::Subscriber sub = n.subscribe("/local/depth_registered/points", 1000, callback);
+  // ros::Subscriber sub = n.subscribe("/local/depth_registered/trans_points", 1000, callback);
   ros::ServiceServer service = n.advertiseService("conv_coord", handle_conv_coord);
 
   ROS_INFO("Ready to convert points.");

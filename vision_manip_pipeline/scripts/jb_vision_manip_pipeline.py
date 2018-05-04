@@ -172,7 +172,7 @@ def main(obj_name):
     # rospy.on_shutdown(self.shutdown)
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid)
-    launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/janelle/onr_ws/src/gpd/launch/jb_tutorial1.launch"])
+    launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/janelle/onr_ws/src/vision_manip_pipeline/launch/jb_tutorial1.launch"])
 
     # rosservice call with object to find location of in YOLO
         # So get the bounding box of the image and 
@@ -203,16 +203,12 @@ def main(obj_name):
     # generate the cube from the transformed point instead
     #  first set the param for the workspace based on the response?!?
     eps = 0.1
+    # cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
     cube = [newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - eps, newPnt.point.z + eps]
+    print cube
     cube = [np.asscalar(i) for i in cube]
-    # cube = [1,1.1,1,1.1,1,1.1]
     print "cube to search for graps:"
     print cube
-
-    temp_ori = [0,0,0,0]
-    temp_pos = [0,0,0]
-    pub_workspace_corners_client(temp_pos,temp_ori)
-
 
     # if rospy.has_param("/detect_grasps/"):
         # rospy.delete_param("/detect_grasps/")
@@ -222,49 +218,54 @@ def main(obj_name):
     # print v
     # print "\n\n"
 
+    temp_ori = [0,0,0,0]
+    temp_pos = [0,0,0]
+    pub_workspace_corners_client(temp_pos,temp_ori)
+
+
     # TODO: JB
     # transform the point cloud to the orthographic frame (static tf projection) ->  will probs need to change frames in launch to get cloud in correct frame!!!   
     # NOOOOOO! Instead just subscribe to the new point cloud topic which is under "/local/depth_registered/trans_points"
     #          and is wrt a test frame that is set in .....WHERE THE HECK DID I SET THIS?!?
     # Actually, don't subscribe at all, modify the point topic in jb)tutorial1.launch etc!
 
-    # relaunch the grasp stuffsssss
-    launch.start()
+    # # relaunch the grasp stuffsssss
+    # launch.start()
 
-    # # rosservice call to gpd with the calculated grasping window in the 
-    # # point cloud to get the top grasp 
-    resp2 = get_grasp_client(resp3.newX, resp3.newY, resp3.newZ)
-    print resp2
+    # # # rosservice call to gpd with the calculated grasping window in the 
+    # # # point cloud to get the top grasp 
+    # resp2 = get_grasp_client(resp3.newX, resp3.newY, resp3.newZ)
+    # print resp2
 
-    launch.shutdown()
+    # launch.shutdown()
 
-    # IF GRASP NOT FOUND, return 0?
-    if resp2 == None:
-    # if resp2.grasp.score == 0:
-        print "Error: No grasp found, will now return"
-        return
+    # # IF GRASP NOT FOUND, return 0?
+    # if resp2 == None:
+    # # if resp2.grasp.score == 0:
+    #     print "Error: No grasp found, will now return"
+    #     return
 
-    # # convert the top grasp format to a move-it useable format
-    # # then use moveit to move the arm of the Baxter/PR2? in rviz/eal world?
-    ori = rotationQuat(resp2.grasp.axis, resp2.grasp.binormal, resp2.grasp.approach);
-    print ori
+    # # # convert the top grasp format to a move-it useable format
+    # # # then use moveit to move the arm of the Baxter/PR2? in rviz/eal world?
+    # ori = rotationQuat(resp2.grasp.axis, resp2.grasp.binormal, resp2.grasp.approach);
+    # print ori
 
-    # visualize the workspace and grasp.......
-    pos = [resp2.grasp.surface.x, resp2.grasp.surface.y, resp2.grasp.surface.z]
-    tilt = [ori['w'], ori['x'], ori['y'], ori['z']]
-    print pos
-    print tilt
-    pub_workspace_corners_client(pos,tilt)
+    # # visualize the workspace and grasp.......
+    # pos = [resp2.grasp.surface.x, resp2.grasp.surface.y, resp2.grasp.surface.z]
+    # tilt = [ori['w'], ori['x'], ori['y'], ori['z']]
+    # print pos
+    # print tilt
+    # pub_workspace_corners_client(pos,tilt)
 
-    # TODO: JB
-    #  WILL need to transform from other frame here nowwwwwww!!!!!
-    # Transform point into correct PR2 frame for motion planning etc...
-    # TODO_PR2_TOPIC_CHANGE!
-    # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/torso_lift_link")
-    newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/camera_link")
+    # # TODO: JB
+    # #  WILL need to transform from other frame here nowwwwwww!!!!!
+    # # Transform point into correct PR2 frame for motion planning etc...
+    # # TODO_PR2_TOPIC_CHANGE!
+    # # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/torso_lift_link")
+    # # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/camera_link")
 
-    # TODO: use moveit to plan to this position and orientation!
-    moveArm(newPnt)
+    # # TODO: use moveit to plan to this position and orientation!
+    # # moveArm(newPnt)
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
