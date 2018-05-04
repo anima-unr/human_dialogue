@@ -18,7 +18,8 @@ void callback(const sensor_msgs::PointCloud2 pc){
   // transform the point cloud
   tf::StampedTransform transform;
   try{
-    listener->lookupTransform( "/test", "/camera_depth_optical_frame",  
+    // listener->lookupTransform( "/test", "/camera_depth_optical_frame",  
+    listener->lookupTransform( "/test", "/head_mount_kinect_rgb_optical_frame",  
              ros::Time(0), transform);
     }
   catch (tf::TransformException ex){

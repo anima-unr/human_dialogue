@@ -196,15 +196,15 @@ def main(obj_name):
     # TODO: JB
     # transform the point from kinect frame to the orthographic frame (static tf projection)
     # TODO_PR2_TOPIC_CHANGE!
-    # newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/head_mount_kinect_rgb_optical_frame", "/test")
-    newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/camera_rgb_optical_frame", "/test")
+    newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/head_mount_kinect_rgb_optical_frame", "/test")
+    # newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/camera_rgb_optical_frame", "/test")
 
     # TODO: JB
     # generate the cube from the transformed point instead
     #  first set the param for the workspace based on the response?!?
     eps = 0.1
     # cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
-    cube = [newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - eps, newPnt.point.z + eps]
+    cube = [newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z - 0.5*eps]
     print cube
     cube = [np.asscalar(i) for i in cube]
     print "cube to search for graps:"
@@ -262,7 +262,7 @@ def main(obj_name):
     #  WILL need to transform from other frame here nowwwwwww!!!!!
     # Transform point into correct PR2 frame for motion planning etc...
     # TODO_PR2_TOPIC_CHANGE!
-    # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/torso_lift_link")
+    newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/torso_lift_link")
     # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/camera_link")
 
     # TODO: use moveit to plan to this position and orientation!

@@ -51,7 +51,7 @@ def handle_get_grasp(req):
 
             # not tested yet, but if can't launch inside from roslaunch api becuase can't set parms in launch file, then test something like this to get the graps at the specified location!
             # if abs( req.x - grasp.surface.x) < eps and abs( req.y - grasp.surface.y) < eps: 
-            if req.x > cube[0] and req.x < cube[1] and req.y > cube[2] and req.y < cube[3] and req.z > cube[4] and req.z < cube[5]: 
+            # if req.x > cube[0] and req.x < cube[1] and req.y > cube[2] and req.y < cube[3] and req.z > cube[4] and req.z < cube[5]: 
                 if grasp.score > top_grasp.score:
                     top_grasp = grasp
                     notFound = False
@@ -88,18 +88,18 @@ def get_grasp_server():
     # Create a service
     s = rospy.Service('get_grasp', GetGrasp, handle_get_grasp)
 
-    # # spin service 
-    # rate = rospy.Rate(0.5)  
-    # while not rospy.is_shutdown():
-    #     print "Ready to get top grasp!"
-    #     sub.unregister()
-    #     # pot hole with a roadsign - TODO
-    #     sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
-    #     rate.sleep()
+    # spin service 
+    rate = rospy.Rate(0.5)  
+    while not rospy.is_shutdown():
+        print "Ready to get top grasp!"
+        sub.unregister()
+        # pot hole with a roadsign - TODO
+        sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
+        rate.sleep()
 
-    # pot hole with a roadsign - TODO
-    sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
-    rospy.spin()
+    # # pot hole with a roadsign - TODO
+    # sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
+    # rospy.spin()
 
 #------------------------------------------------
 if __name__ == "__main__":

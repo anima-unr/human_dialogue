@@ -1,5 +1,5 @@
 roslaunch freenect_launch freenect.launch  depth_registration:=true  /// NOOOT FOR PR2
-cd /etc/ros///FOR PR2 (on the pr2)
+cd /etc/ros/; roslaunch openni_head.launch      //FOR PR2 (on the pr2)
 
 rosrun rviz rviz
 

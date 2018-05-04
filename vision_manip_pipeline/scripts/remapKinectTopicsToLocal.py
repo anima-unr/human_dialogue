@@ -335,20 +335,20 @@ def listener():
     rospy.Subscriber("/kinect_head/rgb/image_color", Image, callback_rgb_image_color)
     rospy.Subscriber("/kinect_head/rgb/image_rect_color", Image, callback_rgb_image_rect_color)
 
-    # for kinect on local computer
-    rospy.Subscriber("/camera/depth_registered/camera_info", CameraInfo, callback_depth_reg_camera_info)
-    rospy.Subscriber("/camera/depth_registered/image_raw", Image, callback_depth_reg_image_raw)
-    rospy.Subscriber("/camera/depth_registered/sw_registered/image_rect_raw", Image, callback_depth_reg_sw_image_rect_raw)
-    rospy.Subscriber("/camera/depth_registered/hw_registered/image_rect_raw", Image, callback_depth_reg_hw_image_rect_raw)
+    # # for kinect on local computer
+    # rospy.Subscriber("/camera/depth_registered/camera_info", CameraInfo, callback_depth_reg_camera_info)
+    # rospy.Subscriber("/camera/depth_registered/image_raw", Image, callback_depth_reg_image_raw)
+    # rospy.Subscriber("/camera/depth_registered/sw_registered/image_rect_raw", Image, callback_depth_reg_sw_image_rect_raw)
+    # rospy.Subscriber("/camera/depth_registered/hw_registered/image_rect_raw", Image, callback_depth_reg_hw_image_rect_raw)
 
-    rospy.Subscriber("/camera/depth/camera_info", CameraInfo, callback_depth_camera_info)
-    rospy.Subscriber("/camera/depth/image_raw", Image, callback_depth_image_raw)
-    rospy.Subscriber("/camera/depth/image_rect_raw", Image, callback_depth_image_rect_raw)
+    # rospy.Subscriber("/camera/depth/camera_info", CameraInfo, callback_depth_camera_info)
+    # rospy.Subscriber("/camera/depth/image_raw", Image, callback_depth_image_raw)
+    # rospy.Subscriber("/camera/depth/image_rect_raw", Image, callback_depth_image_rect_raw)
 
-    rospy.Subscriber("/camera/rgb/camera_info", CameraInfo, callback_rgb_camera_info)
-    rospy.Subscriber("/camera/rgb/image_raw", Image, callback_rgb_image_raw)
-    rospy.Subscriber("/camera/rgb/image_color", Image, callback_rgb_image_color)
-    rospy.Subscriber("/camera/rgb/image_rect_color", Image, callback_rgb_image_rect_color)
+    # rospy.Subscriber("/camera/rgb/camera_info", CameraInfo, callback_rgb_camera_info)
+    # rospy.Subscriber("/camera/rgb/image_raw", Image, callback_rgb_image_raw)
+    # rospy.Subscriber("/camera/rgb/image_color", Image, callback_rgb_image_color)
+    # rospy.Subscriber("/camera/rgb/image_rect_color", Image, callback_rgb_image_rect_color)
 
 
 
