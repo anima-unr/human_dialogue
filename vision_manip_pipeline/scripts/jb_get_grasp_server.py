@@ -46,7 +46,7 @@ def handle_get_grasp(req):
         # rospy.loginfo('Top grasp was:')
         top_grasp = GraspConfig()
         top_grasp.score.data = 0
-        print top_grasp
+        print grasps
         for grasp in grasps:
 
             # not tested yet, but if can't launch inside from roslaunch api becuase can't set parms in launch file, then test something like this to get the graps at the specified location!
@@ -88,14 +88,18 @@ def get_grasp_server():
     # Create a service
     s = rospy.Service('get_grasp', GetGrasp, handle_get_grasp)
 
-    # spin service 
-    rate = rospy.Rate(0.5)  
-    while not rospy.is_shutdown():
-        print "Ready to get top grasp!"
-        sub.unregister()
-        # pot hole with a roadsign - TODO
-        sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
-        rate.sleep()
+    # # spin service 
+    # rate = rospy.Rate(0.5)  
+    # while not rospy.is_shutdown():
+    #     print "Ready to get top grasp!"
+    #     sub.unregister()
+    #     # pot hole with a roadsign - TODO
+    #     sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
+    #     rate.sleep()
+
+    # pot hole with a roadsign - TODO
+    sub = rospy.Subscriber('/detect_grasps/clustered_grasps', GraspConfigList, callback, queue_size = 1)
+    rospy.spin()
 
 #------------------------------------------------
 if __name__ == "__main__":
