@@ -26,14 +26,19 @@ from geometry_msgs.msg import (
 )
 
 
+t_pose = tf.TransformListener(True, rospy.Duration(10.0))
+t_point = tf.TransformListener(True, rospy.Duration(10.0))
+
 
 # ==========================================================
 def getPoseTrans(x,y,z, ori, old_frame, new_frame):
 
+    global t_pose
+
     # get the tf between kinect frame and base?
     now = rospy.Time(0)
-    t = tf.TransformListener(True, rospy.Duration(10.0))
-    t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
+    # t = tf.TransformListener(True, rospy.Duration(10.0))
+    t_pose.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
     # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
 
     pnt = PoseStamped()
@@ -47,7 +52,7 @@ def getPoseTrans(x,y,z, ori, old_frame, new_frame):
     pnt.pose.orientation.z = ori['z']
     pnt.pose.orientation.w = ori['w']
 
-    newPnt = t.transformPose(new_frame, pnt)
+    newPnt = t_pose.transformPose(new_frame, pnt)
 
     print "\nTRANSFORM:"
     print newPnt
@@ -56,10 +61,12 @@ def getPoseTrans(x,y,z, ori, old_frame, new_frame):
 # ==========================================================
 def transPoint(x, y, z, old_frame, new_frame):
 
+    global t_point
+
     # get the tf between kinect frame and base?
     now = rospy.Time(0)
-    t = tf.TransformListener(True, rospy.Duration(10.0))
-    t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
+    # t = tf.TransformListener(True, rospy.Duration(10.0))
+    t_point.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
     # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
 
     pnt = PointStamped()
@@ -69,7 +76,7 @@ def transPoint(x, y, z, old_frame, new_frame):
     pnt.point.y = y
     pnt.point.z = z
 
-    newPnt = t.transformPoint(new_frame, pnt)
+    newPnt = t_point.transformPoint(new_frame, pnt)
 
     print "\nTRANSFORM:"
     print newPnt
@@ -204,7 +211,7 @@ def main(obj_name):
     #  first set the param for the workspace based on the response?!?
     eps = 0.1
     # cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
-    cube = [newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z - 0.5*eps]
+    cube = [newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z + 0.5*eps]
     print cube
     cube = [np.asscalar(i) for i in cube]
     print "cube to search for graps:"
@@ -266,7 +273,7 @@ def main(obj_name):
     # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/camera_link")
 
     # TODO: use moveit to plan to this position and orientation!
-    # moveArm(newPnt)
+    moveArm(newPnt)
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
