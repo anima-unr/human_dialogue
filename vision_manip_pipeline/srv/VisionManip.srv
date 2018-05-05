@@ -1,0 +1,5 @@
+string obj_name
+---
+std::vector<double> ori
+std::vector<double> pos
+geometry_msgs::PointStamped newPnt
