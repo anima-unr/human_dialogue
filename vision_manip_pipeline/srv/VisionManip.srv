@@ -1,5 +1,4 @@
 string obj_name
 ---
-std::vector<double> ori
-std::vector<double> pos
-geometry_msgs::PointStamped newPnt
+geometry_msgs/PoseStamped gripper_pose
+gpd/GraspConfig grasp

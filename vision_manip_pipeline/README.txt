@@ -9,8 +9,10 @@ then run the following:
 roslaunch freenect_launch freenect.launch  depth_registration:=true  /// NOOOT FOR PR2
 cd /etc/ros/; roslaunch openni_head.launch      //FOR PR2 (on the pr2)
 
-rosrun rviz rviz
 
+
+rosrun rviz rviz
+roslaunch table_setting_demo new_test.launch
 
 ///////
 //NEW THINGGGSSS TO DO PROCESSING ON MY MAHCIKNE INSTEAD OF PR2 //

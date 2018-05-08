@@ -95,6 +95,7 @@ find_package(catkin REQUIRED COMPONENTS
    GetGrasp.srv
    Conv2DTo3D.srv
    PubWorkspace.srv
+   VisionManip.srv
  )
 
 ## Generate actions in the 'action' folder

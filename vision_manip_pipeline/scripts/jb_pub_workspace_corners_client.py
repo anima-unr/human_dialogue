@@ -17,12 +17,12 @@ def pub_workspace_corners_client(pos, ori):
 #     return "%s [x y]"%sys.argv[0]
 
 if __name__ == "__main__":
-    # if len(sys.argv) == 3:
-    #     x = int(sys.argv[1])
-    #     y = int(sys.argv[2])
-    # else:
-    #     print usage()
-    #     sys.exit(1)
-    # print "Requesting %s+%s"%(x, y)
+    if len(sys.argv) == 3:
+        pos = int(sys.argv[1])
+        ori = int(sys.argv[2])
+    else:
+        print usage()
+        sys.exit(1)
+    print "Requesting %s\t%s"%(pos, ori)
     # print "%s + %s = %s"%(x, y, add_two_ints_client(x, y))
     pub_workspace_corners_client()

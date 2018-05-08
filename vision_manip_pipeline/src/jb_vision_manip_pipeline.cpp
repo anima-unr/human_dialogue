@@ -10,13 +10,19 @@
 #include "vision_manip_pipeline/GetGrasp.h"
 #include "vision_manip_pipeline/PubWorkspace.h"
 
+#include <signal.h>
+
+  tf::TransformListener *t;
+
+// ==========================================================
+
 //TODO: double check order of w,x,y,z! -> since rest of code set up with numbers not as map, do this instead!!!!
 //geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::map<std::string, double> ori, const std::string old_frame, const std::string new_frame){
 geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::vector<double> ori, const std::string old_frame, const std::string new_frame){
   ros::Time now = ros::Time::now();
   // tf::TransformListener t = new tf::TransformListener(ros::Duration(10.0), true);
-  tf::TransformListener t;
-  t.waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
+  //tf::TransformListener t;
+  t->waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
 
   geometry_msgs::PoseStamped pnt;
   pnt.header.frame_id = old_frame;
@@ -31,17 +37,18 @@ geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::vecto
 
   //geometry_msgs::PoseStamped newPnt = t.transformPose(new_frame, pnt);
   geometry_msgs::PoseStamped newPnt;
-  t.transformPose(new_frame, pnt, newPnt);
+  t->transformPose(new_frame, pnt, newPnt);
   
   std::cout << "\nTRANSFORM: " << newPnt << '\n';
   return newPnt;
 }
 
+// ==========================================================
+
 geometry_msgs::PointStamped transPoint(double x, double y, double z, const std::string old_frame, const std::string new_frame){
   ros::Time now = ros::Time::now();
   // tf::TransformListener t = new tf::TransformListener(ros::Duration(10.0), true);
-  tf::TransformListener t;
-  t.waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
+  t->waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
 
   geometry_msgs::PointStamped pnt;
   pnt.header.frame_id = old_frame;
@@ -52,15 +59,21 @@ geometry_msgs::PointStamped transPoint(double x, double y, double z, const std::
 
   // geometry_msgs::PoseStamped newPnt = t.transformPose(new_frame, pnt);
   geometry_msgs::PointStamped newPnt;
-  t.transformPoint(new_frame, pnt, newPnt);
+  t->transformPoint(new_frame, pnt, newPnt);
 
   std::cout << "\nTRANSFORM: " << newPnt << '\n';
   return newPnt;
 }
 
+// ==========================================================
+
 void moveArm(geometry_msgs::PoseStamped newPnt){
   moveit::planning_interface::MoveGroup group("right_arm");
+  printf("Move it TEST0\n");
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+  group.setPoseReferenceFrame("/torso_lift_link");
+
+  printf("Move it TEST1\n");
 
   geometry_msgs::Pose pose_target;
   pose_target.orientation.x = newPnt.pose.orientation.x;
@@ -71,8 +84,10 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
   pose_target.position.y = newPnt.pose.position.y;
   pose_target.position.z = newPnt.pose.position.z;
 
+  printf("Move it TEST2\n");
+
   group.setPoseTarget(pose_target);
-  moveit_msgs::OrientationConstraint ocm;
+  // moveit_msgs::OrientationConstraint ocm;
   /*ocm.link_name = "right_arm";
   ocm.header.frame_id = "base_link";
   ocm.orientation.w = 1.0;
@@ -81,10 +96,12 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
   ocm.absolute_z_axis_tolerance = 0.0075;
   ocm.weight = 1.0;*/
 
-  // set as the path constraints for the group
-  moveit_msgs::Constraints test_constraints;
-  test_constraints.orientation_constraints.push_back(ocm);
-  group.setPathConstraints(test_constraints);
+  // // set as the path constraints for the group
+  // moveit_msgs::Constraints test_constraints;
+  // test_constraints.orientation_constraints.push_back(ocm);
+  // group.setPathConstraints(test_constraints);
+
+  printf("Move it TEST3\n");
 
   moveit::planning_interface::MoveGroup::Plan my_plan;
   bool success = group.plan(my_plan);
@@ -96,10 +113,12 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
 
 }
 
+// ==========================================================
+
 std::vector<double> rotationQuat(std::vector<double> approach, std::vector<double> axis,
   std::vector<double> binormal){
     double trace;
-    std::vector<double> rotation;
+    std::vector<double> rotation(4);
 
     if(axis[2] < 0){
       if(approach[0] > binormal[1]){
@@ -138,7 +157,11 @@ std::vector<double> rotationQuat(std::vector<double> approach, std::vector<doubl
     rotation[1] *= 1.0 / (2.0 * sqrt(trace)); // TODO: x or y? x 
     rotation[2] *= 1.0 / (2.0 * sqrt(trace)); // TODO: x or z? y
     rotation[3] *= 1.0 / (2.0 * sqrt(trace)); // TODO: z or w? z
+
+    return rotation;
 }
+
+// ==========================================================
 
 int main(int argc, char **argv){
     std::string obj_name;
@@ -146,6 +169,8 @@ int main(int argc, char **argv){
       obj_name = argv[1];
     }
     else{
+      std::cout << "Error: Please call function with an object name, e.g.\n";
+      std::cout <<"\trosrun vision_manip_pipeline jb_vision_manip_pipeline <object_name>\n";
       exit(1);
     }
     std::cout << "Requesting: " << obj_name << '\n';
@@ -163,6 +188,8 @@ int main(int argc, char **argv){
     //vision_manip_pipeline::GetObjLoc::Response resp = get_obj_loc_client(obj_name);
     
     ros::NodeHandle n;
+    t = new tf::TransformListener();
+    ros::Duration(1.0).sleep();
     ros::ServiceClient objLocClient = n.serviceClient<vision_manip_pipeline::GetObjLoc>("get_object_loc");
     vision_manip_pipeline::GetObjLoc objLocSrv;
     
@@ -195,7 +222,7 @@ int main(int argc, char **argv){
     
     conv2DTo3DSrv.request.x = x;
     conv2DTo3DSrv.request.y = y;
-    if(objLocClient.call(conv2DTo3DSrv)) {
+    if(conv2DTo3DClient.call(conv2DTo3DSrv)) {
        std::cout << conv2DTo3DSrv.response << '\n';
     }
     else{
@@ -216,12 +243,34 @@ int main(int argc, char **argv){
 //------------------------------    
 //FIXXXXXX    
 
-    double cube[] = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - eps, newPnt.point.z + eps};    
+    std::vector<double> cube(6);
+    cube = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z + 0.1*eps};    
+    // cube = {conv2DTo3DSrv.response.newX - eps, conv2DTo3DSrv.response.newX + eps, conv2DTo3DSrv.response.newY- eps, conv2DTo3DSrv.response.newY + eps, conv2DTo3DSrv.response.newZ - eps, conv2DTo3DSrv.response.newZ + eps};    
   
-    std::cout << "cube to search for graps: " << cube << '\n'; 
+    std::cout << "cube to search for graps: " << cube[0] << ' ' << cube[1] << ' ' << cube[2] << ' ' << cube[3] << ' ' << cube[4] << ' ' << cube[5] << '\n'; 
 
     ros::param::set("/detect_grasps/workspace", cube);
     ros::param::set("/detect_grasps/workspace_grasps", cube);
+
+    // ros::NodeHandle n;
+    ros::ServiceClient pubWorkspaceClient = n.serviceClient<vision_manip_pipeline::PubWorkspace>("pub_workspace_corners");
+    vision_manip_pipeline::PubWorkspace pubWorkspaceSrv;
+    
+    std::vector<double> tempPos(3);
+    tempPos = {0,0,0}; 
+    std::vector<double> tempOri(4);
+    tempOri = {0,0,0,0}; 
+
+    pubWorkspaceSrv.request.pos = tempPos;
+    pubWorkspaceSrv.request.ori = tempOri;
+    if(pubWorkspaceClient.call(pubWorkspaceSrv)) {
+       std::cout << pubWorkspaceSrv.response << '\n';
+    }
+    else{
+       ROS_ERROR("ERROR: Failed to call pubWorkspace Service!" );
+    }
+
+
 
     // TODO: JB
     // transform the point cloud to the orthographic frame (static tf projection) ->  will probs need to change frames in launch to get cloud in correct frame!!!
@@ -232,29 +281,48 @@ int main(int argc, char **argv){
     // relaunch the grasp stuffsssss
     launch.start()
 */
-    // // rosservice call to gpd with the calculated grasping window in the
-    // // point cloud to get the top grasp
-     //TODO: FIX THESE!
-     //vision_manip_pipeline::GetGrasp::Response resp2 = get_grasp_client(resp3.newX, resp3.newY, resp3.newZ);
+    // path: /home/janelle/onr_ws/src/gpd/launch/jb_tutorial1.launch
+    // system("roslaunch vision_manip_pipeline jb_tutorial1.launch &");
 
-    // ros::NodeHandle n;
-    ros::ServiceClient getGraspClient = n.serviceClient<vision_manip_pipeline::GetGrasp>("conv_coord");
+    ros::ServiceClient getGraspClient = n.serviceClient<vision_manip_pipeline::GetGrasp>("get_grasp");
     vision_manip_pipeline::GetGrasp getGraspSrv;
-    
-    getGraspSrv.request.x = conv2DTo3DSrv.response.newX;
-    getGraspSrv.request.y = conv2DTo3DSrv.response.newY;
-    getGraspSrv.request.y = conv2DTo3DSrv.response.newZ;
-    if(objLocClient.call(getGraspSrv)) {
-       std::cout << getGraspSrv.response << '\n';
-    }
-    else{
-       ROS_ERROR("ERROR: Failed to call getGrasp Service!" );
+
+    pid_t pid;
+    pid = fork();
+    if(pid == 0) { // child process
+        setpgid(getpid(), getpid());
+        system("roslaunch vision_manip_pipeline jb_tutorial1.launch");
+    } 
+    else {   // parent process
+        // sleep(30);
+        // printf("Sleep returned\n");
+
+      // // rosservice call to gpd with the calculated grasping window in the
+      // // point cloud to get the top grasp
+       //TODO: FIX THESE!
+       //vision_manip_pipeline::GetGrasp::Response resp2 = get_grasp_client(resp3.newX, resp3.newY, resp3.newZ);
+
+      // ros::NodeHandle n;
+      
+      getGraspSrv.request.x = conv2DTo3DSrv.response.newX;
+      getGraspSrv.request.y = conv2DTo3DSrv.response.newY;
+      getGraspSrv.request.y = conv2DTo3DSrv.response.newZ;
+      if(getGraspClient.call(getGraspSrv)) {
+         std::cout << getGraspSrv.response << '\n';
+      }
+      else{
+         ROS_ERROR("ERROR: Failed to call getGrasp Service!" );
+      }
+
+      kill(-pid, SIGKILL); // kill the launch process
+      // signal(SIGINT, SIG_IGN); // kill the node it brings up?
+      system("rosnode kill /detect_grasps"); 
+      printf("killed process group %d\n", pid);
     }
 
+//  TODO: FIGURE OUT ROSLAUNCH STUFF!!!
+//     launch.shutdown()
 
-/* TODO: FIGURE OUT ROSLAUNCH STUFF!!!
-    launch.shutdown()
-*/
     // TODO: FIGURE OUT HOW TO RETURN 0 instead of NONE upon fail becuase no C equiv???
     // IF GRASP NOT FOUND, return 0?
     //if( resp2 == "None") {
@@ -272,7 +340,7 @@ int main(int argc, char **argv){
   approach = {getGraspSrv.response.grasp.approach.x, getGraspSrv.response.grasp.approach.y, getGraspSrv.response.grasp.approach.z}; 
 
 
-//------------------------------    
+// //------------------------------    
 
 
     // // convert the top grasp format to a move-it useable format
@@ -292,30 +360,35 @@ int main(int argc, char **argv){
     //pub_workspace_corners_client(pos,tilt)
 
     // ros::NodeHandle n;
-    ros::ServiceClient pubWorkspaceClient = n.serviceClient<vision_manip_pipeline::PubWorkspace>("pub_workspace_corners");
-    vision_manip_pipeline::PubWorkspace pubWorkspaceSrv;
+    // ros::ServiceClient pubWorkspaceClient = n.serviceClient<vision_manip_pipeline::PubWorkspace>("pub_workspace_corners");
+    // vision_manip_pipeline::PubWorkspace pubWorkspaceSrv;
     
     pubWorkspaceSrv.request.pos = pos;
     pubWorkspaceSrv.request.ori = tilt;
-    if(objLocClient.call(pubWorkspaceSrv)) {
+    if(pubWorkspaceClient.call(pubWorkspaceSrv)) {
        std::cout << pubWorkspaceSrv.response << '\n';
     }
     else{
        ROS_ERROR("ERROR: Failed to call pubWorkspace Service!" );
     }
 
-
-
     // TODO: JB
     //  WILL need to transform from other frame here nowwwwwww!!!!!
     // Transform point into correct PR2 frame for motion planning etc...
-    geometry_msgs::PoseStamped newPose = getPoseTrans(conv2DTo3DSrv.response.newX, conv2DTo3DSrv.response.newY, conv2DTo3DSrv.response.newZ, ori, "/test", "/torso_lift_link");
+    geometry_msgs::PoseStamped newPose = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/torso_lift_link");
 
-//------------------------------    
-//FIXXXXXX    
-    // TODO: use moveit to plan to this position and orientation!
+    // std::cout << "final pos: " << newPose.pose.position.x << ',' << newPose.pose.position.y << ',' << newPose.pose.position.z << '\n';
+    // std::cout << "final ori: " << newPose.pose.orientation.w << ',' << newPose.pose.orientation.x << ',' << newPose.pose.orientation.y << ',' << newPose.pose.orientation.z << '\n';
+
+// //------------------------------    
+// //FIXXXXXX    
+//     // TODO: use moveit to plan to this position and orientation!
     moveArm(newPose);
-//------------------------------    
+// //------------------------------    
+
+
+return 0;
+
 }
 
 

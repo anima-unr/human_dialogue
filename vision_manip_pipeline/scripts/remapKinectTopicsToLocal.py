@@ -323,17 +323,17 @@ def listener():
     # for kinect on PR2: TODO_PR2_Topic_Change
     rospy.Subscriber("/kinect_head/depth_registered/camera_info", CameraInfo, callback_depth_reg_camera_info)
     rospy.Subscriber("/kinect_head/depth_registered/image_raw", Image, callback_depth_reg_image_raw)
-    rospy.Subscriber("/kinect_head/depth_registered/sw_registered/image_rect_raw", Image, callback_depth_reg_sw_image_rect_raw)
-    rospy.Subscriber("/kinect_head/depth_registered/hw_registered/image_rect_raw", Image, callback_depth_reg_hw_image_rect_raw)
+    # rospy.Subscriber("/kinect_head/depth_registered/sw_registered/image_rect_raw", Image, callback_depth_reg_sw_image_rect_raw)
+    # rospy.Subscriber("/kinect_head/depth_registered/hw_registered/image_rect_raw", Image, callback_depth_reg_hw_image_rect_raw)
 
     rospy.Subscriber("/kinect_head/depth/camera_info", CameraInfo, callback_depth_camera_info)
     rospy.Subscriber("/kinect_head/depth/image_raw", Image, callback_depth_image_raw)
-    rospy.Subscriber("/kinect_head/depth/image_rect_raw", Image, callback_depth_image_rect_raw)
+    # rospy.Subscriber("/kinect_head/depth/image_rect_raw", Image, callback_depth_image_rect_raw)
 
     rospy.Subscriber("/kinect_head/rgb/camera_info", CameraInfo, callback_rgb_camera_info)
     rospy.Subscriber("/kinect_head/rgb/image_raw", Image, callback_rgb_image_raw)
-    rospy.Subscriber("/kinect_head/rgb/image_color", Image, callback_rgb_image_color)
-    rospy.Subscriber("/kinect_head/rgb/image_rect_color", Image, callback_rgb_image_rect_color)
+    # rospy.Subscriber("/kinect_head/rgb/image_color", Image, callback_rgb_image_color)
+    # rospy.Subscriber("/kinect_head/rgb/image_rect_color", Image, callback_rgb_image_rect_color)
 
     # # for kinect on local computer
     # rospy.Subscriber("/camera/depth_registered/camera_info", CameraInfo, callback_depth_reg_camera_info)

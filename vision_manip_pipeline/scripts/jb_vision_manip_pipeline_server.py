@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# license removed for brevity
 import rospy
 import sys
 import numpy as np
@@ -18,19 +20,33 @@ import moveit_msgs.msg
 import roslib
 
 from geometry_msgs.msg import (
+    PointStamped,
     PoseStamped,
     Pose,
     Point,
     Quaternion
 )
 
+t_pose = tf.TransformListener(True, rospy.Duration(10.0))
+t_point = tf.TransformListener(True, rospy.Duration(10.0))
+
+
+uuid = None
+# roslaunch.configure_logging(uuid)
+# launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/janelle/onr_ws/src/Distributed_Collaborative_Task_Tree/vision_manip_pipeline/launch/jb_tutorial1.launch"])
+launch = None
+
+
+
 # ==========================================================
 def getPoseTrans(x,y,z, ori, old_frame, new_frame):
 
+    global t_pose
+
     # get the tf between kinect frame and base?
     now = rospy.Time(0)
-    t = tf.TransformListener(True, rospy.Duration(10.0))
-    t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
+    # t = tf.TransformListener(True, rospy.Duration(10.0))
+    t_pose.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
     # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
 
     pnt = PoseStamped()
@@ -44,7 +60,7 @@ def getPoseTrans(x,y,z, ori, old_frame, new_frame):
     pnt.pose.orientation.z = ori['z']
     pnt.pose.orientation.w = ori['w']
 
-    newPnt = t.transformPose(new_frame, pnt)
+    newPnt = t_pose.transformPose(new_frame, pnt)
 
     print "\nTRANSFORM:"
     print newPnt
@@ -53,10 +69,12 @@ def getPoseTrans(x,y,z, ori, old_frame, new_frame):
 # ==========================================================
 def transPoint(x, y, z, old_frame, new_frame):
 
+    global t_point
+
     # get the tf between kinect frame and base?
     now = rospy.Time(0)
-    t = tf.TransformListener(True, rospy.Duration(10.0))
-    t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
+    # t = tf.TransformListener(True, rospy.Duration(10.0))
+    t_point.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
     # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
 
     pnt = PointStamped()
@@ -66,26 +84,12 @@ def transPoint(x, y, z, old_frame, new_frame):
     pnt.point.y = y
     pnt.point.z = z
 
-    newPnt = t.transformPoint(new_frame, pnt)
+    newPnt = t_point.transformPoint(new_frame, pnt)
 
     print "\nTRANSFORM:"
     print newPnt
     return newPnt
 
-# ==========================================================
-# def transPointCloud(cloud, old_frame, new_frame):
-
-#     # get the tf between kinect frame and base?
-#     now = rospy.Time(0)
-#     t = tf.TransformListener(True, rospy.Duration(10.0))
-#     t.waitForTransform(new_frame, old_frame, now, rospy.Duration(3.0));
-#     # (trans,rot) = t.lookupTransform("/torso_lift_link", "/head_mount_kinect_ir_optical_frame", now)
-
-#     newCloud = t.transformPoint(new_frame, cloud)
-
-#     print "\nTRANSFORM:"
-#     print newCloud
-#     return newCloud
 
 # ==========================================================
 def moveArm(newPnt):
@@ -163,18 +167,27 @@ def rotationQuat(axis, binormal, approach):
 
 
 def handle_vision_manip(req):
-    # Create a ROS node.
-    rospy.init_node('vision_manip')
+
+
+    global launch
+
+    #--------------------------------------
+    # get obj_name from the request....
+    obj_name = req.obj_name
+
+    #--------------------------------------
+    # now run everything the pipeline does...
+
+
     # rospy.on_shutdown(self.shutdown)
-    uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-    roslaunch.configure_logging(uuid)
-    #launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/janelle/onr_ws/src/vision_manip/launch/jb_tutorial1.launch"])
-    launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/mzagainova/cws_hetero_gripper/src/vision_manip/launch/jb_tutorial1.launch"])
+    # uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+    # roslaunch.configure_logging(uuid)
+    # launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/janelle/onr_ws/src/Distributed_Collaborative_Task_Tree/vision_manip_pipeline/launch/jb_tutorial1.launch"])
 
     # rosservice call with object to find location of in YOLO
-        # So get the bounding box of the image and
+        # So get the bounding box of the image and 
         # calculate the center of it as a start for the grasping window?
-    resp = get_obj_loc_client(req)
+    resp = get_obj_loc_client(obj_name)
     print resp
     x = (resp.xmax - resp.xmin)/2 + resp.xmin
     y = (resp.ymax - resp.ymin)/2 + resp.ymin
@@ -183,25 +196,30 @@ def handle_vision_manip(req):
     # if object not detected, then exit?
     if x == 0 and y == 0:
         print "Error: Object not detected, try again!"
-        return
+        return 
 
     # calculate the transform of the point in the raw image to
     # the grasping window in the depth point cloud!
-    resp3 = conv_coord_client(x,y)
+    resp3 = conv_coord_client(x,y)    
     print resp3
 
     # TODO: JB
     # transform the point from kinect frame to the orthographic frame (static tf projection)
+    # TODO_PR2_TOPIC_CHANGE!
     newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/head_mount_kinect_rgb_optical_frame", "/test")
+    # newPnt = transPoint(resp3.newX, resp3.newY, resp3.newZ, "/camera_rgb_optical_frame", "/test")
 
     # TODO: JB
     # generate the cube from the transformed point instead
     #  first set the param for the workspace based on the response?!?
     eps = 0.1
-    cube = [newPnt.x - eps, newPnt.x + eps, newPnt.y - eps, newPnt.y + eps, newPnt.z - eps, newPnt.z + eps]
-    # cube = [1,1.1,1,1.1,1,1.1]
+    # cube = [resp3.newX - eps, resp3.newX + eps, resp3.newY - eps, resp3.newY + eps, resp3.newZ - eps, resp3.newZ + eps]
+    cube = [newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z + 0.5*eps]
+    print cube
+    cube = [np.asscalar(i) for i in cube]
     print "cube to search for graps:"
     print cube
+
     # if rospy.has_param("/detect_grasps/"):
         # rospy.delete_param("/detect_grasps/")
     rospy.set_param('/detect_grasps/workspace', cube)
@@ -210,17 +228,24 @@ def handle_vision_manip(req):
     # print v
     # print "\n\n"
 
-    # TODO: JB
-    # transform the point cloud to the orthographic frame (static tf projection) ->  will probs need to change frames in launch to get cloud in correct frame!!!
-    # transPointCloud(cloud, "/local/depth_registered/points", "/local/depth_registered/trans_points"):
+    temp_ori = [0,0,0,0]
+    temp_pos = [0,0,0]
+    pub_workspace_corners_client(temp_pos,temp_ori)
 
+
+    # TODO: JB
+    # transform the point cloud to the orthographic frame (static tf projection) ->  will probs need to change frames in launch to get cloud in correct frame!!!   
+    # NOOOOOO! Instead just subscribe to the new point cloud topic which is under "/local/depth_registered/trans_points"
+    #          and is wrt a test frame that is set in .....WHERE THE HECK DID I SET THIS?!?
+    # Actually, don't subscribe at all, modify the point topic in jb)tutorial1.launch etc!
 
     # relaunch the grasp stuffsssss
     launch.start()
 
-    # # rosservice call to gpd with the calculated grasping window in the
-    # # point cloud to get the top grasp
-    resp2 = get_grasp_client(resp3.newX, resp3.newY, resp3.newZ)
+    # # rosservice call to gpd with the calculated grasping window in the 
+    # # point cloud to get the top grasp 
+    # resp2 = get_grasp_client(resp3.newX, resp3.newY, resp3.newZ)
+    resp2 = get_grasp_client(newPnt.point.x, newPnt.point.y, newPnt.point.z)
     print resp2
 
     launch.shutdown()
@@ -246,18 +271,30 @@ def handle_vision_manip(req):
     # TODO: JB
     #  WILL need to transform from other frame here nowwwwwww!!!!!
     # Transform point into correct PR2 frame for motion planning etc...
-    newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/torso_lift_link")
+    # TODO_PR2_TOPIC_CHANGE!
+    newPose = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/torso_lift_link")
+    # newPnt = getPoseTrans(resp3.newX, resp3.newY, resp3.newZ, ori, "/test", "/camera_link")
 
-    # # TODO: use moveit to plan to this position and orientation!
+    # TODO: use moveit to plan to this position and orientation!
     # moveArm(newPnt)
 
     #return oritentation, position and point to client
-    return [ori, pos, newPnt]
+    return [newPose, resp2.grasp]
 
 def vision_manip_server():
+
+    global uuid
+    global launch
+
     #create ROS node
     rospy.init_node('vision_manip_server')
 
+    # set up roslaunch
+    uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+    roslaunch.configure_logging(uuid)
+    launch = roslaunch.parent.ROSLaunchParent(uuid, ["/home/janelle/onr_ws/src/Distributed_Collaborative_Task_Tree/vision_manip_pipeline/launch/jb_tutorial1.launch"])
+
+    # start service
     s = rospy.Service('vision_manip', VisionManip, handle_vision_manip)
     rospy.spin()
 

@@ -11,6 +11,9 @@ pub = []
 def handle_pub_workspace_corners(req):
     global pub
 
+    print req
+
+
     workspace = rospy.get_param("/detect_grasps/workspace")
     workspace_grasps = rospy.get_param("/detect_grasps/workspace_grasps")
 
