@@ -375,7 +375,8 @@ int main(int argc, char **argv){
     // TODO: JB
     //  WILL need to transform from other frame here nowwwwwww!!!!!
     // Transform point into correct PR2 frame for motion planning etc...
-    geometry_msgs::PoseStamped newPose = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/torso_lift_link");
+    // geometry_msgs::PoseStamped newPose = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/torso_lift_link");
+    geometry_msgs::PoseStamped newPose = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/odom_combined");
 
     // std::cout << "final pos: " << newPose.pose.position.x << ',' << newPose.pose.position.y << ',' << newPose.pose.position.z << '\n';
     // std::cout << "final ori: " << newPose.pose.orientation.w << ',' << newPose.pose.orientation.x << ',' << newPose.pose.orientation.y << ',' << newPose.pose.orientation.z << '\n';
