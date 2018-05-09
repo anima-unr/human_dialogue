@@ -115,6 +115,44 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
 
 // ==========================================================
 
+void calcOffset(geometry_msgs::PoseStamped newPnt) {
+
+  // publish tf at point, then backtrack along axis to get the position of the wrist roll so gripper is at point
+
+
+
+  // might need to first move to an approach point further along axsi
+
+  // then move to fixed wrist roll joint
+}
+
+// ==========================================================
+
+bool checkInBounds(geometry_msgs::PointStamped newPnt) {
+
+  // pr2 arm is 100 cm.... 10^2 = x^2 + y^2 .... so if x^2 + y^2 < 0.9 then okay, else return 0? 
+  // but first need to convert to r_torso_lift_side_plate_link frame?? - then can just do the mathhhh
+
+  // convert to r_torso_lift_side_plate_link frame
+ geometry_msgs::PointStamped transPnt = transPoint(newPnt.point.x, newPnt.point.y, newPnt.point.z, "/test", "/r_torso_lift_side_plate_link");
+
+  // check if in bounds
+  double threshold = 0.7;
+  double dist = 1.0;
+
+  dist = (transPnt.point.x * transPnt.point.x) + (transPnt.point.y * transPnt.point.y);
+
+  if( dist < threshold ) {
+    return true;
+  } 
+  else {
+    return false;
+  }
+
+}
+
+// ==========================================================
+
 std::vector<double> rotationQuat(std::vector<double> approach, std::vector<double> axis,
   std::vector<double> binormal){
     double trace;
@@ -241,10 +279,21 @@ int main(int argc, char **argv){
     
     
 //------------------------------    
-//FIXXXXXX    
+// FIXXXXXX    
+
+
+    // pr2 arm is 100 cm.... 10^2 = x^2 + y^2 .... so if x^2 + y^2 < 0.9 then okay, else return 0? 
+    // but first need to convert to r_torso_lift_side_plate_link frame?? - then can just do the mathhhh
+    bool inBounds = false;
+
+    if( !checkInBounds(newPnt) ) {
+      std::cout << "Error: Grasp outside of reachable arm space, will now return\n";  
+      return -1;  
+    }
 
     std::vector<double> cube(6);
-    cube = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z + 0.1*eps};    
+    // cube = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z + 0.5*eps};    
+    cube = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, 1.3};    
     // cube = {conv2DTo3DSrv.response.newX - eps, conv2DTo3DSrv.response.newX + eps, conv2DTo3DSrv.response.newY- eps, conv2DTo3DSrv.response.newY + eps, conv2DTo3DSrv.response.newZ - eps, conv2DTo3DSrv.response.newZ + eps};    
   
     std::cout << "cube to search for graps: " << cube[0] << ' ' << cube[1] << ' ' << cube[2] << ' ' << cube[3] << ' ' << cube[4] << ' ' << cube[5] << '\n'; 

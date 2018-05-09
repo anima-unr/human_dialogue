@@ -20,7 +20,7 @@ def handle_get_grasp(req):
     # set a timer here to keep track of wait time....?
     start = rospy.get_time()
     lapse = 0
-    threshold = 60
+    threshold = 10
 
     # keep waiting until get grasp with close location......
     notFound = True
