@@ -19,7 +19,8 @@
 //TODO: double check order of w,x,y,z! -> since rest of code set up with numbers not as map, do this instead!!!!
 //geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::map<std::string, double> ori, const std::string old_frame, const std::string new_frame){
 geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::vector<double> ori, const std::string old_frame, const std::string new_frame){
-  ros::Time now = ros::Time::now();
+  // ros::Time now = ros::Time::now() - ros::Duration(1.0);
+  ros::Time now = ros::Time(0);
   // tf::TransformListener t = new tf::TransformListener(ros::Duration(10.0), true);
   //tf::TransformListener t;
   t->waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
@@ -46,7 +47,8 @@ geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::vecto
 // ==========================================================
 
 geometry_msgs::PointStamped transPoint(double x, double y, double z, const std::string old_frame, const std::string new_frame){
-  ros::Time now = ros::Time::now();
+  // ros::Time now = ros::Time::now() + ros::Duration(1.0);
+  ros::Time now = ros::Time(0);
   // tf::TransformListener t = new tf::TransformListener(ros::Duration(10.0), true);
   t->waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
 
@@ -71,7 +73,12 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
   moveit::planning_interface::MoveGroup group("right_arm");
   printf("Move it TEST0\n");
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
-  group.setPoseReferenceFrame("/torso_lift_link");
+
+  // group.setPoseReferenceFrame("/torso_lift_link");
+  // // We can print the name of the reference frame for this robot.
+  // ROS_INFO("Reference frame: %s", group.getPlanningFrame().c_str());
+  // // We can also print the name of the end-effector link for this group.
+  // ROS_INFO("Reference frame: %s", group.getEndEffectorLink().c_str());
 
   printf("Move it TEST1\n");
 
@@ -87,6 +94,20 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
   printf("Move it TEST2\n");
 
   group.setPoseTarget(pose_target);
+
+
+  // geometry_msgs::Pose target_pose1;
+  // target_pose1.orientation.x = 0.442673;
+  // target_pose1.orientation.y = 0.446555;
+  // target_pose1.orientation.z = 0.559637;
+  // target_pose1.orientation.w = 0.539848;
+  // target_pose1.position.x =  1.83911;
+  // target_pose1.position.y =  -0.429218;
+  // target_pose1.position.z = 0.83142;
+  // group.setPoseTarget(target_pose1);
+
+
+
   // moveit_msgs::OrientationConstraint ocm;
   /*ocm.link_name = "right_arm";
   ocm.header.frame_id = "base_link";
@@ -103,13 +124,15 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
 
   printf("Move it TEST3\n");
 
+  // std::cout << "\nPlanning To: " << newPnt << '\n';
+
   moveit::planning_interface::MoveGroup::Plan my_plan;
   bool success = group.plan(my_plan);
 
   ROS_INFO("Visualizing plan 1 (pose goal) %s",success?"":"FAILED");
   /* Sleep to give Rviz time to visualize the plan. */
   printf("\tPlanning...");
-  sleep(10);
+  sleep(5.0);
 
 }
 
@@ -118,8 +141,6 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
 void calcOffset(geometry_msgs::PoseStamped newPnt) {
 
   // publish tf at point, then backtrack along axis to get the position of the wrist roll so gripper is at point
-
-
 
   // might need to first move to an approach point further along axsi
 
@@ -148,6 +169,8 @@ bool checkInBounds(geometry_msgs::PointStamped newPnt) {
   else {
     return false;
   }
+
+  // return true; //TODO REMOVE THIS!
 
 }
 
@@ -226,6 +249,11 @@ int main(int argc, char **argv){
     //vision_manip_pipeline::GetObjLoc::Response resp = get_obj_loc_client(obj_name);
     
     ros::NodeHandle n;
+
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
+
+
     t = new tf::TransformListener();
     ros::Duration(1.0).sleep();
     ros::ServiceClient objLocClient = n.serviceClient<vision_manip_pipeline::GetObjLoc>("get_object_loc");
@@ -375,21 +403,30 @@ int main(int argc, char **argv){
     // TODO: FIGURE OUT HOW TO RETURN 0 instead of NONE upon fail becuase no C equiv???
     // IF GRASP NOT FOUND, return 0?
     //if( resp2 == "None") {
-    if( getGraspSrv.response.grasp.score.data == 0 ){
-        std::cout << "Error: No grasp found, will now return\n";
-        return -1;
-    }
 
-  // convert from geometry_msgs/Vector3 to std::vector<float>
-  std::vector<double> axis(3);
-  axis = {getGraspSrv.response.grasp.axis.x, getGraspSrv.response.grasp.axis.y, getGraspSrv.response.grasp.axis.z}; 
-  std::vector<double> binormal(3);
-  binormal = {getGraspSrv.response.grasp.binormal.x, getGraspSrv.response.grasp.binormal.y, getGraspSrv.response.grasp.binormal.z}; 
-  std::vector<double> approach(3);
-  approach = {getGraspSrv.response.grasp.approach.x, getGraspSrv.response.grasp.approach.y, getGraspSrv.response.grasp.approach.z}; 
+  if( getGraspSrv.response.num_grasps == 0 ){
+      std::cout << "Error: No grasp found, will now return\n";
+      return -1;
+  }
 
 
-// //------------------------------    
+  for(int indx = 0; indx < getGraspSrv.response.num_grasps; indx++) {
+
+      // if( getGraspSrv.response.grasps.grasps[indx].score.data == 0 ){
+      //     std::cout << "Error: No grasp found, will now return\n";
+      //     return -1;
+      // }
+
+    // convert from geometry_msgs/Vector3 to std::vector<float>
+    std::vector<double> axis(3);
+    axis = {getGraspSrv.response.grasps.grasps[indx].axis.x, getGraspSrv.response.grasps.grasps[indx].axis.y, getGraspSrv.response.grasps.grasps[indx].axis.z}; 
+    std::vector<double> binormal(3);
+    binormal = {getGraspSrv.response.grasps.grasps[indx].binormal.x, getGraspSrv.response.grasps.grasps[indx].binormal.y, getGraspSrv.response.grasps.grasps[indx].binormal.z}; 
+    std::vector<double> approach(3);
+    approach = {getGraspSrv.response.grasps.grasps[indx].approach.x, getGraspSrv.response.grasps.grasps[indx].approach.y, getGraspSrv.response.grasps.grasps[indx].approach.z}; 
+
+
+  // //------------------------------    
 
 
     // // convert the top grasp format to a move-it useable format
@@ -399,7 +436,24 @@ int main(int argc, char **argv){
 
     // visualize the workspace and grasp.......
     std::vector<double> pos(3);
-    pos = {getGraspSrv.response.grasp.surface.x, getGraspSrv.response.grasp.surface.y, getGraspSrv.response.grasp.surface.z};
+
+    std::vector<double> base(3);
+    std::vector<double> vec(3);
+    std::vector<double> ext_approach(3);
+    // pos = {getGraspSrv.response.grasps.grasps[indx].surface.x, getGraspSrv.response.grasps.grasps[indx].surface.y, getGraspSrv.response.grasps.grasps[indx].surface.z};
+
+    // TODO: Try to plan to the approach point instead?!?!?!?! -> FIX THIS WITH DAVE MATH!!!!
+
+    base = {getGraspSrv.response.grasps.grasps[indx].bottom.x, getGraspSrv.response.grasps.grasps[indx].bottom.y, getGraspSrv.response.grasps.grasps[indx].bottom.z};
+    vec = {getGraspSrv.response.grasps.grasps[indx].approach.x, getGraspSrv.response.grasps.grasps[indx].approach.y, getGraspSrv.response.grasps.grasps[indx].approach.z};
+    // vec = getGraspSrv.response.grasps.grasps[indx].approach
+    ext_approach = base;
+    ext_approach[0] -= 0.08*vec[0];
+    ext_approach[1] -= 0.08*vec[1];
+    ext_approach[2] -= 0.08*vec[2];
+
+    // pos = {getGraspSrv.response.grasps.grasps[indx].approach.x, getGraspSrv.response.grasps.grasps[indx].approach.y, getGraspSrv.response.grasps.grasps[indx].approach.z};
+    pos = ext_approach;
     std::vector<double> tilt(4);
     tilt = {ori[0], ori[1], ori[2], ori[3]}; //TODO: double check order of w,x,y,z!
     std::cout << "pos: " << pos[0] << ',' << pos[1] << ',' << pos[2] << '\n';
@@ -436,6 +490,7 @@ int main(int argc, char **argv){
     moveArm(newPose);
 // //------------------------------    
 
+  }
 
 return 0;
 
