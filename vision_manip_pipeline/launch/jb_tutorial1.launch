@@ -1,7 +1,7 @@
 <launch>
   
   <!-- Load hand geometry parameters -->  
-  <include file="$(find gpd)/launch/jb_hand_geometry.launch">
+  <include file="$(find vision_manip_pipeline/launch/jb_hand_geometry.launch">
     <arg name="node" value="detect_grasps" />
   </include>
   
@@ -38,7 +38,7 @@
     <!-- Preprocessing of point cloud -->
     <param name="voxelize" value="true"/>
     <param name="remove_outliers" value="false"/>
-    <!-- <rosparam param="workspace"> [-0.5, 0.5, -0.5, 0.5, 0.8, 3] </rosparam> -->
+        <rosparam param="workspace"> [-0.5, 0.5, -0.5, 0.5, 0.8, 3] </rosparam> 
     <!-- <rosparam param="workspace"> [0.5, 2, -1, 1, -1, 1] </rosparam> -->
     <rosparam param="camera_position"> [0, 0, 0] </rosparam>
             
@@ -52,7 +52,7 @@
     
     <!-- Filtering of grasp candidates --> 
     <param name="filter_grasps" value="false" /> <!-- on workspace and robot hand aperture -->
-    <!-- <rosparam param="workspace_grasps"> [0.55, 1.0, -0.41, 0.03, -0.29, 1.0] </rosparam> -->
+    <rosparam param="workspace_grasps"> [0.55, 1.0, -0.41, 0.03, -0.29, 1.0] </rosparam>
     <!-- <rosparam param="workspace_grasps"> [0.8, 2.0, -0.5, 0.5, -0.5, 0.75] </rosparam> -->
     <param name="filter_half_antipodal" value="false"/> <!-- on half antipodal -->
     

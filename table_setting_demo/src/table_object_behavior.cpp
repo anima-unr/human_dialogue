@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <cmath>
-#include "log.h"
+#include "table_setting_demo/log.h"
 #include "table_setting_demo/table_object_behavior.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Pose.h"
