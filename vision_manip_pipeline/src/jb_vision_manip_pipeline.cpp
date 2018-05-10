@@ -69,7 +69,7 @@ geometry_msgs::PointStamped transPoint(double x, double y, double z, const std::
 
 // ==========================================================
 
-void moveArm(geometry_msgs::PoseStamped newPnt){
+bool moveArm(geometry_msgs::PoseStamped newPnt){
   moveit::planning_interface::MoveGroup group("right_arm");
   printf("Move it TEST0\n");
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
@@ -133,6 +133,13 @@ void moveArm(geometry_msgs::PoseStamped newPnt){
   /* Sleep to give Rviz time to visualize the plan. */
   printf("\tPlanning...");
   sleep(5.0);
+
+  if(success) {
+    return true;
+  }
+  else {
+    return false;
+  }
 
 }
 
@@ -484,10 +491,12 @@ int main(int argc, char **argv){
     // std::cout << "final pos: " << newPose.pose.position.x << ',' << newPose.pose.position.y << ',' << newPose.pose.position.z << '\n';
     // std::cout << "final ori: " << newPose.pose.orientation.w << ',' << newPose.pose.orientation.x << ',' << newPose.pose.orientation.y << ',' << newPose.pose.orientation.z << '\n';
 
-// //------------------------------    
-// //FIXXXXXX    
-//     // TODO: use moveit to plan to this position and orientation!
-    moveArm(newPose);
+//------------------------------    
+// FIXXXXXX    
+    // TODO: use moveit to plan to this position and orientation!
+    if ( moveArm(newPose) ) {
+      break;
+    }
 // //------------------------------    
 
   }
