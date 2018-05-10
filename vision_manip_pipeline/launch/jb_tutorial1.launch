@@ -1,7 +1,7 @@
 <launch>
   
   <!-- Load hand geometry parameters -->  
-  <include file="$(find vision_manip_pipeline/launch/jb_hand_geometry.launch">
+  <include file="$(find vision_manip_pipeline)/launch/jb_hand_geometry.launch">
     <arg name="node" value="detect_grasps" />
   </include>
   
