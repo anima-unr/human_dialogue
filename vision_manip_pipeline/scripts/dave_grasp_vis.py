@@ -66,17 +66,6 @@ class GraspApproach:
         result.z = 0.5 * r1
         result.w = (m0[1] - m1[0]) * r2
         return result
-
-    # qx = tf.transformations.quaternion_about_axis( 3.1415927, (grasp.axis.x, grasp.axis.y, grasp.axis.z))
-    # qy = tf.transformations.quaternion_about_axis( 3.1415927, (grasp.binormal.x, grasp.binormal.y, grasp.binormal.z))
-    # qz = tf.transformations.quaternion_about_axis( 3.1415927, (grasp.approach.x, grasp.approach.y, grasp.approach.z))
-    # print qx, qy, qz
-    # q1 = tf.transformations.quaternion_multiply(qx, qy)
-    # q = tf.transformations.quaternion_multiply(q1, qz)
-    # rotation.x = q[0]
-    # rotation.y = q[1]
-    # rotation.z = q[2]
-    # rotation.w = q[3]
     return result
 
   def PubGraspFrame(self, grasp):
@@ -151,7 +140,7 @@ class GraspApproach:
     pose = PoseStamped()
     pose.header.frame_id = "camera_rgb_optical_frame"
     pose.header.stamp = rospy.Time.now()
-    pose.pose.position = approach
+    pose.pose.position = deepcopy(approach)
     # vec = grasps.grasps[0].axis
     # yaw = math.atan2(vec.y, vec.x);
     # pitch = math.atan2(math.sqrt((vec.x * vec.x) + (vec.y * vec.y)), vec.z );
