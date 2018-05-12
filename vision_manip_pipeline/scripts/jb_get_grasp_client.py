@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import sys
-from gpd.msg import GraspConfig
+from gpd.msg import GraspConfigList
 from vision_manip_pipeline.srv import GetGrasp
 
 def get_grasp_client(x,y,z):

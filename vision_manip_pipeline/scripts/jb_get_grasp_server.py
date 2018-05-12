@@ -23,6 +23,8 @@ def handle_get_grasp(req):
     threshold = 10
 
     # keep waiting until get grasp with close location......
+    graspList = GraspConfigList()
+
     notFound = True
     while notFound:
 
@@ -40,7 +42,7 @@ def handle_get_grasp(req):
                 print lapse
             if lapse > threshold:
                 print "ERROR: Took too long to get grasp, will now force exit."
-                return top_grasp
+                # return top_grasp
 
         # search for a grasp close to the object location    
         # rospy.loginfo('Top grasp was:')
@@ -57,6 +59,9 @@ def handle_get_grasp(req):
                     notFound = False
                     print "GRASP FOUND!"
 
+                graspList.grasps.append(grasp)
+
+
         # otherwise no close grasps found yet, so reset grasps and try again!
         if notFound:
             print "ERRRORRRRR NO CLOSE GRASP FOUND!!!!!! Trying again! \n\n\n"
@@ -68,14 +73,15 @@ def handle_get_grasp(req):
             print lapse
             if lapse > threshold:
                 print "ERROR: Took too long to get CLOSE grasp, will now force exit."
-                return top_grasp
+                # return top_grasp
 
 
     # grasp was found, return it!
-    print "Returning grasp with highest score [%s]"%(top_grasp)
+    # print "Returning grasp with highest score [%s]"%(top_grasp)
     grasps = [] # need to clear this before exiting, but can't becuase used before assigned
-    return top_grasp
+    # return top_grasp
 
+    return (graspList, len(graspList.grasps))
 
 # Server set up
 def get_grasp_server():
