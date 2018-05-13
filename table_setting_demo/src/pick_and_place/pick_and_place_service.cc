@@ -16,6 +16,9 @@ int main(int argc, char **argv) {
         read_file = optarg;
         read = true;
         break;
+      case 'o':
+        // TODO: Do I need to set anything here?!
+        break;
       case '?':
         if (isprint(optopt))
           printf("Unknown option: %d.\n", optopt);
@@ -28,14 +31,22 @@ int main(int argc, char **argv) {
   // Create Pick Place object
   pr2::PickPlace pp("right_arm");
 
+  // make choices
   if (read) {
     printf("Read File: %s\n", read_file.c_str());
     pp.ReadCalibration(read_file);
-  } else {
+  } 
+  else if ( save ) { 
     pp.CalibrateObjects();
   }
+  else{
+    pp.OnlineDetections();
+  }
 
+  // set params on the ros param server
   pp.PostParameters();
+
+  // save the file if necessary
   if (save) {
     printf("Save File: %s\n", save_file.c_str());
     pp.SaveCalibration(save_file);

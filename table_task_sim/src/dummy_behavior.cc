@@ -81,10 +81,13 @@ void DummyBehavior::UpdateActivationPotential() {
   }
   opos = table_state_.objects[obj_idx].pose.position;
 
+
+  double c1 = 1.0; // weight for distance
+  double c2 = 1.0; //weight for suitability
   double dist = hypot(rpos.y - opos.y, rpos.x - opos.x);
 
   if( fabs(dist) > 0.00001 )
-      state_.activation_potential = (1.0f / dist) * state_.suitability;
+      state_.activation_potential = ( c1 * (1.0f / dist)) + (c2 * state_.suitability);
   else state_.activation_potential = 0.00000001;
 
   ROS_DEBUG_NAMED("DummyBehavior", "%s: activation_potential: [%f]", object_.c_str(), state_.activation_potential );

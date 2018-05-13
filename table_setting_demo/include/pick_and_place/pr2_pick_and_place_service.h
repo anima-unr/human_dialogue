@@ -107,6 +107,8 @@ class PickPlace {
   void PostParameters();
   void CalibrateObjects();
   void ReadCalibration(std::string filename);
+  void OnlineDetections();
+
 //-----
   /* //JB TODO:    MoveArmGoal_t GetArmPoseFromPoints(
     std::string frame_id,
