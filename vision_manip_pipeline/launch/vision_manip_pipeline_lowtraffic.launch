@@ -1,8 +1,8 @@
 <launch>
  <!--<arg name="rgb_camera_info" value="/camera/rgb/camera_info"/>
  <arg name="rgb_rimg_ect" value="/camera/rgb/image_color"/>  --><!--Rectified color image-->
- <arg name="depReg_imgrect" value="/camera/depth_registered/image"/>  <!--Rectified depth image-->
- <arg name="out_cloud" value="newpoints"/>
+ <arg name="depReg_imgrect" value="/kinect_head/depth_registered/image"/>  <!--Rectified depth image-->
+ <arg name="out_cloud" value="/local/depth_registered/points"/>
 
  <node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager" output="screen"/>
 
@@ -15,4 +15,7 @@
    <remap from="image_rect" to="$(arg depReg_imgrect)"/>  
    <remap from="points" to="$(arg out_cloud)"/>
  </node>
+
+    <node pkg="tf" type="static_transform_publisher" name="orthographic_proj" args="0 -1 1 0 1 0 0 torso_lift_link test 100" />
+    
 </launch>

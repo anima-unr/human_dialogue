@@ -69,7 +69,8 @@ geometry_msgs::PointStamped transPoint(double x, double y, double z, const std::
 
 // ==========================================================
 
-bool moveArm(geometry_msgs::PoseStamped newPnt){
+bool moveArm(geometry_msgs::PoseStamped newApp, geometry_msgs::PoseStamped newPnt){
+
   moveit::planning_interface::MoveGroup group("right_arm");
   printf("Move it TEST0\n");
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
@@ -80,9 +81,42 @@ bool moveArm(geometry_msgs::PoseStamped newPnt){
   // // We can also print the name of the end-effector link for this group.
   // ROS_INFO("Reference frame: %s", group.getEndEffectorLink().c_str());
 
-  printf("Move it TEST1\n");
+  //------------------
+  printf("Move to approach\n");
 
   geometry_msgs::Pose pose_target;
+  pose_target.orientation.x = newApp.pose.orientation.x;
+  pose_target.orientation.y = newApp.pose.orientation.y;
+  pose_target.orientation.z = newApp.pose.orientation.z;
+  pose_target.orientation.w = newApp.pose.orientation.w;
+  pose_target.position.x = newApp.pose.position.x;
+  pose_target.position.y = newApp.pose.position.y;
+  pose_target.position.z = newApp.pose.position.z;
+
+  group.setPoseTarget(pose_target);
+
+  moveit::planning_interface::MoveGroup::Plan my_plan;
+  bool success = group.plan(my_plan);
+
+  ROS_INFO("Visualizing plan 1 (pose goal) %s",success?"":"FAILED");
+
+  if( success) {
+    /* Sleep to give Rviz time to visualize the plan. */
+    printf("\tPlanning...");
+    sleep(5.0);
+    // printf("\tMoving...");
+    // group.move();
+    // sleep(5.0);
+  }
+  else {
+    printf("Moving to next grasp!\n");
+    return false;
+  }
+
+ //------------------
+  printf("Move to pick\n");
+
+  // geometry_msgs::Pose pose_target;
   pose_target.orientation.x = newPnt.pose.orientation.x;
   pose_target.orientation.y = newPnt.pose.orientation.y;
   pose_target.orientation.z = newPnt.pose.orientation.z;
@@ -91,48 +125,24 @@ bool moveArm(geometry_msgs::PoseStamped newPnt){
   pose_target.position.y = newPnt.pose.position.y;
   pose_target.position.z = newPnt.pose.position.z;
 
-  printf("Move it TEST2\n");
-
   group.setPoseTarget(pose_target);
 
-
-  // geometry_msgs::Pose target_pose1;
-  // target_pose1.orientation.x = 0.442673;
-  // target_pose1.orientation.y = 0.446555;
-  // target_pose1.orientation.z = 0.559637;
-  // target_pose1.orientation.w = 0.539848;
-  // target_pose1.position.x =  1.83911;
-  // target_pose1.position.y =  -0.429218;
-  // target_pose1.position.z = 0.83142;
-  // group.setPoseTarget(target_pose1);
-
-
-
-  // moveit_msgs::OrientationConstraint ocm;
-  /*ocm.link_name = "right_arm";
-  ocm.header.frame_id = "base_link";
-  ocm.orientation.w = 1.0;
-  ocm.absolute_x_axis_tolerance = 0.0075;
-  ocm.absolute_y_axis_tolerance = 0.0075;
-  ocm.absolute_z_axis_tolerance = 0.0075;
-  ocm.weight = 1.0;*/
-
-  // // set as the path constraints for the group
-  // moveit_msgs::Constraints test_constraints;
-  // test_constraints.orientation_constraints.push_back(ocm);
-  // group.setPathConstraints(test_constraints);
-
-  printf("Move it TEST3\n");
-
-  // std::cout << "\nPlanning To: " << newPnt << '\n';
-
-  moveit::planning_interface::MoveGroup::Plan my_plan;
-  bool success = group.plan(my_plan);
+  // moveit::planning_interface::MoveGroup::Plan my_plan;
+  success = group.plan(my_plan);
 
   ROS_INFO("Visualizing plan 1 (pose goal) %s",success?"":"FAILED");
-  /* Sleep to give Rviz time to visualize the plan. */
-  printf("\tPlanning...");
-  sleep(5.0);
+
+  if( success) {
+    /* Sleep to give Rviz time to visualize the plan. */
+    printf("\tPlanning...");
+    sleep(5.0);
+    // printf("\tMoving...");
+    // group.move();
+    // sleep(5.0);
+  }
+  else {
+    printf("Moving to next grasp!\n");
+  }
 
   if(success) {
     return true;
@@ -140,6 +150,7 @@ bool moveArm(geometry_msgs::PoseStamped newPnt){
   else {
     return false;
   }
+      
 
 }
 
@@ -184,47 +195,55 @@ bool checkInBounds(geometry_msgs::PointStamped newPnt) {
 // ==========================================================
 
 std::vector<double> rotationQuat(std::vector<double> approach, std::vector<double> axis,
-  std::vector<double> binormal){
-    double trace;
-    std::vector<double> rotation(4);
+                                 std::vector<double> binormal){
 
-    if(axis[2] < 0){
-      if(approach[0] > binormal[1]){
-        trace = 1 + approach[0] - binormal[1] - axis[2];
-        rotation[0] = trace;
-        rotation[1] = binormal[0] + approach[1];
-        rotation[2] = approach[2] + axis[0];
-        rotation[3] = axis[1] - binormal[2];
-      }
-      else{
-        trace = 1 - approach[0] + binormal[1] - axis[2];
-        rotation[0] = binormal[0] + approach[1];
-        rotation[1] = trace;
-        rotation[2] = axis[1] + binormal[2];
-        rotation[3] = approach[2] - axis[0];
-      }
+    double r1, r2;
+    std::vector<double> rotation = {0,0,0,1};
+    Eigen::Vector3d up(binormal[0], binormal[1], binormal[2]);
+    Eigen::Vector3d forward(axis[0], axis[1], axis[2]);
+
+    Eigen::Vector3d m0 = up.cross(forward);
+    Eigen::Vector3d m1 = forward.cross(m0);
+
+    double r0 = m0[0] + m0[1] + m0[2];
+    if(r0 > 0){
+      double r1 = sqrt(r0 + 1.0);
+      rotation[3] = r1 * 0.5;
+      r1 = 0.5 / r1;
+      rotation[0] = (m1[2] - forward[1]) * r1;
+      rotation[1] = (forward[0] - m0[2]) * r1;
+      rotation[2] = (m0[1] - m1[0]) * r1;
+    }
+    else if((m0[0] >= m1[1]) && (m0[0] >= forward[2])){
+      r1 = sqrt(((1 + m0[0]) - m1[1]) - forward[2]);
+      r2 = 0.5 / r1;
+      rotation[0] = 0.5 * r1;
+      rotation[1] = (m0[1] + m1[0]) * r2;
+      rotation[2] = (m0[2] + forward[0]) * r2;
+      rotation[3] = (m1[2] - forward[1]) * r2;
+    }
+    else if (m1[1] > forward[2]){
+      r1 = sqrt(((1 + m1[1]) - m0[0]) - forward[2]);
+      r2 = 0.5 / r1;
+      rotation[0] = (m1[0] + m0[1]) * r2;
+      rotation[1] = 0.5 * r1;
+      rotation[2] = (forward[1] + m1[2]) * r2;
+      rotation[3] = (forward[0] - m0[2]) * r2;
     }
     else{
-      if(approach[0] < (-binormal[1])){
-        trace = 1 - approach[0] - binormal[1] + axis[2];
-        rotation[0] = approach[2] + axis[0];
-        rotation[1] = axis[1] + binormal[2];
-        rotation[2] = trace;
-        rotation[3] = binormal[0] - approach[1];
-      }
-      else{
-        trace = 1 + approach[0] + binormal[1] + axis[2];
-        rotation[0] = axis[1] - binormal[2];
-        rotation[1] = approach[2] - axis[0];
-        rotation[2] = binormal[0] - approach[1];
-        rotation[3] = trace;
-      }
+      r1 = sqrt(((1 + forward[2]) - m0[0]) - m1[1]);
+      r2 = 0.5 / r1;
+      rotation[0] = (forward[0] + m0[2]) * r2;
+      rotation[1] = (forward[1] + m1[2]) * r2;
+      rotation[2] = 0.5 * r1;
+      rotation[3] = (m0[1] - m1[0]) * r2;
     }
 
-    rotation[0] *= 1.0 / (2.0 * sqrt(trace)); // TODO: x or w? w
-    rotation[1] *= 1.0 / (2.0 * sqrt(trace)); // TODO: x or y? x 
-    rotation[2] *= 1.0 / (2.0 * sqrt(trace)); // TODO: x or z? y
-    rotation[3] *= 1.0 / (2.0 * sqrt(trace)); // TODO: z or w? z
+    double mag = sqrt(rotation[0]*rotation[0] + rotation[1]*rotation[1] + rotation[2]*rotation[2] + rotation[3]*rotation[3]);
+    rotation[0] = rotation[0] / mag;
+    rotation[1] = rotation[1] / mag;
+    rotation[2] = rotation[2] / mag;
+    rotation[3] = rotation[3] / mag;
 
     return rotation;
 }
@@ -328,7 +347,7 @@ int main(int argc, char **argv){
 
     std::vector<double> cube(6);
     // cube = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, newPnt.point.z + 0.5*eps};    
-    cube = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, 1.3};    
+    cube = {newPnt.point.x - eps, newPnt.point.x + eps, newPnt.point.y - eps, newPnt.point.y + eps, newPnt.point.z - 2*eps, 1.25};    
     // cube = {conv2DTo3DSrv.response.newX - eps, conv2DTo3DSrv.response.newX + eps, conv2DTo3DSrv.response.newY- eps, conv2DTo3DSrv.response.newY + eps, conv2DTo3DSrv.response.newZ - eps, conv2DTo3DSrv.response.newZ + eps};    
   
     std::cout << "cube to search for graps: " << cube[0] << ' ' << cube[1] << ' ' << cube[2] << ' ' << cube[3] << ' ' << cube[4] << ' ' << cube[5] << '\n'; 
@@ -346,6 +365,7 @@ int main(int argc, char **argv){
     tempOri = {0,0,0,0}; 
 
     pubWorkspaceSrv.request.pos = tempPos;
+    pubWorkspaceSrv.request.pos2 = tempPos;
     pubWorkspaceSrv.request.ori = tempOri;
     if(pubWorkspaceClient.call(pubWorkspaceSrv)) {
        std::cout << pubWorkspaceSrv.response << '\n';
@@ -474,6 +494,7 @@ int main(int argc, char **argv){
     // vision_manip_pipeline::PubWorkspace pubWorkspaceSrv;
     
     pubWorkspaceSrv.request.pos = pos;
+    pubWorkspaceSrv.request.pos2 = base;
     pubWorkspaceSrv.request.ori = tilt;
     if(pubWorkspaceClient.call(pubWorkspaceSrv)) {
        std::cout << pubWorkspaceSrv.response << '\n';
@@ -486,7 +507,8 @@ int main(int argc, char **argv){
     //  WILL need to transform from other frame here nowwwwwww!!!!!
     // Transform point into correct PR2 frame for motion planning etc...
     // geometry_msgs::PoseStamped newPose = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/torso_lift_link");
-    geometry_msgs::PoseStamped newPose = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/odom_combined");
+    geometry_msgs::PoseStamped newApproach = getPoseTrans(pos[0], pos[1], pos[2], ori, "/test", "/odom_combined");
+    geometry_msgs::PoseStamped newPick = getPoseTrans(base[0], base[1], base[2], ori, "/test", "/odom_combined");
 
     // std::cout << "final pos: " << newPose.pose.position.x << ',' << newPose.pose.position.y << ',' << newPose.pose.position.z << '\n';
     // std::cout << "final ori: " << newPose.pose.orientation.w << ',' << newPose.pose.orientation.x << ',' << newPose.pose.orientation.y << ',' << newPose.pose.orientation.z << '\n';
@@ -494,7 +516,7 @@ int main(int argc, char **argv){
 //------------------------------    
 // FIXXXXXX    
     // TODO: use moveit to plan to this position and orientation!
-    if ( moveArm(newPose) ) {
+    if ( moveArm(newApproach, newPick) ) {
       break;
     }
 // //------------------------------    

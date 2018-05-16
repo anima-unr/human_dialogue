@@ -48,6 +48,16 @@ find_package(catkin REQUIRED COMPONENTS
   #moveit_visual_tools
 )
 
+
+find_package(cmake_modules REQUIRED)
+find_package(Eigen3 REQUIRED)
+include_directories(
+  include
+  ${EIGEN_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+)
+add_definitions(${EIGEN_DEFINITIONS})
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -158,6 +168,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -293,5 +304,12 @@ add_dependencies(jb_vision_manip_pipeline ${catkin_LIBRARIES}  )
 target_link_libraries(jb_vision_manip_pipeline ${catkin_LIBRARIES} )
 
 
+# add_executable(demo_moveit_cpp src/demo_moveit_cpp.cpp)
+# add_dependencies(demo_moveit_cpp ${catkin_LIBRARIES}  )
+# target_link_libraries(demo_moveit_cpp ${catkin_LIBRARIES} )
+
+# add_executable(testtt src/test.cpp)
+# add_dependencies(testtt ${catkin_LIBRARIES}  )
+# target_link_libraries(testtt ${catkin_LIBRARIES} )
 
 

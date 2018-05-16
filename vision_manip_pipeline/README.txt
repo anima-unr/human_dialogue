@@ -21,6 +21,8 @@ cd ~/freenect_headless; roslaunch freenect-dave_localKinect.launch     /// THIS 
 rosrun vision_manip_pipeline remapKinectTopicsToLocal.py 
 ///////
 
+REPLACED WITH: vision_manip_low_traffic.launch
+
 
 /----
 // New things for ortho proj //
