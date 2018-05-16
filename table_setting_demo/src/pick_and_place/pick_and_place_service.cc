@@ -2,11 +2,11 @@
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "pick_and_place_service");
-  bool save = false, read = false;
+  bool save = false, read = false, save_place = false;
   std::string save_file, read_file;
   char c;
   ros::NodeHandle nh;
-  while ((c = getopt(argc, argv, "s:r:")) != -1) {
+  while ((c = getopt(argc, argv, "s:r:p:o:")) != -1) {
     switch (c) {
       case 's':
         save_file = optarg;
@@ -16,6 +16,10 @@ int main(int argc, char **argv) {
         read_file = optarg;
         read = true;
         break;
+      case 'p': // pick place saving 
+        save_file = optarg;
+        save_place = true;
+        break;
       case 'o':
         // TODO: Do I need to set anything here?!
         break;
@@ -24,7 +28,9 @@ int main(int argc, char **argv) {
           printf("Unknown option: %d.\n", optopt);
         return 1;
       default:
-        abort();
+        printf("Assuming the yolo-based vision manip pipeline is running. Will read from input calibration file for place locations.\n");
+        read_file = optarg;
+        // abort();
     }
   }
 
@@ -39,8 +45,17 @@ int main(int argc, char **argv) {
   else if ( save ) { 
     pp.CalibrateObjects();
   }
+  else if (save_place) {
+    pp.OnlineDetectionsPlaces();    
+  }
   else{
-    pp.OnlineDetections();
+    printf("Read File: %s\n", read_file.c_str());
+    pp.ReadPlaces(read_file);      
+
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
+
+    pp.OnlineDetectionsPicks( nh );
   }
 
   // set params on the ros param server
@@ -50,6 +65,10 @@ int main(int argc, char **argv) {
   if (save) {
     printf("Save File: %s\n", save_file.c_str());
     pp.SaveCalibration(save_file);
+  }
+  else if (save_place) {
+    printf("Save File: %s\n", save_file.c_str());
+    pp.SavePlaces(save_file);
   }
 
 

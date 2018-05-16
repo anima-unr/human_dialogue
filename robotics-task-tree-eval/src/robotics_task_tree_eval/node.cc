@@ -52,7 +52,7 @@ float getSuitability(uint16_t node, uint8_t robot) {
     }
     // Sugar
     if( node == 5 ){
-      return 1.0;
+      return 0.25;
     }
     // Tea
     if( node == 6 ){
@@ -84,7 +84,7 @@ float getSuitability(uint16_t node, uint8_t robot) {
     }
     // Sugar
     if( node == 18 ){
-      return 0.0;
+      return 0.75;
     }
     // Tea
     if( node == 19 ){

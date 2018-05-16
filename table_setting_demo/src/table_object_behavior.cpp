@@ -100,7 +100,7 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
   neutral_object_pos = neutral_pos;
   object_id_ = "";
 
-ROS_INFO("MADE IT HERE!!!!!!\n\n");
+// ROS_INFO("MADE IT HERE!!!!!!\n\n");
 
   // check if dynamic object
   std::vector<std::string> static_objects_ = std::vector<std::string>(

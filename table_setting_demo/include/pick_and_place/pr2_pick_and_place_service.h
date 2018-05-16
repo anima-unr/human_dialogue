@@ -107,7 +107,12 @@ class PickPlace {
   void PostParameters();
   void CalibrateObjects();
   void ReadCalibration(std::string filename);
-  void OnlineDetections();
+
+  void OnlineDetectionsPlaces();
+  void OnlineDetectionsPicks(ros::NodeHandle);
+  void ReadPlaces(std::string filename);
+  void SavePlaces(std::string filename);
+  // int visionManipPipeline(std::string obj_name, ros::NodeHandle);
 
 //-----
   /* //JB TODO:    MoveArmGoal_t GetArmPoseFromPoints(
