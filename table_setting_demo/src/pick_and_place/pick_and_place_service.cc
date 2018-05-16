@@ -6,6 +6,10 @@ int main(int argc, char **argv) {
   std::string save_file, read_file;
   char c;
   ros::NodeHandle nh;
+
+  ros::ServiceClient visManipClient = nh.serviceClient<vision_manip_pipeline::VisionManip>("vision_manip");
+
+
   while ((c = getopt(argc, argv, "s:r:p:o:")) != -1) {
     switch (c) {
       case 's':
@@ -55,7 +59,7 @@ int main(int argc, char **argv) {
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
-    pp.OnlineDetectionsPicks( nh );
+    pp.OnlineDetectionsPicks( visManipClient );
   }
 
   // set params on the ros param server

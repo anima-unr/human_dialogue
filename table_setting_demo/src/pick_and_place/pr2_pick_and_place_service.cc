@@ -626,14 +626,35 @@ void PickPlace::OnlineDetectionsPlaces() {
 
 }
 
-void PickPlace::OnlineDetectionsPicks(ros::NodeHandle nh) {
+void PickPlace::OnlineDetectionsPicks( ros::ServiceClient visManipClient ) {
 
+  // ros::ServiceClient visManipClient = n.serviceClient<vision_manip_pipeline::VisionManip>("vision_manip");
   for (uint32_t i = 0; i < objects_.size(); ++i) {
     // int res = visionManipPipeline( objects_[i], nh);  //TODO JB_INTEGRATION replace this call with vision manup pipeline
                                                       //  THE OUTPUT IS COMPLETELY WRONG FOR THIS FUNCTION, FIXXXXXXX TO BE POSE
-    geometry_msgs::PoseStamped currentPose;
-    currentPose = arm_group_.getCurrentPose();
-    object_goal_map_[objects_[i]].pick_pose = currentPose.pose; //TODO REPLACE WITH POES FROM VISIONMANIP FUNCTION!!!
+    vision_manip_pipeline::VisionManip visManipSrv;
+    visManipSrv.request.obj_name = objects_[i].c_str();
+    if(visManipClient.call(visManipSrv)){
+      // ROS_INFO("NewX: %f NewY: %f NewZ: %f", (float)srv.response.newX, (float)srv.response.newY, (float)srv.response.newZ);
+      std::cout << "Object:   " << objects_[i].c_str() << '\n';
+      std::cout << "Approach Pose:   " << visManipSrv.response.approach_pose << '\n';
+      std::cout << "Pick Pose:       " << visManipSrv.response.pick_pose << '\n';
+      std::cout << "Top Valid Grasp: " << visManipSrv.response.grasp << '\n';
+    }
+    else{
+      ROS_ERROR("Failed to call service vision_manip, setting score to 0 for object: %s.", objects_[i].c_str());
+      // return 1;
+    }
+
+    // set the pick pose
+    object_goal_map_[objects_[i]].pick_pose = visManipSrv.response.pick_pose.pose; 
+    // TODO JB_INTEGRATION: Need to add in the approach pose as it's own thing too instead of doing hardcoded offset as before?!?!?
+
+    // TODO: backup testing - remove when pipleine works!!!
+    // geometry_msgs::PoseStamped currentPose;
+    // currentPose = arm_group_.getCurrentPose();
+    // object_goal_map_[objects_[i]].pick_pose = currentPose.pose; //TODO REPLACE WITH POES FROM VISIONMANIP FUNCTION!!!
+
    }
 
 }

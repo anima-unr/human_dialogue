@@ -45,6 +45,12 @@
 #include "table_setting_demo/pick_and_place_state.h"
 #include "table_setting_demo/pick_and_place_stop.h"
 
+
+#include "vision_manip_pipeline/VisionManip.h"
+
+
+
+
 namespace pr2 {
 
 typedef enum STATE {
@@ -109,7 +115,7 @@ class PickPlace {
   void ReadCalibration(std::string filename);
 
   void OnlineDetectionsPlaces();
-  void OnlineDetectionsPicks(ros::NodeHandle);
+  void OnlineDetectionsPicks(ros::ServiceClient visManipClient);
   void ReadPlaces(std::string filename);
   void SavePlaces(std::string filename);
   // int visionManipPipeline(std::string obj_name, ros::NodeHandle);

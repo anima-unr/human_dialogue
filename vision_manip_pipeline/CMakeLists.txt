@@ -313,3 +313,11 @@ target_link_libraries(jb_vision_manip_pipeline ${catkin_LIBRARIES} )
 # target_link_libraries(testtt ${catkin_LIBRARIES} )
 
 
+add_executable(jb_vision_manip_pipeline_server src/jb_vision_manip_pipeline_server.cpp)
+add_dependencies(jb_vision_manip_pipeline_server ${catkin_LIBRARIES}  )
+target_link_libraries(jb_vision_manip_pipeline_server ${catkin_LIBRARIES} )
+
+add_executable(jb_vision_manip_pipeline_client src/jb_vision_manip_pipeline_client.cpp)
+add_dependencies(jb_vision_manip_pipeline_client ${catkin_LIBRARIES}  )
+target_link_libraries(jb_vision_manip_pipeline_client ${catkin_LIBRARIES} )
+
