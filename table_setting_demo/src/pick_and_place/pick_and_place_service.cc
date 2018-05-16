@@ -9,23 +9,30 @@ int main(int argc, char **argv) {
 
   ros::ServiceClient visManipClient = nh.serviceClient<vision_manip_pipeline::VisionManip>("vision_manip");
 
+  // Create Pick Place object
+  pr2::PickPlace pp("right_arm");
 
-  while ((c = getopt(argc, argv, "s:r:p:o:")) != -1) {
+  // get args to set correct flags
+  while ((c = getopt(argc, argv, "s:r:p:v:")) != -1) {
     switch (c) {
       case 's':
         save_file = optarg;
         save = true;
+        pp.visionManipVer = false;
         break;
       case 'r':
         read_file = optarg;
         read = true;
+        pp.visionManipVer = false;
         break;
       case 'p': // pick place saving 
         save_file = optarg;
         save_place = true;
+        pp.visionManipVer = true;
         break;
-      case 'o':
-        // TODO: Do I need to set anything here?!
+      case 'v':
+        read_file = optarg;
+        pp.visionManipVer = true;
         break;
       case '?':
         if (isprint(optopt))
@@ -34,12 +41,11 @@ int main(int argc, char **argv) {
       default:
         printf("Assuming the yolo-based vision manip pipeline is running. Will read from input calibration file for place locations.\n");
         read_file = optarg;
+        pp.visionManipVer = true;
         // abort();
     }
   }
 
-  // Create Pick Place object
-  pr2::PickPlace pp("right_arm");
 
   // make choices
   if (read) {

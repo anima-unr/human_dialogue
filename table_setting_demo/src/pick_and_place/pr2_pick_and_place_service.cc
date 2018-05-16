@@ -180,7 +180,15 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
 PickPlace::~PickPlace() {}
 
 void PickAndPlaceThread(PickPlace *manipulation, std::string object) {
-  manipulation->PickAndPlaceImpl(object);
+
+  // old way of manipulation
+  if ( !manipulation->visionManipVer ) {
+    manipulation->PickAndPlaceImpl(object);
+  }
+  // new way of manipulation with vision manip pipeiline
+  else {
+    manipulation->PickAndPlaceImpl_VisionManip(object);
+  }
 }
 
 void TransformPoseLocalToWorld(
@@ -204,6 +212,153 @@ void TransformPoseWorldToLocal(
 
   output.pose.orientation = input.pose.orientation;
 }
+
+void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
+
+  printf("Picking up Object: %s\n", object.c_str());
+  geometry_msgs::Pose pick_pose_offset;
+  geometry_msgs::Pose approach_pose_offset;
+  geometry_msgs::Pose place_pose_offset;
+  if (stop)
+    return;
+
+  state_ = NEUTRAL;
+  r_gripper_.Open();
+  state_ = APPROACHING;
+
+  //---------------
+  // Move to Neutral Start
+  ROS_INFO("Goal: %s APPROACH", object.c_str());
+  // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].pick_pose.position.x, object_goal_map_["neutral"].pick_pose.position.y, object_goal_map_["neutral"].pick_pose.position.z);
+  // printf("\n  goal ori pick place imp x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].pick_pose.orientation.x, object_goal_map_["neutral"].pick_pose.orientation.y, object_goal_map_["neutral"].pick_pose.orientation.z, object_goal_map_["neutral"].pick_pose.orientation.z);
+  // ROS_INFO("              planner_id: %s", arm_group_.getDefaultPlannerId(arm_).c_str());
+
+  approach_pose_offset = object_goal_map_[object.c_str()].approach_pose;
+  printf("\n  goal pos x %f  y %f  z %f \n", approach_pose_offset.position.x, approach_pose_offset.position.y, approach_pose_offset.position.z);
+  printf("\n  goal ori x %f  y %f  z %f  w %f\n", approach_pose_offset.orientation.x, approach_pose_offset.orientation.y, approach_pose_offset.orientation.z, approach_pose_offset.orientation.w);
+
+  if (!SendGoal(approach_pose_offset)) { 
+    ROS_INFO("Goal ERROR!!!!");
+    return;
+  } 
+  if (stop)
+    return;
+
+  //---------------
+  // Move to Object Pick location
+  ROS_INFO("Goal: %s PICK", object.c_str());
+  // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[object.c_str()].pick_pose.position.x, object_goal_map_[object.c_str()].pick_pose.position.y, object_goal_map_[object.c_str()].pick_pose.position.z);
+  // printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].pick_pose.orientation.x, object_goal_map_[object.c_str()].pick_pose.orientation.y, object_goal_map_[object.c_str()].pick_pose.orientation.z, object_goal_map_[object.c_str()].pick_pose.orientation.z);
+  if (!SendGoal(object_goal_map_[object.c_str()].pick_pose)) {
+    ROS_INFO("Goal ERROR!!!!");
+    return;
+  }
+  if (stop)
+  return;
+  r_gripper_.Close();
+  // TODO JB: attach object to arm using moveit
+  ROS_INFO("Attach the object to the robot");
+  int index = getIndex(object);
+  if (index != -1) {
+  arm_group_.attachObject(collision_objects_[index].id);
+  }
+  /* Sleep to give Rviz time to show the object attached (different color). */
+  // sleep(4.0);
+  state_ = PICKED;
+  ROS_INFO("     State is now PICKED");
+  // Move to Neutral start
+  if (stop)
+    return;
+
+  //---------------
+  // Move to netural pick
+  ROS_INFO("Goal: %s APPROACH", object.c_str());
+  approach_pose_offset = object_goal_map_[object.c_str()].approach_pose;
+  // printf("\n  goal pos x %f  y %f  z %f \n", approach_pose_offset.position.x, approach_pose_offset.position.y, approach_pose_offset.position.z);
+  // printf("\n  goal ori x %f  y %f  z %f  w %f\n", approach_pose_offset.orientation.x, approach_pose_offset.orientation.y, approach_pose_offset.orientation.z, approach_pose_offset.orientation.w);
+  if (!SendGoal(approach_pose_offset)) { 
+    ROS_INFO("Goal ERROR!!!!");
+    ROS_INFO("Detach the object from the robot");
+    index = getIndex(object);
+    if (index != -1) {
+    arm_group_.detachObject(collision_objects_[index].id);
+    }
+    return;
+  }
+  if (stop)
+    return;
+  state_ = PLACING;
+  ROS_INFO("     State is now PLACING");
+  //TODO JB: object_goal_map_["neutral"].place_pose.motion_plan_request.goal_constraints.position_constraints[0].header.stamp = ros::Time::now();
+
+  //---------------
+  //  Move to neutral place
+  ROS_INFO("Goal: Neutral PLACE");
+  //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
+  //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
+  place_pose_offset = object_goal_map_[object.c_str()].place_pose;
+    place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
+    place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+    place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+
+    // printf("\n  goal pos x %f  y %f  z %f \n", place_pose_offset.position.x, place_pose_offset.position.y, place_pose_offset.position.z);
+    // printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
+  if (!SendGoal(place_pose_offset)) {
+    ROS_INFO("Goal ERROR!!!!");
+    return;
+  }
+  if (stop)
+    return;
+
+  //---------------
+  //  Move to object place
+  ROS_INFO("Goal: %s PLACE", object.c_str());
+    // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[object.c_str()].place_pose.position.x, object_goal_map_[object.c_str()].place_pose.position.y, object_goal_map_[object.c_str()].place_pose.position.z);
+    // printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].place_pose.orientation.x, object_goal_map_[object.c_str()].place_pose.orientation.y, object_goal_map_[object.c_str()].place_pose.orientation.z, object_goal_map_[object.c_str()].place_pose.orientation.z);
+  if (!SendGoal(object_goal_map_[object.c_str()].place_pose)) {
+    ROS_INFO("Goal ERROR!!!!");
+    return;
+  }
+  if (stop)
+    return;
+  r_gripper_.Open();
+  // TODO JB: dettach object to arm using moveit
+  ROS_INFO("Detach the object from the robot");
+  index = getIndex(object);
+  if (index != -1) {
+  arm_group_.detachObject(collision_objects_[index].id);
+  }
+  /* Sleep to give Rviz time to show the object detached. */
+  // sleep(4.0);
+  // The pickandplacecheck uses this to tell when done, so it should be moved to after reset to neutral pick
+  // state_ = PLACED;
+  // ROS_INFO("     State is now PLACED");
+  if (stop)
+    return;
+
+  //---------------
+  //  Move to neutral place
+  ROS_INFO("Goal: Neutral PLACE");
+  //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
+  //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
+  place_pose_offset = object_goal_map_[object.c_str()].place_pose;
+    place_pose_offset.position.z = place_pose_offset.position.z + 0.2; 
+    place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
+    place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
+    printf("\n  goal pos x %f  y %f  z %f \n", place_pose_offset.position.x, place_pose_offset.position.y, place_pose_offset.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
+  if (!SendGoal(place_pose_offset)) {  
+    ROS_INFO("Goal ERROR!!!!");
+    return;
+  }
+  if (stop)
+    return;
+  // !!! Don't want to move back to pick as unncessesary with +z instead of neutral
+  state_ = PLACED;
+  ROS_INFO("     State is now PLACED");
+
+}
+
 
 void PickPlace::PickAndPlaceImpl(std::string object) {
   printf("Picking up Object: %s\n", object.c_str());
@@ -648,6 +803,7 @@ void PickPlace::OnlineDetectionsPicks( ros::ServiceClient visManipClient ) {
 
     // set the pick pose
     object_goal_map_[objects_[i]].pick_pose = visManipSrv.response.pick_pose.pose; 
+    object_goal_map_[objects_[i]].approach_pose = visManipSrv.response.approach_pose.pose; 
     // TODO JB_INTEGRATION: Need to add in the approach pose as it's own thing too instead of doing hardcoded offset as before?!?!?
 
     // TODO: backup testing - remove when pipleine works!!!
