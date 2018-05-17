@@ -93,15 +93,16 @@ TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {}
 TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
-    std::string mutex_topic,
     std::string object,
+    std::string mutex_topic,
     std::vector<float> pos,
     bool use_local_callback_queue,
     boost::posix_time::millisec mtime) : arm_group_{"right_arm"}, Behavior(name,
       peers,
       children,
       parent,
-      state), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_(){
+      state, 
+      object), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_(){
 
   // flag saying whether the ROS publishers/listeners have been created
   ready_to_publish_ = false;
@@ -118,30 +119,31 @@ TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, 
 
 // ROS_INFO("MADE IT HERE!!!!!!\n\n");
 
-  // check if dynamic object
-  std::vector<std::string> static_objects_ = std::vector<std::string>(
-    static_object_str,
-    static_object_str + sizeof(static_object_str) / sizeof(char*));
-  dynamic_object = true;
-  for (int i = 0; i < static_objects_.size(); ++i) {
-    if (object == static_objects_[i]) {
-      dynamic_object = false;
-      break;
-    }
-  }
-  // set object_id
-  if (!dynamic_object) {
-    object_id_ = object;
-  }
+  // // check if dynamic object
+  // std::vector<std::string> static_objects_ = std::vector<std::string>(
+  //   static_object_str,
+  //   static_object_str + sizeof(static_object_str) / sizeof(char*));
+  // dynamic_object = true;
+  // for (int i = 0; i < static_objects_.size(); ++i) {
+  //   if (object == static_objects_[i]) {
+  //     dynamic_object = false;
+  //     break;
+  //   }
+  // }
+  // // set object_id
+  // if (!dynamic_object) {
+  //   object_id_ = object;
+  // }
 
-  // set root/manip frames
-  nh_.getParam("root_frame", root_frame_);
-  nh_.getParam("manip_frame", manip_frame_);
-  //tf_listener_ = new TransformListener();
+  // // set root/manip frames
+  // nh_.getParam("root_frame", root_frame_);
+  // nh_.getParam("manip_frame", manip_frame_);
+  // //tf_listener_ = new TransformListener();
 
-  // debugging - declare publisher for manip markers
-  marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
-  ready_to_publish_ = true;
+  // // debugging - declare publisher for manip markers
+  // marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
+  // ready_to_publish_ = true;
+
   // Check size of initial position of objects
   if (pos.size() <= 0)
     object_pos = std::vector<float>(3);
@@ -187,108 +189,86 @@ void TableObject_VisionManip::UpdateActivationPotential() {
     oz = object_pos[2];
   }
  
-  // get PR2 hand position (and store in mx, my, mz)
-  tf::StampedTransform transform;
-  try{
-    //ROS_INFO( "trying transform" );
-    tf_listener_.lookupTransform(root_frame_, manip_frame_, ros::Time(0), transform);
-    mx = transform.getOrigin().x();
-    my = transform.getOrigin().y();
-    mz = transform.getOrigin().z();
-    //ROS_INFO( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
-  }
-  catch( tf::TransformException ex)
+
+  // // LUKES WAY TO GET ARM POSITION.......
+  // // get PR2 hand position (and store in mx, my, mz)
+  // tf::StampedTransform transform;
+  // try{
+  //   //ROS_INFO( "trying transform" );
+  //   tf_listener_.lookupTransform(root_frame_, manip_frame_, ros::Time(0), transform);
+  //   mx = transform.getOrigin().x();
+  //   my = transform.getOrigin().y();
+  //   mz = transform.getOrigin().z();
+  //   //ROS_INFO( "got transformation: %0.2f %0.2f %0.2f", mx, my, mz);
+  // }
+  // catch( tf::TransformException ex)
+  // {
+  //   ROS_WARN( "could not get transform between [%s] and [%s] (%s), relying on neutral_obj_pos", root_frame_.c_str(), manip_frame_.c_str(), ex.what());
+  // }
+
+  // JB Way of getting arm position through moveit!!!
+  geometry_msgs::PoseStamped currentPose;
+  currentPose = arm_group_.getCurrentPose();
+  mx = currentPose.pose.position.x; //TODO: Don't want to use neutral pos, need it to be current pose of robot!!! - set a moveit thing in class and then can call from all these things to get current pose of robot to set to "neutral??"
+  my = currentPose.pose.position.y; //TODO: Don't want to use neutral pos, need it to be current pose of robot!!! - set a moveit thing in class and then can call from all these things to get current pose of robot to set to "neutral??"
+  mz = currentPose.pose.position.z; //TODO: Don't want to use neutral pos, need it to be current pose of robot!!! - set a moveit thing in class and then can call from all these things to get current pose of robot to set to "neutral??"
+
+  // debugging: publish TF frames to make sure objects positions are understood
+  if( ready_to_publish_ )
   {
-    ROS_WARN( "could not get transform between [%s] and [%s] (%s), relying on neutral_obj_pos", root_frame_.c_str(), manip_frame_.c_str(), ex.what());
+    visualization_msgs::Marker marker;
+
+    // marker to show object location
+    marker.header.frame_id = root_frame_;
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "manip_shapes";
+    marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 0;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.pose.position.x = ox;
+    marker.pose.position.y = oy;
+    marker.pose.position.z = oz;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 0.1;
+    marker.scale.y = 0.1;
+    marker.scale.z = 0.1;
+    marker.color.r = 0.0f;
+    marker.color.g = 1.0f;
+    marker.color.b = 0.0f;
+    marker.color.a = 1.0;
+    marker.lifetime = ros::Duration();
+    marker_pub_.publish(marker);
+
+    // marker to show hand location
+    marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 1;
+    marker.pose.position.x = mx;
+    marker.pose.position.y = my;
+    marker.pose.position.z = mz;
+    marker.color.r = 1.0f;
+    marker.color.g = 0.0f;
+    marker.color.b = 0.0f;
+    marker_pub_.publish(marker);
+
   }
 
-  // Get object neutral position and object position 
-  //   from service call potentially
-  if (!dynamic_object) {
-    ROS_DEBUG ("static objects");
+  double c1 = 1.0; // weight for distance
+  double c2 = 1.0; //weight for suitability
+  dist = hypot(my - oy, mx - ox);
 
-    // debugging: publish TF frames to make sure objects positions are understood
-    if( ready_to_publish_ )
-    {
-      visualization_msgs::Marker marker;
+  if( fabs(dist) > 0.00001 )
+    state_.activation_potential = ( c1 * (1.0f / dist)) + (c2 * state_.suitability);
+  else state_.activation_potential = 0.00001;
 
-      // marker to show object location
-      marker.header.frame_id = root_frame_;
-      marker.header.stamp = ros::Time::now();
-      marker.ns = "manip_shapes";
-      marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 0;
-      marker.action = visualization_msgs::Marker::ADD;
-      marker.type = visualization_msgs::Marker::SPHERE;
-      marker.pose.position.x = ox;
-      marker.pose.position.y = oy;
-      marker.pose.position.z = oz;
-      marker.pose.orientation.x = 0.0;
-      marker.pose.orientation.y = 0.0;
-      marker.pose.orientation.z = 0.0;
-      marker.pose.orientation.w = 1.0;
-      marker.scale.x = 0.1;
-      marker.scale.y = 0.1;
-      marker.scale.z = 0.1;
-      marker.color.r = 0.0f;
-      marker.color.g = 1.0f;
-      marker.color.b = 0.0f;
-      marker.color.a = 1.0;
-      marker.lifetime = ros::Duration();
-      marker_pub_.publish(marker);
+  ROS_INFO("OBJ(%s): updating activation potential: %0.2f", object_.c_str(), state_.activation_potential);
 
-      // marker to show hand location
-      marker.id = mask_.type * 1000 + mask_.robot * 100 + mask_.node * 10 + 1;
-      marker.pose.position.x = mx;
-      marker.pose.position.y = my;
-      marker.pose.position.z = mz;
-      marker.color.r = 1.0f;
-      marker.color.g = 0.0f;
-      marker.color.b = 0.0f;
-      marker_pub_.publish(marker);
-
-    }
-
-    dist = hypot(my - oy, mx - ox);
-
-    if( fabs(dist) > 0.00001 )
-      state_.activation_potential = 1.0f / dist;
-    else state_.activation_potential = 0.00001;
-
-    ROS_INFO("OBJ(%s): updating activation potential: %0.2f", object_.c_str(), state_.activation_potential);
-
-    // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
-    // ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);
-    // ROS_INFO("x %f y %f z %f dist %f activation_potential %f", x, y, z, dist, state_.activation_potential);
-
-  } else {
-    ROS_DEBUG("Dynamic object here soooo get activation diffly");
-    table_setting_demo::object_position pos_msg;
-    table_setting_demo::ObjectTransformation pose_msg;
-    // Check if object available in scene
-    pos_msg.request.object_id = object_;
-    if (!ros::service::call("qr_get_object_position", pos_msg)) {
-      LOG_INFO("SERVICE: [%s] - Not responding!", "qr_get_object_position");
-    } else {
-      pose_msg.request.x = pos_msg.response.position[0];
-      pose_msg.request.y = pos_msg.response.position[1];
-      pose_msg.request.w = pos_msg.response.position[2];
-      pose_msg.request.h = pos_msg.response.position[3];
-      if (!ros::service::call("object_transformation", pose_msg)) {
-        ROS_ERROR("Service [%s] is not available!", "object_transformation");
-      } else {
-        // float x = pow(neutral_object_pos[0] - pose_msg.response.transform.transform.translation.x,2);
-        // float y = pow(neutral_object_pos[1] - pose_msg.response.transform.transform.translation.y,2);
-        // float z = pow(neutral_object_pos[2] - pose_msg.response.transform.transform.translation.z,2);
-        float x = pow(mx - pose_msg.response.transform.transform.translation.x,2);
-        float y = pow(my - pose_msg.response.transform.transform.translation.y,2);
-        float z = pow(mz - pose_msg.response.transform.transform.translation.z,2);
-        dist = sqrt(x + y); // ========================================== Z REMOVED!!!!!
-        state_.activation_potential = 1.0f / dist;
-      }
-    }
-    // update position
-  }
+  // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
+  // ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);
+  // ROS_INFO("x %f y %f z %f dist %f activation_potential %f", x, y, z, dist, state_.activation_potential);
 }
+
 void TableObject_VisionManip::PickAndPlace(std::string object) {
   table_setting_demo::pick_and_place msg;
   msg.request.object = object;

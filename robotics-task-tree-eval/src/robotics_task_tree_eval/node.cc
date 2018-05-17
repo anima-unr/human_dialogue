@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include "robotics_task_tree_msgs/State.h"
 #include "log.h"
+#include "vision_manip_pipeline/VisionManip.h"
 // #include <regex>
 
 namespace task_net {
@@ -39,40 +40,55 @@ void PeerCheckThread(Node *node);
 
 //---------------
 
-float getSuitability(uint16_t node, uint8_t robot) {
+float getSuitability(uint16_t node, uint8_t robot, std::string object, ros::ServiceClient visManipClient) {
 
   // for now just strictly hard code objects for each robot.....
   // this param is only used in dummy behavior, so it does not affect THEN AND OR nodes!
 
   // define for pr2
   if(robot == 0) {
-    // Cup
-    if( node == 3 ){
-      return 1.0;
+    // // Cup
+    // if( node == 3 ){
+    //   return 1.0;
+    // }
+    // // Sugar
+    // if( node == 5 ){
+    //   return 0.25;
+    // }
+    // // Tea
+    // if( node == 6 ){
+    //   return 1.0;
+    // }
+    // // Left_Bread
+    // if( node == 8 ){
+    //   return 0.0;
+    // }
+    // // Meat
+    // if( node == 10 ){
+    //   return 0.0;
+    // }
+    // // Lettuce
+    // if( node == 11 ){
+    //   return 0.0;
+    // }
+    // // Right_Bread
+    // if( node == 12 ){
+    //   return 0.0;
+    // }
+
+    // instead call vision manip pipeline....
+    vision_manip_pipeline::VisionManip visManipSrv;
+    visManipSrv.request.obj_name = object.c_str();
+    if(visManipClient.call(visManipSrv)){
+      // ROS_INFO("NewX: %f NewY: %f NewZ: %f", (float)srv.response.newX, (float)srv.response.newY, (float)srv.response.newZ);
+      std::cout << "Object:   " << object.c_str() << '\n';
+      std::cout << "Approach Pose:   " << visManipSrv.response.approach_pose << '\n';
+      std::cout << "Pick Pose:       " << visManipSrv.response.pick_pose << '\n';
+      std::cout << "Top Valid Grasp: " << visManipSrv.response.grasp << '\n';
     }
-    // Sugar
-    if( node == 5 ){
-      return 0.25;
-    }
-    // Tea
-    if( node == 6 ){
-      return 1.0;
-    }
-    // Left_Bread
-    if( node == 8 ){
-      return 0.0;
-    }
-    // Meat
-    if( node == 10 ){
-      return 0.0;
-    }
-    // Lettuce
-    if( node == 11 ){
-      return 0.0;
-    }
-    // Right_Bread
-    if( node == 12 ){
-      return 0.0;
+    else{
+      ROS_ERROR("Failed to call service vision_manip, setting score to 0 for object: %s.", object.c_str());
+      // return 1;
     }
   }
 
@@ -122,6 +138,7 @@ Node::Node() {
 
 Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     State_t state,
+    std::string object,
     bool use_local_callback_queue, boost::posix_time::millisec mtime):
     local_("~") {
   if (use_local_callback_queue) {
@@ -130,6 +147,8 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     sub_nh_.setCallbackQueue(sub_callback_queue_);
   }
     // ROS_INFO("Node::Node was called!!!!\n");
+
+  ros::ServiceClient visManipClient = local_.serviceClient<vision_manip_pipeline::VisionManip>("vision_manip");
 
   // Generate reverse map
   GenerateNodeBitmaskMap();
@@ -166,6 +185,8 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
   state_.highest_potential = 0.0;
   thread_running_ = false;
 
+  object_ = object;
+
   // parse out parent type
   int i = 0;
   std::string type;
@@ -179,8 +200,7 @@ Node::Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
 
   // get suitability of node based on robot
   // NOTE: this param is only used in dummy/place behavior, so it does not affect THEN AND OR nodes!
-  state_.suitability = getSuitability(state_.owner.node, state_.owner.robot);   
-
+  state_.suitability = getSuitability(state_.owner.node, state_.owner.robot, object_, visManipClient);   
 
   // Get bitmask
   // printf("name: %s\n", name_->topic.c_str());

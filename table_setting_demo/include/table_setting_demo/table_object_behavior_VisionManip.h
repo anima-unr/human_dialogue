@@ -36,8 +36,8 @@ class TableObject_VisionManip : public Behavior {
   TableObject_VisionManip(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
-    std::string mutex_topic,
     std::string object,
+    std::string mutex_topic,
     std::vector<float> pos,
     bool use_local_callback_queue = false,
     boost::posix_time::millisec mtime = boost::posix_time::millisec(1000)

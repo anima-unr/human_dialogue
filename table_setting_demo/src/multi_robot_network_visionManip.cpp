@@ -141,6 +141,7 @@ int main(int argc, char *argv[]) {
                                         children_param,
                                         parent_param,
                                         state,
+                                        "N/A",
                                         false);
             // printf("\ttask_net::THEN %d\n",task_net::THEN);
             break;
@@ -150,6 +151,7 @@ int main(int argc, char *argv[]) {
                                         children_param,
                                         parent_param,
                                         state,
+                                        "N/A",
                                         false);
             // printf("\ttask_net::OR %d\n",task_net::OR);
             break;
@@ -159,6 +161,7 @@ int main(int argc, char *argv[]) {
                                         children_param,
                                         parent_param,
                                         state,
+                                        "N/A",
                                         false);
             // printf("\ttask_net::AND %d\n",task_net::AND);
             break;

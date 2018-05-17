@@ -53,6 +53,7 @@ class Node {
   Node();
   Node(NodeId_t name, NodeList peers, NodeList children, NodeId_t parent,
     State_t state,
+    std::string object,
     bool use_local_callback_queue = false,
     boost::posix_time::millisec mtime = boost::posix_time::millisec(50));
   virtual ~Node();
@@ -142,6 +143,9 @@ class Node {
   NodeListPtr peers_;
   NodeListPtr children_;
   NodeId_t *parent_;
+
+  std::string object_;
+
 
   // Publishers
   PubList children_pub_list_;

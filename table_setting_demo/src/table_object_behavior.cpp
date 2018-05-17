@@ -80,8 +80,8 @@ TableObject::TableObject() {}
 TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
-    std::string mutex_topic,
     std::string object,
+    std::string mutex_topic,
     std::vector<float> pos,
     std::vector<float> neutral_pos,
     bool use_local_callback_queue,
@@ -89,7 +89,8 @@ TableObject::TableObject(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_() {
+      state,
+      object), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_() {
 
   // flag saying whether the ROS publishers/listeners have been created
   ready_to_publish_ = false;

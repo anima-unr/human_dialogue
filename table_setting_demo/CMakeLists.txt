@@ -233,6 +233,18 @@ if (${BUILD_TABLE_SETTING_DEMO})
     table_setting_demo_generate_messages_cpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
   )
 
+# multi vision manip version
+  add_executable(multi_robot_demo_visionManip
+    src/multi_robot_network_visionManip.cpp
+    src/table_object_behavior_VisionManip.cpp
+  )
+  target_link_libraries(multi_robot_demo_visionManip
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+  add_dependencies(multi_robot_demo_visionManip
+    multi_robot_demo_visionManip_generate_messages_cpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
+  )
 
 
   # BUILD OBJECT TRANSFORMATION service

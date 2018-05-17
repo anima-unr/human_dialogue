@@ -19,7 +19,8 @@ DummyBehavior::DummyBehavior(NodeId_t name, NodeList peers, NodeList children,
       peers,
       children,
       parent,
-      state), mut_arm(name.topic.c_str(), "/right_arm_mutex") {
+      state ,
+      object), mut_arm(name.topic.c_str(), "/right_arm_mutex") {
 
     object_ = object;
     state_.done = false;
