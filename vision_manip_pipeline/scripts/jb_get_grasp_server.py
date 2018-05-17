@@ -60,6 +60,7 @@ def handle_get_grasp(req):
                     print "GRASP FOUND!"
 
                 graspList.grasps.append(grasp)
+                notFound = False
 
 
         # otherwise no close grasps found yet, so reset grasps and try again!
