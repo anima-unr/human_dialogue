@@ -117,7 +117,7 @@ class PickPlace {
 
   // TODO JB_INTEGRATION
   void OnlineDetectionsPlaces();
-  void OnlineDetectionsPicks(ros::ServiceClient visManipClient);
+  void OnlineDetectionsPicks(ros::ServiceClient *visManipClient_pntr);
   void ReadPlaces(std::string filename);
   void SavePlaces(std::string filename);
   // int visionManipPipeline(std::string obj_name, ros::NodeHandle);

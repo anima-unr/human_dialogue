@@ -118,40 +118,48 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
   };
   const char *static_object_str[] = {
 
-    // "cup",
-    //"bowl",
-    // "soda",
-    "Lettuce",
-    "Cup",
-    "Tea",
-    "Sugar", 
-    "Meat",
-    "Right_Bread", 
-    "Left_Bread",
-    "neutral"
-    //"placemat",
-    // "wineglass",
-    //"plate"
-  };
-  const char *object_str[] = {
-    
-    // "placemat",
-    // "cup",
-    //"plate",
+    // // "cup",
+    // //"bowl",
+    // // "soda",
     // "Lettuce",
     // "Cup",
     // "Tea",
     // "Sugar", 
     // "Meat",
-    "Right_Bread", 
-    "Left_Bread",
-    "neutral"
-    // "fork",
-    // "spoon",
-    // "knife",
-    //"bowl",
-    //"soda",
-    // "wineglass"
+    // "Right_Bread", 
+    // "Left_Bread",
+    // "neutral"
+    // //"placemat",
+    // // "wineglass",
+    // //"plate"
+  };
+  const char *object_str[] = {
+    
+    // // "placemat",
+    // // "cup",
+    // //"plate",
+    // // "Lettuce",
+    // // "Cup",
+    // // "Tea",
+    // // "Sugar", 
+    // // "Meat",
+    // "Right_Bread", 
+    // "Left_Bread",
+    // "neutral"
+    // // "fork",
+    // // "spoon",
+    // // "knife",
+    // //"bowl",
+    // //"soda",
+    // // "wineglass"
+  "teddy_bear",
+  // "orange",
+  // "book",
+  // "clock",
+  // "bottle",
+  // "scissors",
+  // "cup",
+  // "bowl"
   };
   objects_ = std::vector<std::string>(object_str,
     object_str + sizeof(object_str) / sizeof(char*));
@@ -168,12 +176,13 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
 
   // SET STATE
   arm_group_.setStartStateToCurrentState();
+  arm_group_.setPoseReferenceFrame("/odom_combined");
   state_ = IDLE;
 
   // TODO JB: Create the scene objects!
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
-  SetSceneObjects();
-  SetSceneBounds();
+  // SetSceneObjects();
+  // SetSceneBounds();
   
 } 
 
@@ -293,7 +302,7 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
 
   //---------------
   //  Move to neutral place
-  ROS_INFO("Goal: Neutral PLACE");
+  ROS_INFO("Goal: %s PLACE APPROACH", object.c_str());
   //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
   //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
   place_pose_offset = object_goal_map_[object.c_str()].place_pose;
@@ -338,7 +347,7 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
 
   //---------------
   //  Move to neutral place
-  ROS_INFO("Goal: Neutral PLACE");
+  ROS_INFO("Goal: %s APPROACH", object.c_str());
   //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
   //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
   place_pose_offset = object_goal_map_[object.c_str()].place_pose;
@@ -773,27 +782,46 @@ void PickPlace::OnlineDetectionsPlaces() {
       arm_.c_str(),
       objects_[i].c_str());
     waitKeyboard();
+
+  // We can print the name of the reference frame for this robot.
+  ROS_INFO("Reference frame: %s", arm_group_.getPlanningFrame().c_str());
+ 
+  // We can also print the name of the end-effector link for this group.
+  ROS_INFO("Reference frame: %s", arm_group_.getEndEffectorLink().c_str());
+
+  // JB WAY
     geometry_msgs::PoseStamped currentPose;
     currentPose = arm_group_.getCurrentPose();
+
+  std::cout << "Current pose: " << currentPose << '\n';
+
+  // LUKE WAY
+    currentPose.pose = GetArmPoseGoal();
+  std::cout << "Current pose: " << currentPose << '\n';
+
+
     object_goal_map_[objects_[i]].place_pose = currentPose.pose; //TODO JB_INTEGRATION verify this is in the right frame!!!
     r_gripper_.Open();
   }
 
 }
 
-void PickPlace::OnlineDetectionsPicks( ros::ServiceClient visManipClient ) {
+void PickPlace::OnlineDetectionsPicks( ros::ServiceClient *visManipClient_pntr ) {
 
   // ros::ServiceClient visManipClient = n.serviceClient<vision_manip_pipeline::VisionManip>("vision_manip");
   for (uint32_t i = 0; i < objects_.size(); ++i) {
     // int res = visionManipPipeline( objects_[i], nh);  //TODO JB_INTEGRATION replace this call with vision manup pipeline
                                                       //  THE OUTPUT IS COMPLETELY WRONG FOR THIS FUNCTION, FIXXXXXXX TO BE POSE
+    // system(" sudo invoke-rc.d chrony restart");
+    // sleep(3);
     vision_manip_pipeline::VisionManip visManipSrv;
     visManipSrv.request.obj_name = objects_[i].c_str();
-    if(visManipClient.call(visManipSrv)){
+    if(visManipClient_pntr->call(visManipSrv)){
       // ROS_INFO("NewX: %f NewY: %f NewZ: %f", (float)srv.response.newX, (float)srv.response.newY, (float)srv.response.newZ);
       std::cout << "Object:   " << objects_[i].c_str() << '\n';
       std::cout << "Approach Pose:   " << visManipSrv.response.approach_pose << '\n';
       std::cout << "Pick Pose:       " << visManipSrv.response.pick_pose << '\n';
+      std::cout << "Score of Grasp:  " << visManipSrv.response.score << '\n';
       std::cout << "Top Valid Grasp: " << visManipSrv.response.grasp << '\n';
     }
     else{
@@ -1337,7 +1365,7 @@ void PickPlace::SavePlaces(std::string filename) {
   std::string header;
   header = "odom_combined";
   outfile << header;
-  std::cout<<header;
+  // std::cout<<header;
   outfile<<'\n';
   header = "r_wrist_roll_link";
   outfile<< header;

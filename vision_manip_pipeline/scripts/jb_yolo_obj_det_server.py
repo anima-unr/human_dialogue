@@ -26,6 +26,9 @@ def handle_get_obj_loc(req):
     while obj_loc == []:
         print '.'
 
+    if req.obj_name == "teddy_bear":
+        req.obj_name = "teddy bear"
+
     #  get the location of the requested object 
     # - if multiple objects, return one with highest probability!
     top_item = BoundingBox(probability=0.0);

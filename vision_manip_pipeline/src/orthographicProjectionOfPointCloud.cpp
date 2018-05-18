@@ -31,8 +31,8 @@ void callback(const sensor_msgs::PointCloud2 pc){
   // publish the point cloud
   pub.publish(pCloud_out);
 
-  printf("publishing!\n");
-
+  printf(".");
+  fflush(stdout);
 }
 
 
@@ -40,13 +40,17 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "orthoProjPointCloud");
   ros::NodeHandle n;
+  ros::AsyncSpinner a(2);
 
   listener = new tf::TransformListener();
   pub = n.advertise<sensor_msgs::PointCloud2>("/local/depth_registered/trans_points", 1000);
 
   // subscribe to point cloud
   ros::Subscriber sub = n.subscribe("/local/depth_registered/points", 1000, callback);
+  a.start();
+
   ros::spin();
+
 
   return 0;
 }

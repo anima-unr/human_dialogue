@@ -20,7 +20,7 @@ def handle_get_grasp(req):
     # set a timer here to keep track of wait time....?
     start = rospy.get_time()
     lapse = 0
-    threshold = 10
+    threshold = 60
 
     # keep waiting until get grasp with close location......
     graspList = GraspConfigList()
@@ -43,6 +43,7 @@ def handle_get_grasp(req):
             if lapse > threshold:
                 print "ERROR: Took too long to get grasp, will now force exit."
                 # return top_grasp
+                return (graspList, len(graspList.grasps))
 
         # search for a grasp close to the object location    
         # rospy.loginfo('Top grasp was:')
@@ -75,7 +76,7 @@ def handle_get_grasp(req):
             if lapse > threshold:
                 print "ERROR: Took too long to get CLOSE grasp, will now force exit."
                 # return top_grasp
-
+                return (graspList, len(graspList.grasps))
 
     # grasp was found, return it!
     # print "Returning grasp with highest score [%s]"%(top_grasp)

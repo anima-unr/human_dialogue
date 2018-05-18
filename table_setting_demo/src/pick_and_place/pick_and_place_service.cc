@@ -1,5 +1,7 @@
 #include "pick_and_place/pr2_pick_and_place_service.h"
 
+ros::ServiceClient *visManipClient_pntr;
+
 int main(int argc, char **argv) {
   ros::init(argc, argv, "pick_and_place_service");
   bool save = false, read = false, save_place = false;
@@ -8,6 +10,7 @@ int main(int argc, char **argv) {
   ros::NodeHandle nh;
 
   ros::ServiceClient visManipClient = nh.serviceClient<vision_manip_pipeline::VisionManip>("vision_manip");
+  visManipClient_pntr = &visManipClient; 
 
   // Create Pick Place object
   pr2::PickPlace pp("right_arm");
@@ -46,6 +49,8 @@ int main(int argc, char **argv) {
     }
   }
 
+    // ros::AsyncSpinner spinner(1);
+    // spinner.start();
 
   // make choices
   if (read) {
@@ -62,14 +67,8 @@ int main(int argc, char **argv) {
     printf("Read File: %s\n", read_file.c_str());
     pp.ReadPlaces(read_file);      
 
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
-
-    pp.OnlineDetectionsPicks( visManipClient );
+    pp.OnlineDetectionsPicks( visManipClient_pntr );
   }
-
-  // set params on the ros param server
-  pp.PostParameters();
 
   // save the file if necessary
   if (save) {
@@ -81,6 +80,8 @@ int main(int argc, char **argv) {
     pp.SavePlaces(save_file);
   }
 
+  // set params on the ros param server
+  pp.PostParameters();
 
   // Advertise the service
   ros::ServiceServer service_object = nh.advertiseService(

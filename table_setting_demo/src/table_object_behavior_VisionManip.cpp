@@ -79,7 +79,7 @@ static const char *static_object_str[] = {
   // "Meat",
   // "Lettuce"
   // DARS DEMO
-  "teddy bear",
+  "teddy_bear",
   "orange",
   "book",
   "clock",
@@ -116,33 +116,6 @@ TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, 
   neutral_object_pos[2] = currentPose.pose.position.z; //TODO: Don't want to use neutral pos, need it to be current pose of robot!!! - set a moveit thing in class and then can call from all these things to get current pose of robot to set to "neutral??"
   // neutral_object_pos = neutral_pos; //TODO: Don't want to use neutral pos, need it to be current pose of robot!!! - set a moveit thing in class and then can call from all these things to get current pose of robot to set to "neutral??"
   object_id_ = "";
-
-// ROS_INFO("MADE IT HERE!!!!!!\n\n");
-
-  // // check if dynamic object
-  // std::vector<std::string> static_objects_ = std::vector<std::string>(
-  //   static_object_str,
-  //   static_object_str + sizeof(static_object_str) / sizeof(char*));
-  // dynamic_object = true;
-  // for (int i = 0; i < static_objects_.size(); ++i) {
-  //   if (object == static_objects_[i]) {
-  //     dynamic_object = false;
-  //     break;
-  //   }
-  // }
-  // // set object_id
-  // if (!dynamic_object) {
-  //   object_id_ = object;
-  // }
-
-  // // set root/manip frames
-  // nh_.getParam("root_frame", root_frame_);
-  // nh_.getParam("manip_frame", manip_frame_);
-  // //tf_listener_ = new TransformListener();
-
-  // // debugging - declare publisher for manip markers
-  // marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
-  // ready_to_publish_ = true;
 
   // Check size of initial position of objects
   if (pos.size() <= 0)

@@ -40,7 +40,7 @@ ros::ServiceClient *getGraspClient_pntr;
 
 geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::vector<double> ori, const std::string old_frame, const std::string new_frame){
 
-  ros::Time now = ros::Time(0);
+  ros::Time now = ros::Time::now();;
   t->waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
 
   geometry_msgs::PoseStamped pnt;
@@ -65,7 +65,9 @@ geometry_msgs::PoseStamped getPoseTrans(double x, double y, double z, std::vecto
 
 geometry_msgs::PointStamped transPoint(double x, double y, double z, const std::string old_frame, const std::string new_frame){
 
-  ros::Time now = ros::Time(0);
+  ros::Time now = ros::Time::now();
+    // system(" sudo invoke-rc.d chrony restart");
+    // sleep(3);"/head_mount_kinect_rgb_optical_frame", "/test"
   t->waitForTransform(new_frame, old_frame, now, ros::Duration(3.0));
 
   geometry_msgs::PointStamped pnt;
@@ -358,8 +360,8 @@ void vision_manip_pipeline_fxn(vision_manip_pipeline::VisionManip::Request &req,
 
     // now, do the vision manip stuff
 
-    t = new tf::TransformListener();
-    ros::Duration(1.0).sleep();
+    // t = new tf::TransformListener();
+    // ros::Duration(1.0).sleep();
     // ros::ServiceClient objLocClient = n.serviceClient<vision_manip_pipeline::GetObjLoc>("get_object_loc");
     vision_manip_pipeline::GetObjLoc objLocSrv;
     
@@ -573,6 +575,8 @@ int main(int argc, char** argv){
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
+
+  t = new tf::TransformListener();
 
   // advertise the service
   ros::ServiceServer service = n.advertiseService("vision_manip", handle_vision_manip);
