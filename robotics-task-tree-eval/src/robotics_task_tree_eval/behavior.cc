@@ -39,6 +39,8 @@ Behavior::Behavior(NodeId_t name, NodeList peers, NodeList children,
       state,
       object) {  
       // printf("Behavior::Behavior WAS CALLED\n");
+  ROS_WARN("END OF BEHAVIOR CONSTRUCTOR");
+  sleep(3);
 }
 Behavior::~Behavior() {}
 
@@ -58,7 +60,7 @@ AndBehavior::AndBehavior(NodeId_t name, NodeList peers, NodeList children,
       parent,
       state,
       object) {
-        // printf("AndBehavior::AndBehavior WAS CALLED\n");
+        printf("AndBehavior::AndBehavior WAS CALLED\n");
     }
 AndBehavior::~AndBehavior() {}
 

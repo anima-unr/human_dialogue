@@ -84,6 +84,9 @@ int main(int argc, char *argv[]) {
   std::string param_ext_parent = "parent";
   std::string param_ext_peers = "peers";
   for(int i=0; i < nodes.size(); ++i) {
+
+    ROS_WARN("HERE;");
+
     // Get name
     name_param.topic = nodes[i];
     // printf("name: %s\n", name_param.topic.c_str());
@@ -165,22 +168,24 @@ int main(int argc, char *argv[]) {
                                         false);
             // printf("\ttask_net::AND %d\n",task_net::AND);
             break;
-          case task_net::BEHAVIOR:
+          case task_net::BEHAVIOR_VM:
             // ROS_INFO("Children Size: %lu", children_param.size());
             object = name_param.topic.c_str();
            // get the name of the object of corresponding node:
             nh_.getParam((param_prefix + nodes[i] + "/object").c_str(), obj_name);
             // set up network for corresponding node:
             ros::param::get(("/ObjectPositions/"+obj_name).c_str(), object_pos);
+            ROS_INFO("Found %s at loc %f, %f, %f", obj_name.c_str(), object_pos[0], object_pos[1], object_pos[2]);
             network[i] = new task_net::TableObject_VisionManip(name_param,
                                       peers_param,
                                       children_param,
                                       parent_param,
                                       state,
-                                      "/right_arm_mutex",
                                       obj_name.c_str(),
+                                      "/right_arm_mutex",
                                       object_pos,
                                       false);
+            // network[i] = new task_net::TableObject_VisionManip();
             // network[i] = new task_net::DummyBehavior(name_param,
             //                             peers_param,
             //                             children_param,
@@ -197,7 +202,7 @@ int main(int argc, char *argv[]) {
             break;
         }
       }
-      // printf("MADE 5\n");
+      printf("MADE 5\n");
     }
   }
   printf("MADE 6 - now spinning\n");

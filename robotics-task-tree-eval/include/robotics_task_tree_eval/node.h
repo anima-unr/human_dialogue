@@ -132,6 +132,11 @@ class Node {
   virtual void PublishStateToPeers();
   virtual void PublishStateToChildren();
 
+
+ // to call the vision manip pipeline service
+ ros::ServiceClient* visManipClient_pntr;
+
+
  protected:
   std::ofstream record_file;
   NodeId_t *name_;

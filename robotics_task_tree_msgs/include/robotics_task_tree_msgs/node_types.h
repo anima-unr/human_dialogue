@@ -36,6 +36,7 @@ typedef enum {  // Eight possible node types
   BEHAVIOR,     // 3
   ROOT,         // 4
   PLACE,        // 5
+  BEHAVIOR_VM,  // 6
 } NodeTypes_t;
 
 typedef enum {  // Eight possible robots

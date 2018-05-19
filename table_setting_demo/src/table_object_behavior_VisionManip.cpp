@@ -89,7 +89,7 @@ static const char *static_object_str[] = {
   "bowl",
 };
 
-TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {}
+TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {  ROS_INFO("START OF TableObject_VisionManip CONSTRUCTOR");}
 TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
@@ -102,9 +102,12 @@ TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, 
       children,
       parent,
       state, 
-      object), mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_(){
+      object), mut(name.topic.c_str(), mutex_topic){
 
   // flag saying whether the ROS publishers/listeners have been created
+
+  ROS_WARN("START OF TableObject_VisionManip CONSTRUCTOR");
+
   ready_to_publish_ = false;
 
   object_ = object;
@@ -125,7 +128,7 @@ TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, 
   // set root/manip frames
   nh_.getParam("root_frame", root_frame_);
   nh_.getParam("manip_frame", manip_frame_);
-  //tf_listener_ = new TransformListener();
+  tf_listener_ = new tf::TransformListener();
 
   // debugging - declare publisher for manip markers
   marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
@@ -375,4 +378,5 @@ void TableObject_VisionManip::UndoWork() {
     }
   }
 }
+
 }  // namespace task_net
