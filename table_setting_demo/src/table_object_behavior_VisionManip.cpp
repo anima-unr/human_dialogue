@@ -89,7 +89,7 @@ static const char *static_object_str[] = {
   "bowl",
 };
 
-TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {  ROS_INFO("START OF TableObject_VisionManip CONSTRUCTOR");}
+TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {  ROS_ERROR("START OF TableObject_VisionManip CONSTRUCTOR");}
 TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, NodeList children,
     NodeId_t parent,
     State_t state,
@@ -97,22 +97,29 @@ TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, 
     std::string mutex_topic,
     std::vector<float> pos,
     bool use_local_callback_queue,
-    boost::posix_time::millisec mtime) : arm_group_{"right_arm"}, Behavior(name,
+    boost::posix_time::millisec mtime) : 
+object_pos(pos),
+Behavior(name,
       peers,
       children,
       parent,
       state, 
-      object), mut(name.topic.c_str(), mutex_topic){
+      object),
+       mut(name.topic.c_str(), mutex_topic), nh_(), tf_listener_(),
+       arm_group_{"right_arm"} {
 
   // flag saying whether the ROS publishers/listeners have been created
 
-  ROS_WARN("START OF TableObject_VisionManip CONSTRUCTOR");
+  ROS_ERROR("START OF TableObject_VisionManip CONSTRUCTOR");
 
   ready_to_publish_ = false;
 
   object_ = object;
-  object_pos = pos;
+  // object_pos = pos;
   geometry_msgs::PoseStamped currentPose;
+
+  ROS_ERROR("2 START OF TableObject_VisionManip CONSTRUCTOR");
+  neutral_object_pos = {0.0, 0.0, 0.0};
   currentPose = arm_group_.getCurrentPose();
   neutral_object_pos[0] = currentPose.pose.position.x; //TODO: Don't want to use neutral pos, need it to be current pose of robot!!! - set a moveit thing in class and then can call from all these things to get current pose of robot to set to "neutral??"
   neutral_object_pos[1] = currentPose.pose.position.y; //TODO: Don't want to use neutral pos, need it to be current pose of robot!!! - set a moveit thing in class and then can call from all these things to get current pose of robot to set to "neutral??"
@@ -124,23 +131,41 @@ TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, 
   if (pos.size() <= 0)
     object_pos = std::vector<float>(3);
 
+  ROS_ERROR("3 START OF TableObject_VisionManip CONSTRUCTOR");
+
+  // set objects to static
+  std::vector<std::string> static_objects_ = std::vector<std::string>(
+    static_object_str,
+    static_object_str + sizeof(static_object_str) / sizeof(char*));
+  dynamic_object = true;
+  for (int i = 0; i < static_objects_.size(); ++i) {
+    if (object == static_objects_[i]) {
+      dynamic_object = false;
+      break;
+    }
+  }
+  // set object_id
+  if (!dynamic_object) {
+    object_id_ = object;
+  }
 
   // set root/manip frames
   nh_.getParam("root_frame", root_frame_);
   nh_.getParam("manip_frame", manip_frame_);
-  tf_listener_ = new tf::TransformListener();
+  //tf_listener_ = new TransformListener();
 
   // debugging - declare publisher for manip markers
   marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/markers",1000);
   sleep(3);
   ready_to_publish_ = true;
+  ROS_ERROR("END OF TableObject_VisionManip CONSTRUCTOR");
 
 }
 TableObject_VisionManip::~TableObject_VisionManip() {}
 
 void TableObject_VisionManip::UpdateActivationPotential() {
   float dist;
-  ROS_DEBUG("TableObject::UpdateActivationPotential was called!!!\n");
+  // ROS_WARN("TableObject::UpdateActivationPotential was called!!!\n");
 
   
   // manipulator position defaults to neutral_obj_pos
@@ -160,9 +185,16 @@ void TableObject_VisionManip::UpdateActivationPotential() {
     ox = oy = oz = 0;
   }
   else {
-    ox = object_pos[0];  
-    oy = object_pos[1];
-    oz = object_pos[2];
+    if( object_pos.size() == 3 ) {
+      ox = object_pos[0];  
+      oy = object_pos[1];
+      oz = object_pos[2];
+    }
+    else{
+      ROS_ERROR( "object_pos size is != 3...setting activation to 0" );
+      state_.activation_potential = 0.00001;
+      return;
+    }
   }
  
 
@@ -238,7 +270,7 @@ void TableObject_VisionManip::UpdateActivationPotential() {
     state_.activation_potential = ( c1 * (1.0f / dist)) + (c2 * state_.suitability);
   else state_.activation_potential = 0.00001;
 
-  ROS_INFO("OBJ(%s): updating activation potential: %0.2f", object_.c_str(), state_.activation_potential);
+  // ROS_INFO("OBJ(%s): updating activation potential: %0.2f", object_.c_str(), state_.activation_potential);
 
   // ROS_INFO("object_pos: %f %f %f", object_pos[0],object_pos[1],object_pos[2]);
   // ROS_INFO("object_pos: %f %f %f", neutral_object_pos[0],neutral_object_pos[1],neutral_object_pos[2]);

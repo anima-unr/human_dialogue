@@ -40,7 +40,6 @@ Behavior::Behavior(NodeId_t name, NodeList peers, NodeList children,
       object) {  
       // printf("Behavior::Behavior WAS CALLED\n");
   ROS_WARN("END OF BEHAVIOR CONSTRUCTOR");
-  sleep(3);
 }
 Behavior::~Behavior() {}
 

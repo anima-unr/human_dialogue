@@ -51,7 +51,7 @@ class TableObject_VisionManip : public Behavior {
   std::vector<moveit_msgs::CollisionObject> collision_objects_;
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 //-----
-  tf::TransformListener* tf_listener_;
+  tf::TransformListener tf_listener_;
 
  protected:
   virtual void PickAndPlace(std::string object);

@@ -103,33 +103,51 @@ float getSuitability(uint16_t node, uint8_t robot, std::string object, ros::Serv
 
   //define for baxter
   else if(robot == 1) {
-    // Cup
-    if( node == 16 ){
+    // // Cup
+    // if( node == 16 ){
+    //   return 0.0;
+    // }
+    // // Sugar
+    // if( node == 18 ){
+    //   return 0.75;
+    // }
+    // // Tea
+    // if( node == 19 ){
+    //   return 0.0;
+    // }
+    // // Left_Bread
+    // if( node == 21 ){
+    //   return 1.0;
+    // }
+    // // Meat
+    // if( node == 23 ){
+    //   return 1.0;
+    // }
+    // // Lettuce
+    // if( node == 24 ){
+    //   return 1.0;
+    // }
+    // // Right_Bread
+    // if( node == 25 ){
+    //   return 1.0;
+    // }
+
+    // instead call vision manip pipeline....
+    vision_manip_pipeline::VisionManip visManipSrv;
+    visManipSrv.request.obj_name = object.c_str();
+    std::cout << "Trying Object:    " << object.c_str() << '\n';
+    if(visManipClient_pntr->call(visManipSrv)){
+      // ROS_INFO("NewX: %f NewY: %f NewZ: %f", (float)srv.response.newX, (float)srv.response.newY, (float)srv.response.newZ);
+      std::cout << "Object:             " << object.c_str() << '\n';
+      std::cout << "Approach Pose:      " << visManipSrv.response.approach_pose << '\n';
+      std::cout << "Pick Pose:          " << visManipSrv.response.pick_pose << '\n';
+      std::cout << "Score of Top Grasp: " << visManipSrv.response.score << '\n';
+      std::cout << "Top Valid Grasp:    " << visManipSrv.response.grasp << '\n';
+      return visManipSrv.response.score.data;
+    }
+    else{
+      ROS_ERROR("Failed to call service vision_manip, setting score to 0 for object: %s!", object.c_str());
       return 0.0;
-    }
-    // Sugar
-    if( node == 18 ){
-      return 0.75;
-    }
-    // Tea
-    if( node == 19 ){
-      return 0.0;
-    }
-    // Left_Bread
-    if( node == 21 ){
-      return 1.0;
-    }
-    // Meat
-    if( node == 23 ){
-      return 1.0;
-    }
-    // Lettuce
-    if( node == 24 ){
-      return 1.0;
-    }
-    // Right_Bread
-    if( node == 25 ){
-      return 1.0;
     }
   }
   

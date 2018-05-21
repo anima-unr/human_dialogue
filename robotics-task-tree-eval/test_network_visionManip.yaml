@@ -45,7 +45,7 @@ Nodes:
 
   PLACE_5_0_002:
     mask:
-      type: 5
+      type: 6
       robot: 0
       node: 2
     parent: 'AND_2_0_006'
@@ -94,7 +94,7 @@ Nodes:
 
   PLACE_5_1_009:
     mask:
-      type: 5
+      type: 6
       robot: 1
       node: 9
     parent: 'AND_2_1_007'
