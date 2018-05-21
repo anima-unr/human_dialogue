@@ -79,14 +79,14 @@ static const char *static_object_str[] = {
   // "Meat",
   // "Lettuce"
   // DARS DEMO
-  "teddy_bear",
-  "orange",
-  "book",
+  // "teddy_bear",
+  // "orange",
+  // "book",
   "clock",
-  "bottle",
-  "scissors",
+  // "bottle",
+  // "scissors",
   "cup",
-  "bowl",
+  // "bowl",
 };
 
 TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {  ROS_ERROR("START OF TableObject_VisionManip CONSTRUCTOR");}
@@ -173,20 +173,31 @@ void TableObject_VisionManip::UpdateActivationPotential() {
   if( neutral_object_pos.size() == 0 ) {
     ROS_WARN( "neutral_object_pos size is 0, that's weird..." );
     mx = my = mz = 0;
+    state_.activation_potential = 0.00001;
+    return;
   }
   else {
-    mx = neutral_object_pos[0];  
-    my = neutral_object_pos[1];
-   mz = neutral_object_pos[2];
+    if( neutral_object_pos.size() == 3 ) {
+      mx = neutral_object_pos[0];
+      my = neutral_object_pos[1];
+      mz = neutral_object_pos[2];
+    }
+    else{
+      ROS_ERROR( "neutral_object_pos size is != 3...setting activation to 0" );
+      state_.activation_potential = 0.00001;
+      return;
+    }
   }
-  
+
   if( object_pos.size() == 0 ) {
     ROS_WARN( "object_pos size is 0, that's weird..." );
     ox = oy = oz = 0;
+    state_.activation_potential = 0.00001;
+    return;
   }
   else {
     if( object_pos.size() == 3 ) {
-      ox = object_pos[0];  
+      ox = object_pos[0];
       oy = object_pos[1];
       oz = object_pos[2];
     }
@@ -195,8 +206,7 @@ void TableObject_VisionManip::UpdateActivationPotential() {
       state_.activation_potential = 0.00001;
       return;
     }
-  }
- 
+}
 
   // // LUKES WAY TO GET ARM POSITION.......
   // // get PR2 hand position (and store in mx, my, mz)

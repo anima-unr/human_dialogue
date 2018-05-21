@@ -152,13 +152,13 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
     // //"bowl",
     // //"soda",
     // // "wineglass"
-  "teddy_bear",
+  // "teddy_bear",
   // "orange",
   // "book",
   "clock",
   // "bottle",
   // "scissors",
-  // "cup",
+  "cup",
   // "bowl"
   };
   objects_ = std::vector<std::string>(object_str,
@@ -241,10 +241,10 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
   //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
   //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
   approach_pose_offset = object_goal_map_[object.c_str()].approach_pose;
-    approach_pose_offset.position.z = std::min(approach_pose_offset.position.z + 0.2, 1.4); 
+    approach_pose_offset.position.z = std::min(approach_pose_offset.position.z + 0.2, 1.1); 
     approach_pose_offset.position.x = approach_pose_offset.position.x; 
     approach_pose_offset.position.y = approach_pose_offset.position.y; 
-  // if (approach_pose_offset.position.z < 1.4 ) {
+  // if (approach_pose_offset.position.z < 1.1 ) {
     printf("\n  goal pos x %f  y %f  z %f \n", approach_pose_offset.position.x, approach_pose_offset.position.y, approach_pose_offset.position.z);
     printf("\n  goal ori x %f  y %f  z %f  w %f\n", approach_pose_offset.orientation.x, approach_pose_offset.orientation.y, approach_pose_offset.orientation.z, approach_pose_offset.orientation.w);
     if (!SendGoal(approach_pose_offset)) {  
@@ -309,7 +309,7 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
   //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
   //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
   pick_pose_offset = object_goal_map_[object.c_str()].pick_pose;
-    pick_pose_offset.position.z = std::min(pick_pose_offset.position.z + 0.2, 1.4); 
+    pick_pose_offset.position.z = std::min(pick_pose_offset.position.z + 0.2, 1.1); 
     pick_pose_offset.position.x = pick_pose_offset.position.x; 
     pick_pose_offset.position.y = pick_pose_offset.position.y; 
     printf("\n  goal pos x %f  y %f  z %f \n", pick_pose_offset.position.x, pick_pose_offset.position.y, pick_pose_offset.position.z);
@@ -330,12 +330,12 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
   //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
   //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
   place_pose_offset = object_goal_map_[object.c_str()].place_pose;
-    place_pose_offset.position.z = std::min(place_pose_offset.position.z + 0.2, 1.4); 
+    place_pose_offset.position.z = std::min(place_pose_offset.position.z + 0.2, 1.1); 
     place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
     place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
 
-    // printf("\n  goal pos x %f  y %f  z %f \n", place_pose_offset.position.x, place_pose_offset.position.y, place_pose_offset.position.z);
-    // printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
+    printf("\n  goal pos x %f  y %f  z %f \n", place_pose_offset.position.x, place_pose_offset.position.y, place_pose_offset.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
   if (!SendGoal(place_pose_offset)) {
     ROS_INFO("Goal ERROR!!!!");
     return;
@@ -346,8 +346,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
   //---------------
   //  Move to object place
   ROS_INFO("Goal: %s PLACE", object.c_str());
-    // printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[object.c_str()].place_pose.position.x, object_goal_map_[object.c_str()].place_pose.position.y, object_goal_map_[object.c_str()].place_pose.position.z);
-    // printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].place_pose.orientation.x, object_goal_map_[object.c_str()].place_pose.orientation.y, object_goal_map_[object.c_str()].place_pose.orientation.z, object_goal_map_[object.c_str()].place_pose.orientation.z);
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_[object.c_str()].place_pose.position.x, object_goal_map_[object.c_str()].place_pose.position.y, object_goal_map_[object.c_str()].place_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].place_pose.orientation.x, object_goal_map_[object.c_str()].place_pose.orientation.y, object_goal_map_[object.c_str()].place_pose.orientation.z, object_goal_map_[object.c_str()].place_pose.orientation.z);
   if (!SendGoal(object_goal_map_[object.c_str()].place_pose)) {
     ROS_INFO("Goal ERROR!!!!");
     return;
@@ -372,10 +372,10 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
   //---------------
   //  Move to neutral place
   ROS_INFO("Goal: %s PLACE Plus Z", object.c_str());
-  //   printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
-  //   printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
+    printf("\n  goal pos x %f  y %f  z %f \n", object_goal_map_["neutral"].place_pose.position.x, object_goal_map_["neutral"].place_pose.position.y, object_goal_map_["neutral"].place_pose.position.z);
+    printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_["neutral"].place_pose.orientation.x, object_goal_map_["neutral"].place_pose.orientation.y, object_goal_map_["neutral"].place_pose.orientation.z, object_goal_map_["neutral"].place_pose.orientation.z);
   place_pose_offset = object_goal_map_[object.c_str()].place_pose;
-    place_pose_offset.position.z = std::min(place_pose_offset.position.z + 0.2, 1.4); 
+    place_pose_offset.position.z = std::min(place_pose_offset.position.z + 0.2, 1.1); 
     place_pose_offset.position.x = place_pose_offset.position.x - 0.1; 
     place_pose_offset.position.y = place_pose_offset.position.y - 0.1; 
     printf("\n  goal pos x %f  y %f  z %f \n", place_pose_offset.position.x, place_pose_offset.position.y, place_pose_offset.position.z);
@@ -1543,7 +1543,7 @@ moveit_msgs::DisplayTrajectory display_trajectory;
 
     // success = arm_group_.move();
     ROS_INFO("  Visualizing plan! %s",success?"":"FAILED");
-    // sleep(5.0);
+    sleep(1.0);
 
     // if (!finished_within_time) {
     //   arm_group_.stop();
@@ -1556,10 +1556,10 @@ moveit_msgs::DisplayTrajectory display_trajectory;
         // now execute the plan
 
         // todo put back in!
-        // ROS_INFO("  Action will now execute!");
-        // arm_group_.execute(motion_plan);
+        ROS_INFO("  Action will now execute!");
+        arm_group_.execute(motion_plan);
 
-        // sleep(5.0);
+        sleep(2.0);
         arm_group_.setStartStateToCurrentState();
 
         // ROS_INFO("Action finished: %s",state.toString().c_str());
