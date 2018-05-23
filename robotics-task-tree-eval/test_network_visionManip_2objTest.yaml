@@ -41,7 +41,7 @@ Nodes:
     parent: 'AND_2_0_006'
     children: ['NONE']
     peers: ['PLACE_5_1_008']
-    object: 'teddy_bear'
+    object: 'cup'
 
   PLACE_5_0_002:
     mask:
@@ -81,7 +81,7 @@ Nodes:
     parent: 'AND_2_1_007'
     children: ['NONE']
     peers: ['PLACE_5_0_001']
-    object: 'teddy_bear'
+    object: 'cup'
 
   AND_2_1_007:
     mask:

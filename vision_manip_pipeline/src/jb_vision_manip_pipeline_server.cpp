@@ -91,6 +91,41 @@ bool moveArm(geometry_msgs::PoseStamped newApp, geometry_msgs::PoseStamped newPn
   moveit::planning_interface::MoveGroup group("right_arm");
   printf("Move it TEST0\n");
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+  std::vector<moveit_msgs::CollisionObject> collision_objects_;
+  sleep(1);
+  moveit_msgs::CollisionObject collision_object1;
+  collision_object1.header.frame_id = "/base_link";
+
+  // -------
+  /* Define a table to add to the world. */
+  /* The id of the object is used to identify it. */
+  collision_object1.id = "table";
+  shape_msgs::SolidPrimitive primitive;
+  primitive.type = primitive.BOX;
+  primitive.dimensions.resize(3);
+  primitive.dimensions[0] = 1;
+  primitive.dimensions[1] = 2;
+  primitive.dimensions[2] = 0.85;
+
+  /* A pose for the table (specified relative to frame_id) */
+  geometry_msgs::Pose table_pose;
+  table_pose.orientation.w = 0;
+  table_pose.position.x =  0.85;
+  table_pose.position.y =  0;
+  table_pose.position.z =  0.29; //objects_n3_v2.bin
+
+  collision_object1.primitives.push_back(primitive);
+  collision_object1.primitive_poses.push_back(table_pose);
+  collision_object1.operation = collision_object1.ADD;
+  collision_objects_.push_back(collision_object1);
+
+  //----------------------------------------
+  // Add objects to world
+  // if collision_objects_.primitives.empty()
+  ROS_INFO("Add an object into the world");
+  planning_scene_interface.addCollisionObjects(collision_objects_);
+  // sleep(20);
+  ROS_INFO("out of set table function");
 
   //------------------
   printf("Move to approach\n");
@@ -169,7 +204,7 @@ bool checkInBounds(geometry_msgs::PointStamped newPnt) {
   geometry_msgs::PointStamped transPnt = transPoint(newPnt.point.x, newPnt.point.y, newPnt.point.z, "/test", "/r_torso_lift_side_plate_link");
 
   // check if in bounds
-  double threshold = 0.7;
+  double threshold = 0.8;
   double dist = 1.0;
 
   dist = (transPnt.point.x * transPnt.point.x) + (transPnt.point.y * transPnt.point.y);

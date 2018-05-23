@@ -152,14 +152,14 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
     // //"bowl",
     // //"soda",
     // // "wineglass"
-  // "teddy_bear",
-  // "orange",
-  // "book",
+  "teddy_bear",
+  "orange",
+  "sports_ball",
   "clock",
-  // "bottle",
-  // "scissors",
+  "bottle",
+  "scissors",
   "cup",
-  // "bowl"
+  "bowl"
   };
   objects_ = std::vector<std::string>(object_str,
     object_str + sizeof(object_str) / sizeof(char*));
@@ -249,6 +249,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
     printf("\n  goal ori x %f  y %f  z %f  w %f\n", approach_pose_offset.orientation.x, approach_pose_offset.orientation.y, approach_pose_offset.orientation.z, approach_pose_offset.orientation.w);
     if (!SendGoal(approach_pose_offset)) {  
       ROS_INFO("Goal ERROR!!!!");
+      sleep(14.0);
+      state_ = PLACED;
       return;
     }
     if (stop)
@@ -270,6 +272,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
 
   if (!SendGoal(approach_pose_offset)) { 
     ROS_INFO("Goal ERROR!!!!");
+    sleep(13.0);
+    state_ = PLACED;
     return;
   } 
   if (stop)
@@ -284,6 +288,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
   // printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].pick_pose.orientation.x, object_goal_map_[object.c_str()].pick_pose.orientation.y, object_goal_map_[object.c_str()].pick_pose.orientation.z, object_goal_map_[object.c_str()].pick_pose.orientation.z);
   if (!SendGoal(object_goal_map_[object.c_str()].pick_pose)) {
     ROS_INFO("Goal ERROR!!!!");
+    sleep(12.0);
+    state_ = PLACED;
     return;
   }
   if (stop)
@@ -316,6 +322,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
     printf("\n  goal ori x %f  y %f  z %f  w %f\n", pick_pose_offset.orientation.x, pick_pose_offset.orientation.y, pick_pose_offset.orientation.z, pick_pose_offset.orientation.w);
   if (!SendGoal(pick_pose_offset)) {  
     ROS_INFO("Goal ERROR!!!!");
+    sleep(11.0);
+    state_ = PLACED;
     return;
   }
   if (stop)
@@ -338,6 +346,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
     printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
   if (!SendGoal(place_pose_offset)) {
     ROS_INFO("Goal ERROR!!!!");
+    sleep(10.0);
+    state_ = PLACED;
     return;
   }
   if (stop)
@@ -350,6 +360,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
     printf("\n  goal ori x %f  y %f  z %f  w %f\n", object_goal_map_[object.c_str()].place_pose.orientation.x, object_goal_map_[object.c_str()].place_pose.orientation.y, object_goal_map_[object.c_str()].place_pose.orientation.z, object_goal_map_[object.c_str()].place_pose.orientation.z);
   if (!SendGoal(object_goal_map_[object.c_str()].place_pose)) {
     ROS_INFO("Goal ERROR!!!!");
+    sleep(9.0);
+    state_ = PLACED;
     return;
   }
   if (stop)
@@ -382,6 +394,8 @@ void PickPlace::PickAndPlaceImpl_VisionManip(std::string object) {
     printf("\n  goal ori x %f  y %f  z %f  w %f\n", place_pose_offset.orientation.x, place_pose_offset.orientation.y, place_pose_offset.orientation.z, place_pose_offset.orientation.w);
   if (!SendGoal(place_pose_offset)) {  
     ROS_INFO("Goal ERROR!!!!");
+    sleep(8.0);
+    state_ = PLACED;
     return;
   }
   if (stop)
@@ -1543,7 +1557,7 @@ moveit_msgs::DisplayTrajectory display_trajectory;
 
     // success = arm_group_.move();
     ROS_INFO("  Visualizing plan! %s",success?"":"FAILED");
-    sleep(1.0);
+    sleep(3.0);
 
     // if (!finished_within_time) {
     //   arm_group_.stop();

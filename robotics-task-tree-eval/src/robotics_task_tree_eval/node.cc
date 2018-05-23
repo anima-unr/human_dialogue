@@ -499,6 +499,7 @@ void Node::ReceiveFromPeers(ConstControlMessagePtr_t msg) {
 // Main Loop of Update Thread. spins once every mtime milliseconds
 void UpdateThread(Node *node, boost::posix_time::millisec mtime) {
     ROS_DEBUG("Node::UpdateThread was called!!!!");
+    sleep(5);
   while (true) {
     node->Update();
     boost::this_thread::sleep(mtime);
@@ -682,6 +683,8 @@ void Node::RecordToFile() {
         << state_.activation_potential
         << ","
         << working
+        << ","
+        << state_.suitability
         << "\n";
         record_file.flush();
 }

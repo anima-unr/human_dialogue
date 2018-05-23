@@ -227,18 +227,21 @@ def GraphData(data_hash, order):
 
     # Tea-time PR2
     labels = {
-       'AND_2_0_001_state_Data_.csv'   : 'AND_1',
-       'THEN_0_0_002_state_Data_.csv'  : 'THEN_1',
-       'PLACE_3_0_003_state_Data_.csv' : 'Cup',
-       'AND_2_0_004_state_Data_.csv'   : 'AND_2',
-       'PLACE_3_0_005_state_Data_.csv' : 'Sugar',
-       'PLACE_3_0_006_state_Data_.csv' : 'Tea',
-       'THEN_0_0_007_state_Data_.csv'  : 'THEN_2',
-       'PLACE_3_0_008_state_Data_.csv' : 'Left_Bread',
-       'OR_1_0_009_state_Data_.csv'    : 'OR_1',
-       'PLACE_3_0_010_state_Data_.csv' : 'Meat',
-       'PLACE_3_0_011_state_Data_.csv' : 'Lettuce',
-       'PLACE_3_0_012_state_Data_.csv' : 'Right_Bread',
+       # 'AND_2_0_001_state_Data_.csv'   : 'AND_1',
+       # 'THEN_0_0_002_state_Data_.csv'  : 'THEN_1',
+       # 'PLACE_3_0_003_state_Data_.csv' : 'Cup',
+       # 'AND_2_0_004_state_Data_.csv'   : 'AND_2',
+       # 'PLACE_3_0_005_state_Data_.csv' : 'Sugar',
+       # 'PLACE_3_0_006_state_Data_.csv' : 'Tea',
+       # 'THEN_0_0_007_state_Data_.csv'  : 'THEN_2',
+       # 'PLACE_3_0_008_state_Data_.csv' : 'Left_Bread',
+       # 'OR_1_0_009_state_Data_.csv'    : 'OR_1',
+       # 'PLACE_3_0_010_state_Data_.csv' : 'Meat',
+       # 'PLACE_3_0_011_state_Data_.csv' : 'Lettuce',
+       # 'PLACE_3_0_012_state_Data_.csv' : 'Right_Bread',
+       'AND_2_0_006_state_Data_.csv'   : 'AND_1',
+       'PLACE_5_0_001_state_Data_.csv' : 'teddy_bear',
+       'PLACE_5_0_002_state_Data_.csv' : 'clock',
     }
 
 

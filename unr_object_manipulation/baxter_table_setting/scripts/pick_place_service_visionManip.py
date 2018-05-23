@@ -504,7 +504,7 @@ def main():
     # call the vision manip service
     rospy.wait_for_service('vision_manip')
     try:
-        conv_coord = rospy.ServiceProxy('vision_manip', VisionManipSrv)
+        conv_coord = rospy.ServiceProxy('vision_manip', VisionManip)
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 

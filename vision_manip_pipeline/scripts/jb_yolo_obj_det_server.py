@@ -28,6 +28,8 @@ def handle_get_obj_loc(req):
 
     if req.obj_name == "teddy_bear":
         req.obj_name = "teddy bear"
+    if req.obj_name == "sports`_ball":
+        req.obj_name = "sports ball"
 
     #  get the location of the requested object 
     # - if multiple objects, return one with highest probability!

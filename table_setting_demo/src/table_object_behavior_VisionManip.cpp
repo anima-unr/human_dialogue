@@ -79,14 +79,14 @@ static const char *static_object_str[] = {
   // "Meat",
   // "Lettuce"
   // DARS DEMO
-  // "teddy_bear",
-  // "orange",
-  // "book",
+  "teddy_bear",
+  "orange",
+  "sports_ball",
   "clock",
-  // "bottle",
-  // "scissors",
+  "bottle",
+  "scissors",
   "cup",
-  // "bowl",
+  "bowl",
 };
 
 TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {  ROS_ERROR("START OF TableObject_VisionManip CONSTRUCTOR");}
@@ -98,7 +98,7 @@ TableObject_VisionManip::TableObject_VisionManip(NodeId_t name, NodeList peers, 
     std::vector<float> pos,
     bool use_local_callback_queue,
     boost::posix_time::millisec mtime) : 
-object_pos(pos),
+object_pos(pos), object_(object),
 Behavior(name,
       peers,
       children,
@@ -273,7 +273,7 @@ void TableObject_VisionManip::UpdateActivationPotential() {
   }
 
   double c1 = 1.0; // weight for distance
-  double c2 = 1.0; //weight for suitability
+  double c2 = 0.001; //weight for suitability
   dist = hypot(my - oy, mx - ox);
 
   if( fabs(dist) > 0.00001 )
