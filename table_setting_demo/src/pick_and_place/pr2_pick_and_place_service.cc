@@ -153,13 +153,13 @@ PickPlace::PickPlace(std::string arm) : arm_group_{"right_arm"}  {
     // //"soda",
     // // "wineglass"
   "teddy_bear",
-  "orange",
+  // "orange",
   "sports_ball",
   "clock",
-  "bottle",
+  // "bottle",
   "scissors",
   "cup",
-  "bowl"
+  // "bowl"
   };
   objects_ = std::vector<std::string>(object_str,
     object_str + sizeof(object_str) / sizeof(char*));
@@ -1557,7 +1557,7 @@ moveit_msgs::DisplayTrajectory display_trajectory;
 
     // success = arm_group_.move();
     ROS_INFO("  Visualizing plan! %s",success?"":"FAILED");
-    sleep(3.0);
+    sleep(2.0);
 
     // if (!finished_within_time) {
     //   arm_group_.stop();
@@ -1573,7 +1573,7 @@ moveit_msgs::DisplayTrajectory display_trajectory;
         ROS_INFO("  Action will now execute!");
         arm_group_.execute(motion_plan);
 
-        sleep(2.0);
+        sleep(1.0);
         arm_group_.setStartStateToCurrentState();
 
         // ROS_INFO("Action finished: %s",state.toString().c_str());

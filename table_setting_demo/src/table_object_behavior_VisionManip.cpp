@@ -80,13 +80,13 @@ static const char *static_object_str[] = {
   // "Lettuce"
   // DARS DEMO
   "teddy_bear",
-  "orange",
+  // "orange",
   "sports_ball",
   "clock",
-  "bottle",
+  // "bottle",
   "scissors",
   "cup",
-  "bowl",
+  // "bowl",
 };
 
 TableObject_VisionManip::TableObject_VisionManip() : arm_group_{"right_arm"} {  ROS_ERROR("START OF TableObject_VisionManip CONSTRUCTOR");}
@@ -311,6 +311,11 @@ bool TableObject_VisionManip::Precondition() {
     } else {
       LOG_INFO("SERVICE: [%s] - Not responding!", "qr_get_object_position");
     }
+  }
+
+  if( object_ == "cup") {
+    sleep(1.0);
+    return false;
   }
   return true;
 }
