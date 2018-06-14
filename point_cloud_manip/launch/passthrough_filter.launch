@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="orthographic_proj" args="0 -1 1 0 1 0 0 camera_depth_optical_frame test 100" />
+  <node pkg="point_cloud_manip" type="passthrough_node" name="passthrough_filter">
+  		<remap from="points" to="/camera/depth_registered/points"/>
+  </node>
+</launch>

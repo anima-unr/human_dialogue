@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   ros::AsyncSpinner a(4);
 
   listener = new tf::TransformListener();
-  pub = n.advertise<sensor_msgs::PointCloud2>("/local/depth_registered/trans_points", 1000);
+  pub = n.advertise<sensor_msgs::PointCloud2>("trans_points", 1000);
 
   // subscribe to point cloud
   ros::Subscriber sub = n.subscribe("points", 1, callback);
