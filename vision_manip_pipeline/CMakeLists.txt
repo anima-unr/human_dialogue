@@ -50,7 +50,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 
 find_package(cmake_modules REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(Eigen REQUIRED)
 include_directories(
   include
   ${EIGEN_INCLUDE_DIRS}
@@ -277,7 +277,7 @@ target_link_libraries(jb_conv_coord_server ${catkin_LIBRARIES}
   cublas
   curand
   )
-add_dependencies(jb_conv_coord_server ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(jb_conv_coord_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(jb_conv_coord_client src/jb_conv_coord_client.cpp)
 target_link_libraries(jb_conv_coord_client ${catkin_LIBRARIES}
@@ -286,11 +286,11 @@ target_link_libraries(jb_conv_coord_client ${catkin_LIBRARIES}
   cublas
   curand
   )
-add_dependencies(jb_conv_coord_client ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(jb_conv_coord_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(orthoProj src/orthographicProjectionOfPointCloud.cpp)
 target_link_libraries(orthoProj ${catkin_LIBRARIES}  )
-add_dependencies(orthoProj ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(orthoProj ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 
@@ -300,7 +300,7 @@ add_dependencies(orthoProj ${PROJECT_NAME}_generate_messages_cpp)
 
 
 add_executable(jb_vision_manip_pipeline src/jb_vision_manip_pipeline.cpp)
-add_dependencies(jb_vision_manip_pipeline ${catkin_LIBRARIES}  )
+add_dependencies(jb_vision_manip_pipeline ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(jb_vision_manip_pipeline ${catkin_LIBRARIES} )
 
 
@@ -314,10 +314,10 @@ target_link_libraries(jb_vision_manip_pipeline ${catkin_LIBRARIES} )
 
 
 add_executable(jb_vision_manip_pipeline_server src/jb_vision_manip_pipeline_server.cpp)
-add_dependencies(jb_vision_manip_pipeline_server ${catkin_LIBRARIES}  )
+add_dependencies(jb_vision_manip_pipeline_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(jb_vision_manip_pipeline_server ${catkin_LIBRARIES} )
 
 add_executable(jb_vision_manip_pipeline_client src/jb_vision_manip_pipeline_client.cpp)
-add_dependencies(jb_vision_manip_pipeline_client ${catkin_LIBRARIES}  )
+add_dependencies(jb_vision_manip_pipeline_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(jb_vision_manip_pipeline_client ${catkin_LIBRARIES} )
 

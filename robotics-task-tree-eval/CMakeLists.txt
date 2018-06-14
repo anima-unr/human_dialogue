@@ -143,9 +143,7 @@ add_library(robotics_task_tree
 )
 
 add_dependencies(robotics_task_tree
-  ${catkin_EXPORTED_TARGETS}
-  # ${robotics_task_tree_eval_msgs_gencpp}
-  robotics_task_tree_eval_generate_messages_cpp
+  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
 )
 ## Specify libraries to link a library or executable target against
 
