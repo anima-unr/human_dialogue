@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   active_vision_msgs
   moveit_ros_planning_interface
   robotics_task_tree_eval
+  robotics_task_tree_msgs
+  remote_mutex
   tf
 )
 if ($ENV{ROBOT} MATCHES "pr2")
@@ -25,15 +27,6 @@ endif ($ENV{ROBOT} MATCHES "pr2")
 if (${BUILD_TABLE_SETTING_DEMO})
   message("-- BUILD: TABLE_SETTING_DEMO")
   
-  find_package(catkin REQUIRED COMPONENTS
-    robotics_task_tree_eval
-    remote_mutex
-    message_generation
-    #tabletop_segmenter
-    moveit_ros_planning_interface
-    robotics_task_tree_eval
-    tf
-  )
   find_package(PCL REQUIRED COMPONENTS
     common
     io
@@ -87,6 +80,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
   geometry_msgs
+  robotics_task_tree_msgs
 )
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
@@ -96,9 +90,9 @@ generate_messages(
 # )
 
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES table_setting_demo
-#  CATKIN_DEPENDS roscpp rospy
+  CATKIN_DEPENDS roscpp rospy message_runtime geometry_msgs active_vision_msgs moveit_ros_planning_interface robotics_task_tree_eval robotics_task_tree_msgs tf remote_mutex
 #  DEPENDS system_lib
 )
 
@@ -148,13 +142,13 @@ endif()
 #JB: This used to be only groovy to build on the pr2, but since we are running it in 
 #    simulation now, we need to build it on our host machine!
 # if (${ROS_VERSION} MATCHES "groovy")
-  find_package(catkin REQUIRED COMPONENTS
-    # arm_navigation
-    # pr2_controllers
-    tf
-    actionlib
-    moveit_ros_planning_interface
-  )
+  # find_package(catkin REQUIRED COMPONENTS
+  #   # arm_navigation
+  #   # pr2_controllers
+  #   tf
+  #   actionlib
+  #   moveit_ros_planning_interface
+  # )
 
   set(message_INCLUDE_DIRS
 # JB: TODO: The arm_navigation does not exist in indigo, it is replaced by MoveIt!
@@ -190,18 +184,18 @@ if (${BUILD_TABLE_SETTING_DEMO})
   #find_package(OpenCV REQUIRED)
 
 
-  find_package(catkin REQUIRED COMPONENTS
-    std_msgs
-    sensor_msgs
-    image_transport
-    cv_bridge
-    robotics_task_tree_eval
-    remote_mutex
-    pcl_ros
-    tf
-    moveit_ros_planning_interface
+  # find_package(catkin REQUIRED COMPONENTS
+  #   std_msgs
+  #   sensor_msgs
+  #   image_transport
+  #   cv_bridge
+  #   robotics_task_tree_eval
+  #   remote_mutex
+  #   pcl_ros
+  #   tf
+  #   moveit_ros_planning_interface
 
-  )
+  # )
 
   option(BUILD_TEST "Build Testing Modules" 1)
 
@@ -210,6 +204,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
     add_library(table_object_behavior
       src/table_object_behavior.cpp
     )
+    add_dependencies(table_object_behavior ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
     # DFS: took out because the testing directory is not compiling with tf correctly
     #add_subdirectory(testing)
   endif ()
@@ -235,9 +230,21 @@ if (${BUILD_TABLE_SETTING_DEMO})
     ${Boost_LIBRARIES}
   )
   add_dependencies(multi_robot_demo
-    table_setting_demo_generate_messages_cpp
+    table_setting_demo_generate_messages_cpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
   )
 
+# multi vision manip version
+  add_executable(multi_robot_demo_visionManip
+    src/multi_robot_network_visionManip.cpp
+    src/table_object_behavior_VisionManip.cpp
+  )
+  target_link_libraries(multi_robot_demo_visionManip
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+  add_dependencies(multi_robot_demo_visionManip
+    multi_robot_demo_visionManip_generate_messages_cpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
+  )
 
 
   # BUILD OBJECT TRANSFORMATION service
@@ -276,7 +283,4 @@ if (${BUILD_TABLE_SETTING_DEMO})
   #  ${${PROJECT_NAME}_EXPORTED_TARGETS}
   #  ${catkin_EXPORTED_TARGETS}
   #)
-  add_dependencies(table_setting_demo
-    table_setting_demo_generate_messages_cpp
-  )
 endif (${BUILD_TABLE_SETTING_DEMO})
