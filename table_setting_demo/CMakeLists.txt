@@ -243,7 +243,7 @@ if (${BUILD_TABLE_SETTING_DEMO})
     ${Boost_LIBRARIES}
   )
   add_dependencies(multi_robot_demo_visionManip
-    multi_robot_demo_visionManip_generate_messages_cpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
+    ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
   )
 
 
