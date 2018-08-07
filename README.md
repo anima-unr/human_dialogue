@@ -1,5 +1,5 @@
 # Distributed_Collaborative_Task_Tree
-Clone of Luke's code as of Sep 15, 2016
+Distributed Hierarchical Architecture for Human-Robot Collaboration
 
 ## Installation
 1. Clone this repository and put it in the /src folder of your catkin workspace.
